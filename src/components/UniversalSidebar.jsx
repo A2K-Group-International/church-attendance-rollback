@@ -51,11 +51,11 @@ export default function UniversalSidebar({ children }) {
         label: "Organised Events",
         icon: CalendarIcon,
       },
-      {
-        link: "/volunteer-duties",
-        label: "Rota Management",
-        icon: CalendarIcon,
-      },
+      // {
+      //   link: "/volunteer-duties",
+      //   label: "Rota Management",
+      //   icon: CalendarIcon,
+      // },
     ],
     user: [
       {
