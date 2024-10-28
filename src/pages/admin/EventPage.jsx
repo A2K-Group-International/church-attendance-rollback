@@ -67,7 +67,7 @@ import CreatePoll from "./CreatePoll";
 import { useNavigate } from "react-router-dom";
 import QRCodeIcon from "../../assets/svg/qrCode.svg";
 
-const headers = ["Event Name", "Date", "Time", "Description", "QR Code"];
+const headers = ["QR Code", "Event Name", "Date", "Time", "Description", ];
 
 export default function EventPage() {
   const navigate = useNavigate();
@@ -282,23 +282,6 @@ export default function EventPage() {
   };
 
   const rows = events.map((event) => [
-    event.name,
-    moment(event.schedule_date).format("MMMM Do YYYY"), // Format date using Moment.js
-    event.time && event.time.length > 0
-      ? event.time.map((t) => formatTime(t)).join(", ")
-      : "N/A",
-    <div
-      key={event.name}
-      style={{
-        maxWidth: "200px",
-        maxHeight: "100px",
-        overflow: "auto",
-        whiteSpace: "pre-wrap",
-      }}
-    >
-      {event.description || "N/A"}
-    </div>,
-    // QR CODE
     <AlertDialog key={event.id}>
       <AlertDialogTrigger
         asChild
@@ -337,6 +320,23 @@ export default function EventPage() {
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>,
+    event.name,
+    moment(event.schedule_date).format("MMMM Do YYYY"), // Format date using Moment.js
+    event.time && event.time.length > 0
+      ? event.time.map((t) => formatTime(t)).join(", ")
+      : "N/A",
+    <div
+      key={event.name}
+      style={{
+        maxWidth: "200px",
+        maxHeight: "100px",
+        overflow: "auto",
+        whiteSpace: "pre-wrap",
+      }}
+    >
+      {event.description || "N/A"}
+    </div>,
+    // QR CODE
     <DropdownMenu key={event.id}>
       <DropdownMenuTrigger>
         <button aria-label="Options">

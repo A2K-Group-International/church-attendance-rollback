@@ -8,11 +8,8 @@ import {
   CardTitle,
   CardDescription,
 } from "../../shadcn/card";
-import { Button } from "@/shadcn/button";
 import UserCalendar from "@/components/user/UserCalendar";
-import { Dialog, DialogContent, DialogTrigger } from "../../shadcn/dialog";
-import qrScannerIcon from "../../assets/svg/qrScanner.svg";
-import { Scanner } from "@yudiel/react-qr-scanner";
+import ParishionerQRCodeScanner from "@/components/user/ParishionerQRCodeScanner";
 
 export default function Eventspage() {
   const [eventItems, setEventItems] = useState([]);
@@ -52,8 +49,6 @@ export default function Eventspage() {
           };
         });
 
-        console.log(data);
-
         setEventItems(formattedEvents);
       } catch (error) {
         console.error("Error fetching events:", error);
@@ -67,16 +62,6 @@ export default function Eventspage() {
 
   const handleEventClick = (event) => {
     navigate(`/event-info/${event.id}`);
-  };
-
-  const handleScan = (data) => {
-    if (data) {
-      setScanResult(data);
-    }
-  };
-
-  const handleError = (err) => {
-    setError(err);
   };
 
   if (loading) {
@@ -98,19 +83,7 @@ export default function Eventspage() {
       </div>
       <div className="mt-2 flex">
         <UserCalendar />
-        <Dialog>
-          <DialogTrigger asChild className="ml-2">
-            <Button>
-              <img src={qrScannerIcon} alt="" />
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="mt-2 p-2">
-            <Scanner
-              facingMode="environment"
-              onScan={(result) => console.log(result)}
-            />
-          </DialogContent>
-        </Dialog>
+        <ParishionerQRCodeScanner />
       </div>
 
       <div className="no-scrollbar mt-8 grid h-screen grid-cols-1 gap-4 overflow-scroll md:grid-cols-2 lg:grid-cols-3">
