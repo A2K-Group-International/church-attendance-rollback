@@ -92,25 +92,66 @@ export default function UniversalSidebar({ children }) {
 
           {/* Placeholder buttons and Profile/Logout buttons */}
           <div className="mt-auto flex flex-col space-y-2">
-            {/* Render buttons to switch displayed links */}
-            <Button
-              variant="outline"
-              onClick={() => setCurrentUserRole("admin")}
-            >
-              Switch to Admin
-            </Button>
-            <Button
-              variant="outline"
-              onClick={() => setCurrentUserRole("volunteer")}
-            >
-              Switch to Volunteer
-            </Button>
-            <Button
-              variant="outline"
-              onClick={() => setCurrentUserRole("user")}
-            >
-              Switch to User
-            </Button>
+            {/* Conditionally render buttons based on userData.user_role */}
+            {userData.user_role === "admin" && (
+              <>
+                {/* Show return button to Admin only if not currently in Admin view */}
+                {currentUserRole !== "admin" && (
+                  <Button
+                    variant="outline"
+                    onClick={() => setCurrentUserRole("admin")}
+                  >
+                    Return to Admin
+                  </Button>
+                )}
+                {/* Show switch buttons only if not currently in that role */}
+                {currentUserRole !== "volunteer" && (
+                  <Button
+                    variant="outline"
+                    onClick={() => setCurrentUserRole("volunteer")}
+                  >
+                    Switch to Volunteer
+                  </Button>
+                )}
+                {currentUserRole !== "user" && (
+                  <Button
+                    variant="outline"
+                    onClick={() => setCurrentUserRole("user")}
+                  >
+                    Switch to User
+                  </Button>
+                )}
+              </>
+            )}
+
+            {userData.user_role === "volunteer" && (
+              <>
+                {/* Show return button to Volunteer only if not currently in Volunteer view */}
+                {currentUserRole !== "volunteer" && (
+                  <Button
+                    variant="outline"
+                    onClick={() => setCurrentUserRole("volunteer")}
+                  >
+                    Return to Volunteer
+                  </Button>
+                )}
+                {/* Show switch button only if not currently in that role */}
+                {currentUserRole !== "user" && (
+                  <Button
+                    variant="outline"
+                    onClick={() => setCurrentUserRole("user")}
+                  >
+                    Switch to User
+                  </Button>
+                )}
+              </>
+            )}
+
+            {userData.user_role === "user" && (
+              <div>
+                <p>You cannot switch to any other role.</p>
+              </div>
+            )}
           </div>
 
           <div className="mt-4 flex items-center justify-between">

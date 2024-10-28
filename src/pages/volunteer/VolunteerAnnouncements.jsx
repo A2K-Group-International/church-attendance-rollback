@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import supabase from "../../api/supabase";
 import VolunteerSidebar from "../../components/volunteer/VolunteerSidebar";
-import { useUser } from "../../authentication/useUser";
+
 import Spinner from "../../components/Spinner";
 import { Button } from "../../shadcn/button";
 import {
@@ -14,17 +14,18 @@ import {
 } from "../../shadcn/dialog";
 import { Input } from "../../shadcn/input";
 import { Label } from "../../shadcn/label";
-import useUserData from "../../api/useUserData";
 import useAnnouncements from "../../api/useAnnouncements";
 import AnnouncementCard from "../../components/volunteer/post/AnnouncementCard";
 import AnnouncementForm from "../../components/volunteer/post/AnnouncementForm";
 import AnnouncementEdit from "../../components/volunteer/post/AnnouncementEdit"; // Import the edit component
+import { useUser } from "@/context/UserContext";
+import GroupSelect from "@/components/volunteer/post/GroupSelect";
 
 export default function VolunteerAnnouncements() {
   const [groupId, setGroupId] = useState(null);
-  const [userId, setUserId] = useState(null);
+
   const [groupData, setGroupData] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false); // New state for edit dialog
@@ -38,8 +39,7 @@ export default function VolunteerAnnouncements() {
   const [visibleCount, setVisibleCount] = useState(10); // For pagination
   const [uploadedImage, setUploadedImage] = useState(null); // State for the uploaded image
 
-  const { user } = useUser();
-  const { userData, loading: userLoading, error: userError } = useUserData();
+  const { userData } = useUser();
   const {
     announcements,
     loading: announcementsLoading,
@@ -47,35 +47,8 @@ export default function VolunteerAnnouncements() {
     fetchAnnouncements,
   } = useAnnouncements(groupId, null); // Fetch all announcements
 
-  const fetchGroupInfo = useCallback(async () => {
-    if (!userData) return;
-
-    // Check if userData.group_id is null or undefined
-    if (userData.group_id == null) {
-      console.log("NO GROUP");
-      setError("You are not a member of any group. Please contact an admin.");
-      setLoading(false); // Stop loading immediately
-      return; // Exit early
-    }
-
-    try {
-      setGroupId(userData.group_id);
-      setUserId(userData.user_id);
-      const { data: groupData, error: groupError } = await supabase
-        .from("group_list")
-        .select("*")
-        .eq("group_id", userData.group_id);
-
-      if (groupError) throw groupError;
-      setGroupData(groupData);
-    } catch (err) {
-      setError("Error fetching group information. Please try again.");
-      console.error("Error fetching group information:", err);
-    } finally {
-      setLoading(false); // Ensure loading is set to false
-    }
-  }, [userData]);
   const handleReaction = async (postId, reaction) => {
+    const userId = userData.user_id;
     try {
       // Check if the user has already reacted to the post
       const { data, error } = await supabase
@@ -152,16 +125,19 @@ export default function VolunteerAnnouncements() {
   const handleSubmit = async (e) => {
     e.preventDefault(); // Prevent default form submission
     if (
-      !newAnnouncement.post_content.trim() ||
-      !newAnnouncement.post_header.trim()
+      !newAnnouncement.post_header ||
+      !newAnnouncement.post_content ||
+      !newAnnouncement.groupId ||
+      !newAnnouncement.privacy
     ) {
-      setError("Please enter both announcement content and header."); // Set error message
-      return; // Stop further execution
+      alert("Please fill in all required fields.");
+      return;
     }
 
     try {
-      const groupName =
-        groupData && groupData[0] ? groupData[0].group_name : "";
+      // Get group_id and group_name from newAnnouncement
+      const groupId = newAnnouncement.groupId; // Retrieve groupId from newAnnouncement
+      const groupName = newAnnouncement.groupName; // Retrieve groupName from newAnnouncement
       let imageUrl = null; // Initialize imageUrl to null
 
       if (uploadedImage) {
@@ -207,8 +183,8 @@ export default function VolunteerAnnouncements() {
           post_header: newAnnouncement.post_header,
           created_at: new Date().toISOString(),
           post_user_id: userData.user_id,
-          post_group_id: groupId,
-          group_name: groupName,
+          post_group_id: groupId, // Use groupId from newAnnouncement
+          group_name: groupName, // Use groupName from newAnnouncement
           user_name: `${userData.user_name} ${userData.user_last_name}`,
           uploaded_image: imageUrl, // Use the publicUrl variable here
           public: newAnnouncement.privacy === "public", // Use the privacy field to set the "public" column
@@ -227,7 +203,12 @@ export default function VolunteerAnnouncements() {
 
       // Reset the dialog and form state
       setIsDialogOpen(false);
-      setNewAnnouncement({ post_content: "", post_header: "" });
+      setNewAnnouncement({
+        post_content: "",
+        post_header: "",
+        groupId: null,
+        groupName: "",
+      }); // Reset state including group info
       setUploadedImage(null); // Reset the uploaded image
     } catch (err) {
       setError("Error creating announcement. Please try again."); // Set error message
@@ -284,10 +265,6 @@ export default function VolunteerAnnouncements() {
     }
   };
 
-  useEffect(() => {
-    fetchGroupInfo();
-  }, [fetchGroupInfo]);
-
   const filteredAnnouncements = announcements.filter(
     (post) =>
       post.post_content.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -311,43 +288,42 @@ export default function VolunteerAnnouncements() {
           <>
             <header className="mb-4 flex items-center justify-between">
               <div>
-                <h1 className="text-2xl font-bold">
-                  {groupData && groupData[0] && groupData[0].group_name
-                    ? `${groupData[0].group_name} Announcements`
-                    : "Volunteer Announcements"}
-                </h1>
+                <h1 className="text-2xl font-bold">Announcements</h1>
                 {userData && (
                   <p className="text-gray-600">
                     Welcome, {userData.user_name} {userData.user_last_name}
                   </p>
                 )}
               </div>
-              {groupId ? (
-                <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-                  <DialogTrigger asChild>
-                    <Button className="ml-4">Create Announcement</Button>
-                  </DialogTrigger>
-                  <DialogContent className="sm:max-w-[500px]">
-                    <DialogHeader>
-                      <DialogTitle>Create New Announcement</DialogTitle>
-                      <DialogDescription>
-                        Post a new announcement for your group.
-                      </DialogDescription>
-                    </DialogHeader>
-                    <AnnouncementForm
-                      newAnnouncement={newAnnouncement}
-                      setNewAnnouncement={setNewAnnouncement}
-                      handleSubmit={handleSubmit} // Pass the handleSubmit to the form
-                      error={error} // Pass the error state here
-                      groupName={
-                        groupData && groupData[0] ? groupData[0].group_name : ""
-                      } // Pass the group name here
-                      setUploadedImage={setUploadedImage} // Pass the function to set uploaded image
-                    />
-                  </DialogContent>
-                </Dialog>
-              ) : null}
+              <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button className="ml-4">Create Announcement</Button>
+                </DialogTrigger>
+                <DialogContent className="sm:max-w-[500px]">
+                  <DialogHeader>
+                    <DialogTitle>Create New Announcement</DialogTitle>
+                    <DialogDescription>
+                      Post a new announcement for your group.
+                    </DialogDescription>
+                  </DialogHeader>
+                  <AnnouncementForm
+                    newAnnouncement={newAnnouncement}
+                    setNewAnnouncement={setNewAnnouncement}
+                    handleSubmit={handleSubmit} // Pass the handleSubmit to the form
+                    error={error} // Pass the error state here
+                    groupName={
+                      groupData && groupData[0] ? groupData[0].group_name : ""
+                    } // Pass the group name here
+                    setUploadedImage={setUploadedImage} // Pass the function to set uploaded image
+                  />
+                </DialogContent>
+              </Dialog>
             </header>
+
+            <GroupSelect
+              selectedGroupId={groupId}
+              setSelectedGroupId={setGroupId}
+            />
 
             <div className="mt-4">
               <Input
