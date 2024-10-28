@@ -34,25 +34,42 @@ export const UserProvider = ({ children }) => {
           setLoggedIn(true); // Set logged-in state to true
           console.log("User Data:", userDetails); // Log user data
 
-          // Fetch groups associated with the user
-          const { data: groupsData, error: groupsError } = await supabase
-            .from("group_user_assignments")
-            .select("group_id, group_list(*)") // Assuming group_list has the group details
-            .eq("user_id", userDetails.user_id); // Replace user_id with the correct field from userDetails
+          // Fetch groups based on user role
+          if (userDetails.user_role === "admin") {
+            // If the user is an admin, fetch all groups
+            const { data: allGroupsData, error: allGroupsError } =
+              await supabase.from("group_list").select("*"); // Adjust fields as necessary
 
-          if (groupsError) {
-            throw new Error(groupsError.message);
+            if (allGroupsError) {
+              throw new Error(allGroupsError.message);
+            }
+
+            // Log the fetched group data
+            console.log("Fetched All Groups Data:", allGroupsData);
+
+            // Save the group details
+            setUserGroups(allGroupsData); // Admin gets all groups
+          } else {
+            // Fetch groups associated with the user
+            const { data: groupsData, error: groupsError } = await supabase
+              .from("group_user_assignments")
+              .select("group_id, group_list(*)") // Assuming group_list has the group details
+              .eq("user_id", userDetails.user_id); // Replace user_id with the correct field from userDetails
+
+            if (groupsError) {
+              throw new Error(groupsError.message);
+            }
+
+            // Log the fetched group data
+            console.log("Fetched Groups Data:", groupsData);
+
+            // Save the group details
+            setUserGroups(groupsData.map((item) => item.group_list)); // Assuming group_list contains the necessary details
+            console.log(
+              "User Groups:",
+              groupsData.map((item) => item.group_list),
+            ); // Log the processed user groups
           }
-
-          // Log the fetched group data
-          console.log("Fetched Groups Data:", groupsData);
-
-          // Save the group details
-          setUserGroups(groupsData.map((item) => item.group_list)); // Assuming group_list contains the necessary details
-          console.log(
-            "User Groups:",
-            groupsData.map((item) => item.group_list),
-          ); // Log the processed user groups
         }
       } catch (err) {
         setError(err.message); // Set error message
