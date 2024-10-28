@@ -5,7 +5,13 @@ import AdminSidebar from "../../components/admin/AdminSidebar";
 import { Button } from "../../shadcn/button";
 import { Input } from "../../shadcn/input";
 import { Label } from "../../shadcn/label";
-
+import CreateGroupModal from "@/components/admin/Group/CreateGroupModal";
+import EditGroupModal from "@/components/admin/Group/EditGroupModal";
+import GroupList from "@/components/admin/Group/GroupList";
+import AssignMembersModal from "@/components/admin/Group/AssignMembersModal";
+import RemoveMemberDialog from "@/components/admin/Group/RemoveMemberDiaglog";
+import DeleteConfirmationDialog from "@/components/admin/Group/DeleteConfirmationDialog";
+import LoadingDialog from "@/components/admin/Group/LoadingDialog";
 // Define the number of items per page
 const itemsPerPage = 7;
 
@@ -291,9 +297,8 @@ export default function GroupsPage() {
     <main className="mx-auto max-w-7xl p-4 lg:p-8">
       {/* Header Section */}
       <div className="mb-6">
-        <h1 className="text-3xl font-bold">Group Management</h1>
+        <h1 className="text-3xl font-bold">Ministry Management</h1>
       </div>
-
       {/* Create Group Button */}
       <div className="mb-8">
         <Button
@@ -304,90 +309,17 @@ export default function GroupsPage() {
           Create Group
         </Button>
       </div>
-
       {/* Group Cards Layout */}
-      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-        {loading ? (
-          <div className="p-8 text-center">
-            <div className="mx-auto h-8 w-8 animate-spin rounded-full border-b-2 border-primary"></div>
-            <p className="mt-4 text-muted-foreground">Loading groups...</p>
-          </div>
-        ) : error ? (
-          <div className="p-8 text-center">
-            <p className="text-destructive">{error}</p>
-          </div>
-        ) : data.length > 0 ? (
-          data.map((item) => (
-            <div
-              key={item.group_id}
-              className="rounded-lg border p-6 shadow transition-shadow duration-300 hover:shadow-lg"
-            >
-              <h2 className="mb-2 text-2xl font-bold">{item.group_name}</h2>
-              <p className="mb-1 text-gray-700">{item.group_description}</p>
-              <p className="mb-4 text-sm text-gray-500">
-                Created At: {new Date(item.created_at).toLocaleString()}
-              </p>
-
-              {/* Displaying Members */}
-              <div className="mb-6">
-                <h3 className="mb-2 text-lg font-semibold">Members:</h3>
-                {item.members && item.members.length > 0 ? (
-                  <ul className="list-disc space-y-2 pl-5">
-                    {item.members.map((member) => (
-                      <li
-                        key={member.user_id}
-                        className="flex items-center justify-between space-x-4"
-                      >
-                        <span className="text-gray-800">
-                          {member.user_name} {member.user_last_name}
-                        </span>
-                        <button
-                          onClick={() => initiateRemoveMember(member)} // Open confirmation dialog
-                          className="font-medium text-red-500 hover:text-red-700"
-                        >
-                          Remove
-                        </button>
-                      </li>
-                    ))}
-                  </ul>
-                ) : (
-                  <p className="text-gray-500">No members found.</p>
-                )}
-              </div>
-
-              {/* Action Buttons */}
-              <div className="flex space-x-4">
-                <Button
-                  onClick={() => handleEditGroup(item)}
-                  variant="secondary"
-                  className="px-4 py-2"
-                >
-                  Edit
-                </Button>
-                <Button
-                  onClick={() => handleActionClick(item)}
-                  variant="destructive"
-                  className="px-4 py-2"
-                >
-                  Delete
-                </Button>
-                <Button
-                  onClick={() => handleOpenAssignModal(item)}
-                  variant="primary"
-                  className="px-4 py-2"
-                >
-                  Assign Members
-                </Button>
-              </div>
-            </div>
-          ))
-        ) : (
-          <div className="p-8 text-center">
-            <p>No groups found.</p>
-          </div>
-        )}
-      </div>
-
+      <GroupList
+        data={data}
+        loading={loading}
+        error={error}
+        handleEditGroup={handleEditGroup}
+        handleActionClick={handleActionClick}
+        handleOpenAssignModal={handleOpenAssignModal}
+        initiateRemoveMember={initiateRemoveMember}
+      />
+      <LoadingDialog isOpen={loading} /> {/* Loading dialog */}
       {/* Pagination */}
       <div className="mt-8 flex items-center justify-center space-x-4">
         <Button
@@ -412,258 +344,45 @@ export default function GroupsPage() {
           Next
         </Button>
       </div>
-
-      {/* Create Group Modal */}
-      {isCreateModalOpen && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="w-full max-w-md rounded-lg bg-white p-6 shadow-lg">
-            <h2 className="mb-4 text-xl font-bold">Create Group</h2>
-            {createError && <p className="mb-4 text-red-600">{createError}</p>}
-            <form onSubmit={handleSubmit(handleCreateGroup)}>
-              <div className="mb-4">
-                <Label htmlFor="groupName" className="mb-1 block">
-                  Group Name
-                </Label>
-                <Input
-                  id="groupName"
-                  {...register("groupName", { required: true })}
-                  placeholder="Enter group name"
-                  className="w-full"
-                />
-                {errors.groupName && (
-                  <p className="mt-1 text-red-600">Group name is required.</p>
-                )}
-              </div>
-              <div className="mb-4">
-                <Label htmlFor="groupDescription" className="mb-1 block">
-                  Group Description
-                </Label>
-                <Input
-                  id="groupDescription"
-                  {...register("groupDescription", { required: true })}
-                  placeholder="Enter group description"
-                  className="w-full"
-                />
-                {errors.groupDescription && (
-                  <p className="mt-1 text-red-600">Description is required.</p>
-                )}
-              </div>
-              <div className="flex justify-end space-x-2">
-                <Button
-                  type="button"
-                  variant="secondary"
-                  onClick={() => setIsCreateModalOpen(false)}
-                  className="px-4 py-2"
-                >
-                  Cancel
-                </Button>
-                <Button
-                  type="submit"
-                  variant="primary"
-                  className="px-4 py-2"
-                  disabled={createLoading}
-                >
-                  {createLoading ? "Creating..." : "Create"}
-                </Button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* Edit Group Modal */}
-      {isEditModalOpen && selectedGroup && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="w-full max-w-md rounded-lg bg-white p-6 shadow-lg">
-            <h2 className="mb-4 text-xl font-bold">Edit Group</h2>
-            {editError && <p className="mb-4 text-red-600">{editError}</p>}
-            <form onSubmit={handleSubmit(handleUpdateGroup)}>
-              <div className="mb-4">
-                <Label htmlFor="groupName" className="mb-1 block">
-                  Group Name
-                </Label>
-                <Input
-                  id="groupName"
-                  {...register("groupName", { required: true })}
-                  placeholder="Enter group name"
-                  className="w-full"
-                />
-                {errors.groupName && (
-                  <p className="mt-1 text-red-600">Group name is required.</p>
-                )}
-              </div>
-              <div className="mb-4">
-                <Label htmlFor="groupDescription" className="mb-1 block">
-                  Group Description
-                </Label>
-                <Input
-                  id="groupDescription"
-                  {...register("groupDescription", { required: true })}
-                  placeholder="Enter group description"
-                  className="w-full"
-                />
-                {errors.groupDescription && (
-                  <p className="mt-1 text-red-600">Description is required.</p>
-                )}
-              </div>
-              <div className="flex justify-end space-x-2">
-                <Button
-                  type="button"
-                  variant="secondary"
-                  onClick={() => setIsEditModalOpen(false)}
-                  className="px-4 py-2"
-                >
-                  Cancel
-                </Button>
-                <Button
-                  type="submit"
-                  variant="primary"
-                  className="px-4 py-2"
-                  disabled={editLoading}
-                >
-                  {editLoading ? "Updating..." : "Update"}
-                </Button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* Assign Members Modal */}
-      {isAssignModalOpen && selectedGroup && (
-        <div className="fixed inset-0 flex items-center justify-center overflow-auto bg-black bg-opacity-50">
-          <div className="w-full max-w-md rounded-lg bg-white p-6 shadow-lg">
-            <h2 className="mb-4 text-xl font-bold">
-              Assign Members to "{selectedGroup.group_name}"
-            </h2>
-            {assignError && <p className="mb-4 text-red-600">{assignError}</p>}
-            <form
-              onSubmit={(e) => {
-                e.preventDefault();
-                handleAssignMembers();
-              }}
-            >
-              <div className="mb-6">
-                <Label className="mb-2 block">Select Volunteers</Label>
-                <div className="max-h-64 space-y-2 overflow-y-auto rounded border p-4">
-                  {allVolunteers.length > 0 ? (
-                    allVolunteers.map((volunteer) => (
-                      <div
-                        key={volunteer.user_id}
-                        className="flex items-center space-x-2"
-                      >
-                        <input
-                          type="checkbox"
-                          id={`volunteer-${volunteer.user_id}`}
-                          checked={selectedVolunteers.includes(
-                            volunteer.user_id,
-                          )}
-                          onChange={() =>
-                            handleCheckboxChange(volunteer.user_id)
-                          }
-                          className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                        />
-                        <label
-                          htmlFor={`volunteer-${volunteer.user_id}`}
-                          className="text-gray-700"
-                        >
-                          {volunteer.user_name} {volunteer.user_last_name}
-                        </label>
-                      </div>
-                    ))
-                  ) : (
-                    <p className="text-gray-500">No volunteers available.</p>
-                  )}
-                </div>
-              </div>
-              <div className="flex justify-end space-x-2">
-                <Button
-                  type="button"
-                  variant="secondary"
-                  onClick={() => setIsAssignModalOpen(false)}
-                  className="px-4 py-2"
-                >
-                  Cancel
-                </Button>
-                <Button
-                  type="submit"
-                  variant="primary"
-                  className="px-4 py-2"
-                  disabled={assignLoading}
-                >
-                  {assignLoading ? "Assigning..." : "Assign"}
-                </Button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* Remove Member Confirmation Dialog */}
-      {isRemoveDialogOpen && memberToRemove && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="w-full max-w-md rounded-lg bg-white p-6 shadow-lg">
-            <h2 className="mb-4 text-xl font-bold">Confirm Removal</h2>
-            <p className="mb-6">
-              Are you sure you want to remove{" "}
-              <strong>
-                {memberToRemove.user_name} {memberToRemove.user_last_name}
-              </strong>{" "}
-              from the group?
-            </p>
-            <div className="flex justify-end space-x-2">
-              <Button
-                type="button"
-                variant="secondary"
-                onClick={() => setIsRemoveDialogOpen(false)}
-                className="px-4 py-2"
-              >
-                Cancel
-              </Button>
-              <Button
-                onClick={() => {
-                  removeMemberFromGroup(memberToRemove.user_id);
-                  setIsRemoveDialogOpen(false);
-                }}
-                variant="destructive"
-                className="px-4 py-2"
-              >
-                Remove
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
-
+      <CreateGroupModal
+        isOpen={isCreateModalOpen}
+        onClose={() => setIsCreateModalOpen(false)}
+        onSubmit={handleCreateGroup}
+        createLoading={createLoading}
+        createError={createError}
+      />
+      <EditGroupModal
+        isOpen={isEditModalOpen}
+        onClose={() => setIsEditModalOpen(false)}
+        onSubmit={handleUpdateGroup}
+        editLoading={editLoading}
+        editError={editError}
+        selectedGroup={selectedGroup}
+      />
+      <AssignMembersModal
+        isOpen={isAssignModalOpen}
+        onClose={() => setIsAssignModalOpen(false)}
+        groupName={selectedGroup?.group_name}
+        allVolunteers={allVolunteers}
+        selectedVolunteers={selectedVolunteers}
+        handleCheckboxChange={handleCheckboxChange}
+        handleAssignMembers={handleAssignMembers}
+        assignError={assignError}
+        assignLoading={assignLoading}
+      />
+      <RemoveMemberDialog
+        isOpen={isRemoveDialogOpen}
+        onClose={() => setIsRemoveDialogOpen(false)}
+        memberToRemove={memberToRemove}
+        onRemove={removeMemberFromGroup}
+      />
       {/* Delete Confirmation Dialog */}
-      {isDialogOpen && selectedGroup && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="w-full max-w-md rounded-lg bg-white p-6 shadow-lg">
-            <h2 className="mb-4 text-xl font-bold">Confirm Delete</h2>
-            <p className="mb-6">
-              Are you sure you want to delete the group "
-              {selectedGroup.group_name}"?
-            </p>
-            <div className="flex justify-end space-x-2">
-              <Button
-                type="button"
-                onClick={() => setIsDialogOpen(false)}
-                variant="secondary"
-                className="px-4 py-2"
-              >
-                Cancel
-              </Button>
-              <Button
-                onClick={confirmDeleteGroup}
-                variant="destructive"
-                className="px-4 py-2"
-              >
-                Delete
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
+      <DeleteConfirmationDialog
+        isOpen={isDialogOpen}
+        onClose={() => setIsDialogOpen(false)}
+        groupName={selectedGroup ? selectedGroup.group_name : ""}
+        onDelete={confirmDeleteGroup}
+      />
     </main>
     // </AdminSidebar>
   );

@@ -92,25 +92,46 @@ export default function UniversalSidebar({ children }) {
 
           {/* Placeholder buttons and Profile/Logout buttons */}
           <div className="mt-auto flex flex-col space-y-2">
-            {/* Render buttons to switch displayed links */}
-            <Button
-              variant="outline"
-              onClick={() => setCurrentUserRole("admin")}
-            >
-              Switch to Admin
-            </Button>
-            <Button
-              variant="outline"
-              onClick={() => setCurrentUserRole("volunteer")}
-            >
-              Switch to Volunteer
-            </Button>
-            <Button
-              variant="outline"
-              onClick={() => setCurrentUserRole("user")}
-            >
-              Switch to User
-            </Button>
+            {/* Conditionally render buttons based on userData.user_role */}
+            {userData.user_role === "admin" && (
+              <>
+                <Button
+                  variant="outline"
+                  onClick={() => setCurrentUserRole("admin")}
+                >
+                  Switch to Admin
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => setCurrentUserRole("volunteer")}
+                >
+                  Switch to Volunteer
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => setCurrentUserRole("user")}
+                >
+                  Switch to User
+                </Button>
+              </>
+            )}
+
+            {userData.user_role === "volunteer" && (
+              <>
+                <Button
+                  variant="outline"
+                  onClick={() => setCurrentUserRole("volunteer")}
+                >
+                  Switch to Volunteer
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => setCurrentUserRole("user")}
+                >
+                  Switch to User
+                </Button>
+              </>
+            )}
           </div>
 
           <div className="mt-4 flex items-center justify-between">
