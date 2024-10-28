@@ -21,12 +21,12 @@ const CreateGroupModal = ({
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
       <div className="w-full max-w-md rounded-lg bg-white p-6 shadow-lg">
-        <h2 className="mb-4 text-xl font-bold">Create Group sss</h2>
+        <h2 className="mb-4 text-xl font-bold">Create Ministry</h2>
         {createError && <p className="mb-4 text-red-600">{createError}</p>}
         <form onSubmit={handleSubmit(onSubmit)}>
           <div className="mb-4">
             <Label htmlFor="groupName" className="mb-1 block">
-              Group Name
+              Ministry Name
             </Label>
             <Input
               id="groupName"
@@ -35,12 +35,12 @@ const CreateGroupModal = ({
               className="w-full"
             />
             {errors.groupName && (
-              <p className="mt-1 text-red-600">Group name is required.</p>
+              <p className="mt-1 text-red-600">Ministry name is required.</p>
             )}
           </div>
           <div className="mb-4">
             <Label htmlFor="groupDescription" className="mb-1 block">
-              Group Description
+              Ministry Description
             </Label>
             <Input
               id="groupDescription"

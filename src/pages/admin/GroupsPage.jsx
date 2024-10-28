@@ -65,21 +65,27 @@ export default function GroupsPage() {
 
       if (error) throw error;
 
-      // Fetch members for each group
+      // Fetch members for each group from group_user_assignments
       const groupsWithMembers = await Promise.all(
         fetchedData.map(async (group) => {
           const { data: members, error: memberError } = await supabase
-            .from("user_list")
-            .select("*")
-            .eq("group_id", group.group_id)
-            .eq("user_role", "volunteer"); // Ensure only volunteers are fetched
+            .from("group_user_assignments")
+            .select("user_id, user_list(user_name, user_last_name)") // Fetch related user data directly
+            .eq("group_id", group.group_id);
 
           if (memberError) {
             console.error("Fetch Members Error:", memberError);
             return { ...group, members: [] }; // Return empty members array on error
           }
 
-          return { ...group, members };
+          // Map the members to include user_name and user_last_name
+          const mappedMembers = members.map((member) => ({
+            user_id: member.user_id, // This should be present in the member's structure
+            user_name: member.user_list.user_name, // Accessing user name from user_list
+            user_last_name: member.user_list.user_last_name, // Accessing user last name from user_list
+          }));
+
+          return { ...group, members: mappedMembers }; // Return members with user data
         }),
       );
 
@@ -94,6 +100,7 @@ export default function GroupsPage() {
   }, [currentPage]);
 
   // Fetch all volunteers (for assignment)
+  // Fetch all volunteers (for assignment)
   const fetchAllVolunteers = useCallback(async () => {
     try {
       const { data: volunteers, error } = await supabase
@@ -104,16 +111,29 @@ export default function GroupsPage() {
 
       if (error) throw error;
 
-      setAllVolunteers(volunteers);
+      // Filter out volunteers who are already members of the selected group
+      const currentMembers =
+        selectedGroup?.members.map((member) => member.user_id) || [];
+      const filteredVolunteers = volunteers.filter(
+        (volunteer) => !currentMembers.includes(volunteer.user_id),
+      );
+
+      setAllVolunteers(filteredVolunteers);
     } catch (error) {
       console.error("Fetch Volunteers Error:", error);
       setAssignError("Error fetching volunteers. Please try again.");
     }
-  }, []);
+  }, [selectedGroup]);
 
   useEffect(() => {
     fetchData();
   }, [currentPage, fetchData]);
+  useEffect(() => {
+    if (isAssignModalOpen) {
+      fetchAllVolunteers();
+      setSelectedVolunteers([]);
+    }
+  }, [isAssignModalOpen, fetchAllVolunteers]);
 
   // Fetch all volunteers when Assign Members modal is opened
   useEffect(() => {
@@ -235,14 +255,15 @@ export default function GroupsPage() {
     setAssignError(null);
 
     try {
-      const updates = selectedVolunteers.map((userId) => ({
+      const assignments = selectedVolunteers.map((userId) => ({
         user_id: userId,
         group_id: selectedGroup.group_id,
       }));
 
+      // Insert into group_user_assignments
       const { error } = await supabase
-        .from("user_list")
-        .upsert(updates, { onConflict: "user_id" });
+        .from("group_user_assignments")
+        .upsert(assignments, { onConflict: ["user_id", "group_id"] });
 
       if (error) throw error;
 
@@ -259,24 +280,24 @@ export default function GroupsPage() {
   };
 
   // Function to initiate removing a member (opens confirmation dialog)
-  const initiateRemoveMember = (member) => {
+  const initiateRemoveMember = (member, group) => {
     setMemberToRemove(member);
     setIsRemoveDialogOpen(true);
+    setSelectedGroup(group); // Ensure selectedGroup is set
   };
 
   // Function to remove a member from a group
   const removeMemberFromGroup = async (userId) => {
     try {
-      const { data, error } = await supabase
-        .from("user_list")
-        .update({ group_id: null }) // Set group_id to null to remove the member from the group
-        .eq("user_id", userId); // Match the user by their user_id
+      const { error } = await supabase
+        .from("group_user_assignments")
+        .delete()
+        .match({ user_id: userId, group_id: selectedGroup.group_id });
 
       if (error) throw error;
 
       console.log(`Member with user_id: ${userId} removed from the group`);
-      // Refetch the groups and their members to reflect the change
-      fetchData();
+      fetchData(); // Refetch the groups and their members to reflect the change
     } catch (error) {
       console.error("Remove Member Error:", error);
       setAssignError("Error removing the member. Please try again.");
@@ -306,7 +327,7 @@ export default function GroupsPage() {
           onClick={() => setIsCreateModalOpen(true)}
           className="w-full bg-blue-600 px-6 py-3 font-semibold text-white hover:bg-blue-700 sm:w-auto"
         >
-          Create Group
+          Create Ministry
         </Button>
       </div>
       {/* Group Cards Layout */}
@@ -362,7 +383,7 @@ export default function GroupsPage() {
       <AssignMembersModal
         isOpen={isAssignModalOpen}
         onClose={() => setIsAssignModalOpen(false)}
-        groupName={selectedGroup?.group_name}
+        groupName={selectedGroup?.group_name || ""}
         allVolunteers={allVolunteers}
         selectedVolunteers={selectedVolunteers}
         handleCheckboxChange={handleCheckboxChange}
@@ -373,7 +394,7 @@ export default function GroupsPage() {
       <RemoveMemberDialog
         isOpen={isRemoveDialogOpen}
         onClose={() => setIsRemoveDialogOpen(false)}
-        memberToRemove={memberToRemove}
+        memberToRemove={memberToRemove || ""}
         onRemove={removeMemberFromGroup}
       />
       {/* Delete Confirmation Dialog */}

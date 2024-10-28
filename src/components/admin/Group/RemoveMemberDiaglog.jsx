@@ -42,15 +42,5 @@ const RemoveMemberDialog = ({ isOpen, onClose, memberToRemove, onRemove }) => {
 };
 
 // Define prop types for better type checking
-RemoveMemberDialog.propTypes = {
-  isOpen: PropTypes.bool.isRequired,
-  onClose: PropTypes.func.isRequired,
-  memberToRemove: PropTypes.shape({
-    user_id: PropTypes.string.isRequired,
-    user_name: PropTypes.string.isRequired,
-    user_last_name: PropTypes.string.isRequired,
-  }).isRequired,
-  onRemove: PropTypes.func.isRequired,
-};
 
 export default RemoveMemberDialog;

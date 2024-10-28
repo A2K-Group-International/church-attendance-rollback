@@ -82,23 +82,23 @@ const AssignMembersModal = ({
   );
 };
 
-// Define prop types for better type checking
-AssignMembersModal.propTypes = {
-  isOpen: PropTypes.bool.isRequired,
-  onClose: PropTypes.func.isRequired,
-  groupName: PropTypes.string.isRequired,
-  allVolunteers: PropTypes.arrayOf(
-    PropTypes.shape({
-      user_id: PropTypes.string.isRequired,
-      user_name: PropTypes.string.isRequired,
-      user_last_name: PropTypes.string.isRequired,
-    }),
-  ).isRequired,
-  selectedVolunteers: PropTypes.arrayOf(PropTypes.string).isRequired,
-  handleCheckboxChange: PropTypes.func.isRequired,
-  handleAssignMembers: PropTypes.func.isRequired,
-  assignError: PropTypes.string,
-  assignLoading: PropTypes.bool,
-};
+// // Define prop types for better type checking
+// AssignMembersModal.propTypes = {
+//   isOpen: PropTypes.bool.isRequired,
+//   onClose: PropTypes.func.isRequired,
+//   groupName: PropTypes.string.isRequired,
+//   allVolunteers: PropTypes.arrayOf(
+//     PropTypes.shape({
+//       user_id: PropTypes.string.isRequired,
+//       user_name: PropTypes.string.isRequired,
+//       user_last_name: PropTypes.string.isRequired,
+//     }),
+//   ).isRequired,
+//   selectedVolunteers: PropTypes.arrayOf(PropTypes.string).isRequired,
+//   handleCheckboxChange: PropTypes.func.isRequired,
+//   handleAssignMembers: PropTypes.func.isRequired,
+//   assignError: PropTypes.string,
+//   assignLoading: PropTypes.bool,
+// };
 
 export default AssignMembersModal;

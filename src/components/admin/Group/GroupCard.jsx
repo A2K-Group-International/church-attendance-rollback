@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import PropTypes from "prop-types";
 import { Button } from "../../../shadcn/button"; // Assuming Button is a separate component
 
@@ -10,9 +10,10 @@ const GroupCard = ({
   initiateRemoveMember,
 }) => {
   const [isDropdownOpen, setDropdownOpen] = useState(false);
+  const dropdownRef = useRef(null); // Create a reference for the dropdown menu
 
   const toggleDropdown = () => {
-    setDropdownOpen(!isDropdownOpen);
+    setDropdownOpen((prev) => !prev);
   };
 
   const handleEdit = () => {
@@ -30,6 +31,20 @@ const GroupCard = ({
     setDropdownOpen(false);
   };
 
+  // Close dropdown when clicking outside of it
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
   return (
     <div className="relative rounded-lg border p-6 shadow transition-shadow duration-300 hover:shadow-lg">
       {/* Dropdown Button */}
@@ -45,7 +60,10 @@ const GroupCard = ({
 
       {/* Dropdown Menu */}
       {isDropdownOpen && (
-        <div className="absolute right-4 top-12 z-10 rounded border bg-white shadow-md">
+        <div
+          ref={dropdownRef} // Attach the ref to the dropdown menu
+          className="absolute right-4 top-12 z-10 rounded border bg-white shadow-md"
+        >
           <button
             onClick={handleEdit}
             className="block w-full px-4 py-2 text-left hover:bg-gray-100"
@@ -92,7 +110,7 @@ const GroupCard = ({
                   {member.user_name} {member.user_last_name}
                 </span>
                 <button
-                  onClick={() => initiateRemoveMember(member)} // Open confirmation dialog
+                  onClick={() => initiateRemoveMember(member, group)} // Pass the group context
                   className="font-medium text-red-500 hover:text-red-700"
                 >
                   Remove
@@ -109,24 +127,24 @@ const GroupCard = ({
 };
 
 // Define prop types for better type checking
-GroupCard.propTypes = {
-  group: PropTypes.shape({
-    group_id: PropTypes.string.isRequired,
-    group_name: PropTypes.string.isRequired,
-    group_description: PropTypes.string.isRequired,
-    created_at: PropTypes.string.isRequired,
-    members: PropTypes.arrayOf(
-      PropTypes.shape({
-        user_id: PropTypes.string.isRequired,
-        user_name: PropTypes.string.isRequired,
-        user_last_name: PropTypes.string.isRequired,
-      }),
-    ),
-  }).isRequired,
-  handleEditGroup: PropTypes.func.isRequired,
-  handleActionClick: PropTypes.func.isRequired,
-  handleOpenAssignModal: PropTypes.func.isRequired,
-  initiateRemoveMember: PropTypes.func.isRequired,
-};
+// GroupCard.propTypes = {
+//   group: PropTypes.shape({
+//     group_id: PropTypes.string.isRequired,
+//     group_name: PropTypes.string.isRequired,
+//     group_description: PropTypes.string.isRequired,
+//     created_at: PropTypes.string.isRequired,
+//     members: PropTypes.arrayOf(
+//       PropTypes.shape({
+//         user_id: PropTypes.string.isRequired,
+//         user_name: PropTypes.string.isRequired,
+//         user_last_name: PropTypes.string.isRequired,
+//       }),
+//     ),
+//   }).isRequired,
+//   handleEditGroup: PropTypes.func.isRequired,
+//   handleActionClick: PropTypes.func.isRequired,
+//   handleOpenAssignModal: PropTypes.func.isRequired,
+//   initiateRemoveMember: PropTypes.func.isRequired,
+// };
 
 export default GroupCard;
