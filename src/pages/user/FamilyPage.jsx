@@ -334,9 +334,7 @@ export default function FamilyPage() {
         open={editMemberDialogOpen}
         onOpenChange={setEditMemberDialogOpen}
       >
-        <DialogTrigger asChild>
-          <Button variant="primary">Edit Member</Button>
-        </DialogTrigger>
+        <DialogTrigger asChild></DialogTrigger>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
             <DialogTitle>Edit Family Member</DialogTitle>
