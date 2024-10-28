@@ -15,8 +15,6 @@ export default function Eventspage() {
   const [eventItems, setEventItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
-  const [scanResult, setScanResult] = useState(null);
-  const [error, setError] = useState(null);
 
   const formatTime = (timeStr) => {
     if (!timeStr) return "Invalid time";
@@ -34,7 +32,6 @@ export default function Eventspage() {
         const { data, error } = await supabase
           .from("schedule")
           .select("*")
-          .order("schedule", { ascending: true });
 
         if (error) throw error;
 
@@ -45,7 +42,7 @@ export default function Eventspage() {
             title: event.name,
             content: event.description,
             date: new Date(event.schedule).toLocaleDateString(),
-            times: eventTimes ? eventTimes.map(formatTime) : [], // Format each available time
+            times: eventTimes ? eventTimes.map(formatTime) : [],
           };
         });
 
@@ -86,7 +83,7 @@ export default function Eventspage() {
         <ParishionerQRCodeScanner />
       </div>
 
-      <div className="no-scrollbar mt-8 grid h-screen grid-cols-1 gap-4 overflow-scroll md:grid-cols-2 lg:grid-cols-3">
+      <div className="no-scrollbar mt-8 grid grid-cols-1 gap-4 overflow-scroll md:grid-cols-2 lg:grid-cols-3">
         {eventItems.map((item) => (
           <Card
             key={item.id}
