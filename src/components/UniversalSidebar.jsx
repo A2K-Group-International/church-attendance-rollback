@@ -120,7 +120,7 @@ export default function UniversalSidebar({ children }) {
                     variant="outline"
                     onClick={() => setCurrentUserRole("user")}
                   >
-                    Switch to User
+                    Switch to Parishioner
                   </Button>
                 )}
               </>
