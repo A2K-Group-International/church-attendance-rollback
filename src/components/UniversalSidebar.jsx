@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Logout from "../authentication/Logout";
 import { Sheet, SheetTrigger, SheetContent } from "../shadcn/sheet";
@@ -8,22 +8,25 @@ import FamilyIcon from "../assets/svg/family.svg";
 import CalendarIcon from "../assets/svg/calendarIcon.svg";
 import HamburgerIcon from "../assets/svg/hamburgerIcon.svg";
 import RequestIcon from "../assets/svg/requestIcon.svg";
-import BlackBoardIcon from "../assets/svg/blackboard.svg";
-import DashboardIcon from "../assets/svg/dashboard.svg"; // Add import for DashboardIcon
+import DashboardIcon from "../assets/svg/dashboard.svg";
 import CheckListIcon from "../assets/svg/checklist.svg";
-import PersonIcon from "../assets/svg/person.svg"; // Add import for PersonIcon
-import { useUser } from "../context/UserContext"; // Import the context
+import PersonIcon from "../assets/svg/person.svg";
+import { useUser } from "../context/UserContext";
 
 export default function UniversalSidebar({ children }) {
-  const { userData, loggedIn } = useUser(); // Get user data and loggedIn state from context
-  const userRole = userData?.user_role || "user"; // Default to 'user' if user role is not defined
-  const userName =
-    `${userData?.user_name || ""} ${userData?.user_last_name || ""}`.trim(); // Combine first and last name
+  const { userData, loggedIn } = useUser();
   const navigate = useNavigate();
+
+  // State to display links based on user role (for testing)
+  const [currentUserRole, setCurrentUserRole] = useState(
+    userData?.user_role || "user",
+  );
+  const userName =
+    `${userData?.user_name || ""} ${userData?.user_last_name || ""}`.trim();
 
   // If the user is not logged in, render the children without the sidebar
   if (!loggedIn) {
-    return <>{children}</>; // Render children only, without the sidebar
+    return <>{children}</>;
   }
 
   // Define the links for different user roles
@@ -43,7 +46,6 @@ export default function UniversalSidebar({ children }) {
         label: "Announcements",
         icon: CalendarIcon,
       },
-      // { link: "/volunteer-dashboard", label: "Dashboard", icon: CalendarIcon },
       {
         link: "/volunteer-schedule",
         label: "Organised Events",
@@ -54,10 +56,6 @@ export default function UniversalSidebar({ children }) {
         label: "Rota Management",
         icon: CalendarIcon,
       },
-      // { link: "/volunteer-upload", label: "Upload", icon: CalendarIcon },
-      // { link: "/volunteer-profile", label: "Profile", icon: CalendarIcon },
-      // { link: "/volunteer-classes", label: "Classes", icon: BlackBoardIcon },
-      // { link: "/volunteer-requests", label: "Requests", icon: RequestIcon },
     ],
     user: [
       {
@@ -67,12 +65,10 @@ export default function UniversalSidebar({ children }) {
       },
       { link: "/events-page", label: "Events", icon: CalendarIcon },
       { link: "/family", label: "Family", icon: FamilyIcon },
-      // { link: "#", label: "Classes", icon: BlackBoardIcon },
-      // { link: "/parishioner-request", label: "Request", icon: RequestIcon },
     ],
   };
 
-  const currentLinks = links[userRole] || []; // Get the links for the current user role
+  const currentLinks = links[currentUserRole] || [];
 
   return (
     <div className="flex h-screen w-full overflow-y-clip">
@@ -80,10 +76,10 @@ export default function UniversalSidebar({ children }) {
       <div className="hidden lg:block lg:w-64 lg:shrink-0 lg:border-r lg:bg-gray-100 dark:lg:bg-gray-800">
         <div className="flex h-full flex-col justify-between px-4 py-6">
           <div className="space-y-4">
-            {/* Display user name and role */}
             <div className="text-lg font-semibold">{userName}</div>
             <div className="text-sm font-medium text-gray-600">
-              {userRole.charAt(0).toUpperCase() + userRole.slice(1)}
+              {currentUserRole.charAt(0).toUpperCase() +
+                currentUserRole.slice(1)}
             </div>
             <nav className="space-y-1">
               <ul>
@@ -95,7 +91,72 @@ export default function UniversalSidebar({ children }) {
               </ul>
             </nav>
           </div>
-          <div className="flex items-center justify-between">
+
+          {/* Placeholder buttons and Profile/Logout buttons */}
+          <div className="mt-auto flex flex-col space-y-2">
+            {/* Conditionally render buttons based on userData.user_role */}
+            {userData.user_role === "admin" && (
+              <>
+                {/* Show return button to Admin only if not currently in Admin view */}
+                {currentUserRole !== "admin" && (
+                  <Button
+                    variant="outline"
+                    onClick={() => setCurrentUserRole("admin")}
+                  >
+                    Return to Admin
+                  </Button>
+                )}
+                {/* Show switch buttons only if not currently in that role */}
+                {currentUserRole !== "volunteer" && (
+                  <Button
+                    variant="outline"
+                    onClick={() => setCurrentUserRole("volunteer")}
+                  >
+                    Switch to Volunteer
+                  </Button>
+                )}
+                {currentUserRole !== "user" && (
+                  <Button
+                    variant="outline"
+                    onClick={() => setCurrentUserRole("user")}
+                  >
+                    Switch to User
+                  </Button>
+                )}
+              </>
+            )}
+
+            {userData.user_role === "volunteer" && (
+              <>
+                {/* Show return button to Volunteer only if not currently in Volunteer view */}
+                {currentUserRole !== "volunteer" && (
+                  <Button
+                    variant="outline"
+                    onClick={() => setCurrentUserRole("volunteer")}
+                  >
+                    Return to Volunteer
+                  </Button>
+                )}
+                {/* Show switch button only if not currently in that role */}
+                {currentUserRole !== "user" && (
+                  <Button
+                    variant="outline"
+                    onClick={() => setCurrentUserRole("user")}
+                  >
+                    Switch to User
+                  </Button>
+                )}
+              </>
+            )}
+
+            {userData.user_role === "user" && (
+              <div>
+                <p>You cannot switch to any other role.</p>
+              </div>
+            )}
+          </div>
+
+          <div className="mt-4 flex items-center justify-between">
             <Button onClick={() => navigate("/volunteer-profile")}>
               Profile
             </Button>
@@ -125,10 +186,10 @@ export default function UniversalSidebar({ children }) {
               <SheetContent side="right" className="w-64">
                 <div className="flex h-full flex-col justify-between px-4 py-6">
                   <div className="space-y-4">
-                    {/* Display user name and role */}
                     <div className="text-lg font-semibold">{userName}</div>
                     <div className="text-sm font-medium text-gray-600">
-                      {userRole.charAt(0).toUpperCase() + userRole.slice(1)}
+                      {currentUserRole.charAt(0).toUpperCase() +
+                        currentUserRole.slice(1)}
                     </div>
                     <nav className="space-y-1">
                       <ul>

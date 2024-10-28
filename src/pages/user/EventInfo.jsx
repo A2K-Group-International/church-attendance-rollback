@@ -46,21 +46,21 @@ export default function EventInfo() {
 
   if (loading) {
     return (
-      <UserSidebar>
-        <main className="p-4 lg:p-8">
-          <h1 className="text-2xl font-bold">Loading Event...</h1>
-        </main>
-      </UserSidebar>
+      // <UserSidebar>
+      <main className="p-4 lg:p-8">
+        <h1 className="text-2xl font-bold">Loading Event...</h1>
+      </main>
+      // </UserSidebar>
     );
   }
 
   if (!eventData) {
     return (
-      <UserSidebar>
-        <main className="p-4 lg:p-8">
-          <h1 className="text-2xl font-bold">Event not found</h1>
-        </main>
-      </UserSidebar>
+      // <UserSidebar>
+      <main className="p-4 lg:p-8">
+        <h1 className="text-2xl font-bold">Event not found</h1>
+      </main>
+      // </UserSidebar>
     );
   }
 
@@ -69,7 +69,8 @@ export default function EventInfo() {
   };
 
   return (
-    <UserSidebar>
+    // <UserSidebar>
+    <div>
       <main className="p-4 lg:p-8">
         <h1 className="text-2xl font-bold">{eventData.name}</h1>
         <p>{eventData.description}</p>
@@ -111,6 +112,8 @@ export default function EventInfo() {
         onClose={() => setDialogOpen(false)} // Close the dialog
         eventData={eventData} // Pass the event data to the dialog
       />
-    </UserSidebar>
+      {/* </UserSidebar>
+       */}
+    </div>
   );
 }

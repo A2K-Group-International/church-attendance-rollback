@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react"; // Import useEffect
 import { Button } from "../../../shadcn/button";
 import { DialogFooter } from "../../../shadcn/dialog";
 import { Input } from "../../../shadcn/input";
@@ -11,6 +11,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "../../../shadcn/select"; // Import ShadCN select
+import { useUser } from "@/context/UserContext";
 
 const AnnouncementForm = ({
   newAnnouncement,
@@ -20,6 +21,7 @@ const AnnouncementForm = ({
   error,
 }) => {
   const [imagePreview, setImagePreview] = useState(null); // State for image preview
+  const { userGroups } = useUser(); // Get user groups from context
 
   const handleImageUpload = (e) => {
     const file = e.target.files[0];
@@ -33,6 +35,11 @@ const AnnouncementForm = ({
       }
     }
   };
+
+  // Log newAnnouncement whenever it updates
+  useEffect(() => {
+    console.log("Updated Announcement:", newAnnouncement);
+  }, [newAnnouncement]);
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
@@ -51,7 +58,7 @@ const AnnouncementForm = ({
               post_header: e.target.value,
             })
           }
-          required
+          required // Marking this field as required
           placeholder="Enter the announcement header..."
           className="w-full"
         />
@@ -68,7 +75,7 @@ const AnnouncementForm = ({
               post_content: e.target.value,
             })
           }
-          required
+          required // Marking this field as required
           placeholder="Enter your announcement here..."
           className="h-40 w-full"
         />
@@ -82,6 +89,7 @@ const AnnouncementForm = ({
           accept="image/jpeg,image/png,image/gif"
           onChange={handleImageUpload}
           className="w-full"
+          // removed required attribute for image upload
         />
         {imagePreview && (
           <div className="mt-2">
@@ -94,6 +102,41 @@ const AnnouncementForm = ({
         )}
       </div>
 
+      {/* Group selection option using ShadCN Select */}
+      <div className="space-y-2">
+        <Label htmlFor="user_group">Select User Group</Label>
+        <Select
+          value={newAnnouncement.groupId} // Controlled value
+          onValueChange={(value) => {
+            const selectedGroup = userGroups.find(
+              (group) => group.group_id === value,
+            );
+            if (selectedGroup) {
+              setNewAnnouncement({
+                ...newAnnouncement,
+                groupId: selectedGroup.group_id, // Set groupId
+                groupName: selectedGroup.group_name, // Set groupName
+              });
+              // Log the selected group's ID and name
+              console.log("Selected Group ID:", selectedGroup.group_id);
+              console.log("Selected Group Name:", selectedGroup.group_name);
+            }
+          }}
+          required // Make the group selection required
+        >
+          <SelectTrigger>
+            <SelectValue placeholder="Select a group" />
+          </SelectTrigger>
+          <SelectContent>
+            {userGroups.map((group) => (
+              <SelectItem key={group.group_id} value={group.group_id}>
+                {group.group_name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
       {/* Privacy option using ShadCN Select */}
       <div className="space-y-2">
         <Label htmlFor="announcement_privacy">Announcement Privacy</Label>
@@ -102,6 +145,7 @@ const AnnouncementForm = ({
           onValueChange={(value) =>
             setNewAnnouncement({ ...newAnnouncement, privacy: value })
           }
+          required // Make privacy selection required
         >
           <SelectTrigger>
             <SelectValue placeholder="Select privacy" />

@@ -2,19 +2,17 @@ import { useState, useEffect } from "react";
 import { format } from "date-fns"; // For date formatting
 import supabase from "../../api/supabase"; // Ensure this path is correct
 import VolunteerSidebar from "../../components/volunteer/VolunteerSidebar"; // Ensure this path is correct
-import { useUser } from "../../authentication/useUser"; // Ensure this path is correct
 import Spinner from "../../components/Spinner"; // Ensure this path is correct
-import useUserData from "../../api/useUserData"; // Ensure this path is correct
 import { Link } from "react-router-dom"; // Make sure you have this import for navigation
+import { useUser } from "../../context/UserContext"; // Import the useUser hook
 
 export default function VolunteerProfile() {
   const [availability, setAvailability] = useState(null); // State for availability
   const [posts, setPosts] = useState([]); // State for posts
   const [loadingPosts, setLoadingPosts] = useState(true); // State for loading posts
 
-  // Use the custom hook to fetch user data
-  const { userData, loading, error } = useUserData();
-  console.log(userData);
+  // Use the custom hook to fetch user data and user groups
+  const { userData, userGroups, loading, error } = useUser();
 
   // Fetch posts from the post_data table using userData.user_id
   useEffect(() => {
@@ -111,21 +109,25 @@ export default function VolunteerProfile() {
                   {format(new Date(userData.created_at), "MMMM dd, yyyy")}
                 </p>
               </div>
-              {/* Set Availability */}
+
+              {/* User Groups Section */}
               <div>
-                <h2 className="text-xl font-semibold">Set Availability</h2>
-                <select
-                  value={availability || ""}
-                  onChange={handleAvailabilityChange}
-                  className="w-full rounded-md border border-gray-300 p-2 focus:border-blue-500 focus:outline-none focus:ring"
-                >
-                  <option value="" disabled>
-                    Select your availability
-                  </option>
-                  <option value="available">Available</option>
-                  <option value="unavailable">Unavailable</option>
-                  <option value="maybe">Maybe</option>
-                </select>
+                <h2 className="text-xl font-semibold">My Groups</h2>
+                {userGroups.length > 0 ? (
+                  <ul className="list-disc pl-5">
+                    {userGroups.map((group) => (
+                      <li
+                        key={group.group_id}
+                        className="text-gray-700 dark:text-gray-300"
+                      >
+                        {group.group_name}{" "}
+                        {/* Adjust this to your group data structure */}
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="text-gray-500">No groups available.</p>
+                )}
               </div>
             </div>
           ) : (

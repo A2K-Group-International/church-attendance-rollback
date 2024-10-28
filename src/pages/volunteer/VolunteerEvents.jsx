@@ -66,12 +66,21 @@ import { fetchCategory, fetchSubCategory } from "../../api/userService";
 // import CreateMeeting from "./CreateMeeting";
 import { Textarea } from "../../shadcn/textarea";
 import useUserData from "@/api/useUserData";
+
 import QRCodeIcon from "../../assets/svg/qrCode.svg";
+import UserGroupSelect from "@/components/volunteer/UserGroupSelect";
+import { useUser } from "@/context/UserContext";
+
 
 const headers = ["QR Code", "Event Name", "Date", "Time", "Description"];
 
 export default function EventPage() {
+
   const { userData } = useUserData(); // Destructure userData directly
+
+  const navigate = useNavigate(); // Initialize the navigate function
+  const { userData } = useUser(); // Destructure userData directly
+  
   const [isEventsModalOpen, setIsEventsModalOpen] = useState(false); // event time data
   const [time, setTime] = useState([]); // event time data
   const [selectedDate, setSelectedDate] = useState(null); // event date data
@@ -88,6 +97,7 @@ export default function EventPage() {
   const [selectedSubCategory, setSelectedSubCategory] = useState([]);
   const [selectedCategoryName, setSelectedCategoryName] = useState("");
   const [qrCodeValue, setQrCodeValue] = useState(""); // QR Code value
+  const [groupId, setGroupId] = useState(null); // QR Code value
   const itemsPerPage = 8;
 
   const {
@@ -98,6 +108,7 @@ export default function EventPage() {
     formState: { errors },
     watch,
   } = useForm(); // react-hook-forms
+
 
   const fetchGroupInfo = useCallback(async () => {
     if (!userData) return;
@@ -131,6 +142,9 @@ export default function EventPage() {
   useEffect(() => {
     fetchGroupInfo;
   }, [userData]);
+
+  useEffect(() => {}, [userData]);
+
 
   const onSubmit = async (data) => {
     setIsSubmitted(true);
@@ -210,31 +224,43 @@ export default function EventPage() {
     setSelectedDate(moment(date));
     setValue("schedule", date);
   };
-
   const fetchEvents = useCallback(async () => {
     setLoading(true);
     setError(null); // Reset error state at the start
 
     // Wait until userData is available
+
     // if (!userData || !userData.group_id) {
     //   setLoading(false);
     //   return; // Exit early if userData or group_id is not available
     // }
     const groupId = userData.group_id; // Get groupId once it's confirmed available
 
+    if (!userData) {
+      setLoading(false);
+      return; // Exit early if userData is not available
+    }
+
+
     try {
-      const {
-        data: fetchedData,
-        error,
-        count,
-      } = await supabase
+      // Build the query based on the presence of group_id
+      const query = supabase
         .from("schedule")
         .select("*", { count: "exact" })
+
         .eq("creator_id", userData.user_id) // Use groupId for filtering
+
         .range(
           (currentPage - 1) * itemsPerPage,
           currentPage * itemsPerPage - 1,
         );
+
+      // Apply group filter only if groupId is available
+      if (groupId) {
+        query.eq("group_id", groupId); // Filter by group_id if available
+      }
+
+      const { data: fetchedData, error, count } = await query;
 
       if (error) throw error;
 
@@ -246,7 +272,7 @@ export default function EventPage() {
     } finally {
       setLoading(false);
     }
-  }, [currentPage, itemsPerPage, userData]); // Add userData as a dependency if needed
+  }, [currentPage, itemsPerPage, groupId, userData]); // Add groupId as a dependency
 
   useEffect(() => {
     fetchEvents();
@@ -873,6 +899,7 @@ export default function EventPage() {
         <div className="text-red-500">{error}</div>
       ) : (
         <>
+          <UserGroupSelect onSelect={setGroupId} groupId={groupId} />
           <Table headers={headers} rows={rows} />
           <Pagination>
             <PaginationContent>
