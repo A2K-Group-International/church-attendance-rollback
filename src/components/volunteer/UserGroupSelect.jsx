@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useUser } from "@/context/UserContext";
 import {
   Select,
@@ -8,9 +8,14 @@ import {
   SelectValue,
 } from "../../shadcn/select"; // Import ShadCN select
 
-const UserGroupSelect = ({ onSelect }) => {
+const UserGroupSelect = ({ onSelect, groupId }) => {
   const { userGroups, loading, error } = useUser();
-  const [selectedGroup, setSelectedGroup] = useState([]);
+  const [selectedGroup, setSelectedGroup] = useState("");
+
+  // Update selectedGroup when groupId prop changes
+  useEffect(() => {
+    setSelectedGroup(groupId); // Set the selectedGroup based on the incoming groupId
+  }, [groupId]);
 
   const handleSelectChange = (groupId) => {
     setSelectedGroup(groupId);
