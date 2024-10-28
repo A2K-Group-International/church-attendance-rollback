@@ -35,7 +35,7 @@ export default function UniversalSidebar({ children }) {
       { link: "/event", label: "Schedule", icon: CalendarIcon },
       // { link: "/admin-rotas", label: "Rotas", icon: PersonIcon },
       // { link: "/admin-calendar", label: "Calendar", icon: CalendarIcon },
-      { link: "/volunteers", label: "Request(s)", icon: RequestIcon },
+      { link: "/volunteers", label: "Request", icon: RequestIcon },
     ],
     volunteer: [
       {
@@ -46,7 +46,7 @@ export default function UniversalSidebar({ children }) {
       // { link: "/volunteer-dashboard", label: "Dashboard", icon: CalendarIcon },
       {
         link: "/volunteer-schedule",
-        label: "Volunteer Events",
+        label: "Organised Events",
         icon: CalendarIcon,
       },
       {

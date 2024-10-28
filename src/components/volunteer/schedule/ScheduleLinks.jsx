@@ -15,8 +15,8 @@ export default function ScheduleLinks({ children }) {
     <main className="mx-auto max-w-7xl p-4 lg:p-8">
       <div className="mb-2 md:flex md:justify-between">
         <div className="mb-8">
-          <h1 className="mb-2 text-3xl font-bold">Activity Schedule</h1>
-          <p className="text-muted-foreground">Manage Schedules.</p>
+          <h1 className="mb-2 text-3xl font-bold">Activities</h1>
+          <p className="text-muted-foreground">Organise an Event.</p>
         </div>
       </div>
       <div className="flex gap-x-3">

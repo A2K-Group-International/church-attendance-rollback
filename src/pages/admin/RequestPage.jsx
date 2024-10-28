@@ -16,9 +16,9 @@ export default function RequestPage({ children }) {
     <main className="mx-auto max-w-7xl p-4 lg:p-8">
       <div className="mb-2 md:flex md:justify-between">
         <div className="mb-8">
-          <h1 className="mb-2 text-3xl font-bold">Request(s)</h1>
+          <h1 className="mb-2 text-3xl font-bold">Request</h1>
           <p className="text-muted-foreground">
-            Manage and track request records.
+            Manage and track request.
           </p>
         </div>
       </div>

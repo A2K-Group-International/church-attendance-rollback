@@ -66,11 +66,11 @@ import { fetchCategory, fetchSubCategory } from "../../api/userService";
 // import CreateMeeting from "./CreateMeeting";
 import { Textarea } from "../../shadcn/textarea";
 import useUserData from "@/api/useUserData";
+import QRCodeIcon from "../../assets/svg/qrCode.svg";
 
-const headers = ["Event Name", "Date", "Time", "Description"];
+const headers = ["QR Code", "Event Name", "Date", "Time", "Description"];
 
 export default function EventPage() {
-  const navigate = useNavigate(); // Initialize the navigate function
   const { userData } = useUserData(); // Destructure userData directly
   const [isEventsModalOpen, setIsEventsModalOpen] = useState(false); // event time data
   const [time, setTime] = useState([]); // event time data
@@ -129,7 +129,6 @@ export default function EventPage() {
   }, [userData]);
 
   useEffect(() => {
-    console.log("hello");
     fetchGroupInfo;
   }, [userData]);
 
@@ -197,7 +196,6 @@ export default function EventPage() {
       console.error("Unexpected error:", err);
     }
   };
-  console.log(events);
 
   const resetForm = () => {
     reset();
@@ -218,11 +216,10 @@ export default function EventPage() {
     setError(null); // Reset error state at the start
 
     // Wait until userData is available
-    if (!userData || !userData.group_id) {
-      setLoading(false);
-      return; // Exit early if userData or group_id is not available
-    }
-
+    // if (!userData || !userData.group_id) {
+    //   setLoading(false);
+    //   return; // Exit early if userData or group_id is not available
+    // }
     const groupId = userData.group_id; // Get groupId once it's confirmed available
 
     try {
@@ -233,7 +230,7 @@ export default function EventPage() {
       } = await supabase
         .from("schedule")
         .select("*", { count: "exact" })
-        .eq("group_id", groupId) // Use groupId for filtering
+        .eq("creator_id", userData.user_id) // Use groupId for filtering
         .range(
           (currentPage - 1) * itemsPerPage,
           currentPage * itemsPerPage - 1,
@@ -267,7 +264,7 @@ export default function EventPage() {
       const { error } = await supabase.from("schedule").delete().eq("id", id);
 
       if (error) throw error;
-      //update local state to reflect the deletion
+      // update local state to reflect the deletion
       // setData((prevData) => prevData.filter((item) => item.id !== id));
     } catch (error) {
       console.error("Error Deleting event", error);
@@ -327,6 +324,44 @@ export default function EventPage() {
   };
 
   const rows = events.map((event) => [
+    <AlertDialog key={event.id}>
+      <AlertDialogTrigger
+        asChild
+        onClick={() => handleGenerateQRCode(event.event_uuid)}
+      >
+        <Button className="p-4">
+          <img src={QRCodeIcon} />
+        </Button>
+      </AlertDialogTrigger>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Event Information</AlertDialogTitle>
+        </AlertDialogHeader>
+        <AlertDialogDescription className="sr-only">
+          QR Code
+        </AlertDialogDescription>
+        <div
+          style={{
+            height: "auto",
+            margin: "0 auto",
+            maxWidth: 256,
+            width: "100%",
+          }}
+        >
+          <QRCode
+            size={256}
+            style={{ maxWidth: "100%", width: "100%" }}
+            value={qrCodeValue}
+            viewBox={`0 0 256 256`}
+          />
+        </div>
+        <h2>Event Name: {event.name}</h2>
+        <p>Date: {moment(event.schedule_date).format("MMMM Do YYYY")}</p>
+        <AlertDialogFooter>
+          <AlertDialogCancel>Close</AlertDialogCancel>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>,
     event.name,
     moment(event.schedule_date).format("MMMM Do YYYY"), // Format date using Moment.js
     event.time && event.time.length > 0
@@ -350,43 +385,6 @@ export default function EventPage() {
         </button>
       </DropdownMenuTrigger>
       <DropdownMenuContent>
-        <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
-          <AlertDialog>
-            <AlertDialogTrigger
-              onClick={() => handleGenerateQRCode(event.event_uuid)}
-            >
-              Generate QR Code
-            </AlertDialogTrigger>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>Event Information</AlertDialogTitle>
-              </AlertDialogHeader>
-              <AlertDialogDescription className="sr-only">
-                QR Code
-              </AlertDialogDescription>
-              <div
-                style={{
-                  height: "auto",
-                  margin: "0 auto",
-                  maxWidth: 256,
-                  width: "100%",
-                }}
-              >
-                <QRCode
-                  size={256}
-                  style={{ maxWidth: "100%", width: "100%" }}
-                  value={qrCodeValue}
-                  viewBox={`0 0 256 256`}
-                />
-              </div>
-              <h2>Event Name: {event.name}</h2>
-              <p>Date: {moment(event.schedule_date).format("MMMM Do YYYY")}</p>
-              <AlertDialogFooter>
-                <AlertDialogCancel>Close</AlertDialogCancel>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
-        </DropdownMenuItem>
         <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
           <AlertDialog>
             <AlertDialogTrigger onClick={() => handleEditBtn(event.id)}>
