@@ -38,6 +38,7 @@ const ParishionerQRCodeScanner = () => {
   const [selectedTime, setSelectedTime] = useState("");
   const [error, setError] = useState(""); // State to hold error messages
   const [successMessage, setSuccessMessage] = useState(""); // State to hold success messages
+  const [selectedDate, setSelectedDate] = useState();
 
   const user = useUser(); // Retrieve user data from the custom hook
 
@@ -62,7 +63,6 @@ const ParishionerQRCodeScanner = () => {
       if (error) throw error;
 
       setEventData(data);
-      console.log(eventData);
     } catch (error) {
       console.log(error);
     }
@@ -143,8 +143,8 @@ const ParishionerQRCodeScanner = () => {
           attendee_last_name: member.family_last_name,
           has_attended: false, // Default attendance status
           selected_time: selectedTime,
-          selected_event_date: moment(eventData.schedule).format("YYYY-MM-DD"), // Example: assuming schedule_day is part of eventData
-          attendance_type: null, // Modify if needed
+          selected_event_date: eventData.map((item) => item.schedule_date),
+          attendance_type: "family", // Modify if needed
           // attendance_code: eventData.attendance_code, // Assuming eventData has this field
           // children_age: member.family_age, // Assuming family member has an age field
           selected_event: eventData.name, // Event name from eventData
