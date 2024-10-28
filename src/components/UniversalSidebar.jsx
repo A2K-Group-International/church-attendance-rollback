@@ -34,7 +34,7 @@ export default function UniversalSidebar({ children }) {
     admin: [
       { link: "/admin-dashboard", label: "Dashboard", icon: DashboardIcon },
       { link: "/attendance", label: "Attendance", icon: CheckListIcon },
-      { link: "/groups", label: "Groups", icon: PersonIcon },
+      { link: "/groups", label: "Ministries", icon: PersonIcon },
       { link: "/event", label: "Schedule", icon: CalendarIcon },
       // { link: "/admin-rotas", label: "Rotas", icon: PersonIcon },
       // { link: "/admin-calendar", label: "Calendar", icon: CalendarIcon },
@@ -143,7 +143,7 @@ export default function UniversalSidebar({ children }) {
                     variant="outline"
                     onClick={() => setCurrentUserRole("user")}
                   >
-                    Switch to User
+                    Switch to Parishioner
                   </Button>
                 )}
               </>
