@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Logout from "../authentication/Logout";
 import { Sheet, SheetTrigger, SheetContent } from "../shadcn/sheet";
@@ -16,10 +16,12 @@ import { useUser } from "../context/UserContext"; // Import the context
 
 export default function UniversalSidebar({ children }) {
   const { userData, loggedIn } = useUser(); // Get user data and loggedIn state from context
-  const userRole = userData?.user_role || "user"; // Default to 'user' if user role is not defined
+  const navigate = useNavigate();
+
+  // State to switch user roles for testing
+  const [userRole, setUserRole] = useState(userData?.user_role || "user"); // Default to 'user' if user role is not defined
   const userName =
     `${userData?.user_name || ""} ${userData?.user_last_name || ""}`.trim(); // Combine first and last name
-  const navigate = useNavigate();
 
   // If the user is not logged in, render the children without the sidebar
   if (!loggedIn) {
@@ -33,8 +35,6 @@ export default function UniversalSidebar({ children }) {
       { link: "/attendance", label: "Attendance", icon: CheckListIcon },
       { link: "/groups", label: "Groups", icon: PersonIcon },
       { link: "/event", label: "Schedule", icon: CalendarIcon },
-      // { link: "/admin-rotas", label: "Rotas", icon: PersonIcon },
-      // { link: "/admin-calendar", label: "Calendar", icon: CalendarIcon },
       { link: "/volunteers", label: "Request(s)", icon: RequestIcon },
     ],
     volunteer: [
@@ -43,7 +43,6 @@ export default function UniversalSidebar({ children }) {
         label: "Announcements",
         icon: CalendarIcon,
       },
-      // { link: "/volunteer-dashboard", label: "Dashboard", icon: CalendarIcon },
       {
         link: "/volunteer-schedule",
         label: "Volunteer Events",
@@ -54,10 +53,6 @@ export default function UniversalSidebar({ children }) {
         label: "Rota Management",
         icon: CalendarIcon,
       },
-      // { link: "/volunteer-upload", label: "Upload", icon: CalendarIcon },
-      // { link: "/volunteer-profile", label: "Profile", icon: CalendarIcon },
-      // { link: "/volunteer-classes", label: "Classes", icon: BlackBoardIcon },
-      // { link: "/volunteer-requests", label: "Requests", icon: RequestIcon },
     ],
     user: [
       {
@@ -67,8 +62,6 @@ export default function UniversalSidebar({ children }) {
       },
       { link: "/events-page", label: "Events", icon: CalendarIcon },
       { link: "/family", label: "Family", icon: FamilyIcon },
-      // { link: "#", label: "Classes", icon: BlackBoardIcon },
-      // { link: "/parishioner-request", label: "Request", icon: RequestIcon },
     ],
   };
 
@@ -95,7 +88,21 @@ export default function UniversalSidebar({ children }) {
               </ul>
             </nav>
           </div>
-          <div className="flex items-center justify-between">
+
+          {/* Placeholder buttons and Profile/Logout buttons */}
+          <div className="mt-auto flex flex-col space-y-2">
+            <Button variant="outline" onClick={() => setUserRole("admin")}>
+              Switch to Admin
+            </Button>
+            <Button variant="outline" onClick={() => setUserRole("volunteer")}>
+              Switch to Volunteer
+            </Button>
+            <Button variant="outline" onClick={() => setUserRole("user")}>
+              Switch to User
+            </Button>
+          </div>
+
+          <div className="mt-4 flex items-center justify-between">
             <Button onClick={() => navigate("/volunteer-profile")}>
               Profile
             </Button>
