@@ -112,7 +112,7 @@ export default function VolunteerProfile() {
                 </p>
               </div>
               {/* Set Availability */}
-              <div>
+              {/* <div>
                 <h2 className="text-xl font-semibold">Set Availability</h2>
                 <select
                   value={availability || ""}
@@ -126,7 +126,7 @@ export default function VolunteerProfile() {
                   <option value="unavailable">Unavailable</option>
                   <option value="maybe">Maybe</option>
                 </select>
-              </div>
+              </div> */}
             </div>
           ) : (
             <p className="text-gray-500">No user data available.</p>
