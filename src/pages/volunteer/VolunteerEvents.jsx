@@ -75,9 +75,7 @@ import { useUser } from "@/context/UserContext";
 const headers = ["QR Code", "Event Name", "Date", "Time", "Description"];
 
 export default function EventPage() {
-
-  const { userData } = useUserData(); // Destructure userData directly
-
+  
   const navigate = useNavigate(); // Initialize the navigate function
   const { userData } = useUser(); // Destructure userData directly
   
