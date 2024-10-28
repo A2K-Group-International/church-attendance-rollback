@@ -76,7 +76,7 @@ export default function EventInfo() {
         <p>{eventData.description}</p>
         <div className="mt-4">
           <strong>Date:</strong>{" "}
-          {new Date(eventData.schedule).toLocaleDateString()}
+          {new Date(eventData.schedule_date).toLocaleDateString()}
         </div>
         <div className="mt-2">
           <strong>Time{eventData.time.length > 1 ? "s" : ""}:</strong>{" "}

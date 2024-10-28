@@ -29,9 +29,7 @@ export default function Eventspage() {
   useEffect(() => {
     const fetchEvents = async () => {
       try {
-        const { data, error } = await supabase
-          .from("schedule")
-          .select("*")
+        const { data, error } = await supabase.from("schedule").select("*");
 
         if (error) throw error;
 
@@ -41,7 +39,7 @@ export default function Eventspage() {
             id: event.id,
             title: event.name,
             content: event.description,
-            date: new Date(event.schedule).toLocaleDateString(),
+            date: event.schedule_date,
             times: eventTimes ? eventTimes.map(formatTime) : [],
           };
         });
@@ -84,6 +82,7 @@ export default function Eventspage() {
       </div>
 
       <div className="no-scrollbar mt-8 grid grid-cols-1 gap-4 overflow-scroll md:grid-cols-2 lg:grid-cols-3">
+        {console.log(eventItems.map((item) => item))}
         {eventItems.map((item) => (
           <Card
             key={item.id}
