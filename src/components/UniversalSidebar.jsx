@@ -8,24 +8,25 @@ import FamilyIcon from "../assets/svg/family.svg";
 import CalendarIcon from "../assets/svg/calendarIcon.svg";
 import HamburgerIcon from "../assets/svg/hamburgerIcon.svg";
 import RequestIcon from "../assets/svg/requestIcon.svg";
-import BlackBoardIcon from "../assets/svg/blackboard.svg";
-import DashboardIcon from "../assets/svg/dashboard.svg"; // Add import for DashboardIcon
+import DashboardIcon from "../assets/svg/dashboard.svg";
 import CheckListIcon from "../assets/svg/checklist.svg";
-import PersonIcon from "../assets/svg/person.svg"; // Add import for PersonIcon
-import { useUser } from "../context/UserContext"; // Import the context
+import PersonIcon from "../assets/svg/person.svg";
+import { useUser } from "../context/UserContext";
 
 export default function UniversalSidebar({ children }) {
-  const { userData, loggedIn } = useUser(); // Get user data and loggedIn state from context
+  const { userData, loggedIn } = useUser();
   const navigate = useNavigate();
 
-  // State to switch user roles for testing
-  const [userRole, setUserRole] = useState(userData?.user_role || "user"); // Default to 'user' if user role is not defined
+  // State to display links based on user role (for testing)
+  const [currentUserRole, setCurrentUserRole] = useState(
+    userData?.user_role || "user",
+  );
   const userName =
-    `${userData?.user_name || ""} ${userData?.user_last_name || ""}`.trim(); // Combine first and last name
+    `${userData?.user_name || ""} ${userData?.user_last_name || ""}`.trim();
 
   // If the user is not logged in, render the children without the sidebar
   if (!loggedIn) {
-    return <>{children}</>; // Render children only, without the sidebar
+    return <>{children}</>;
   }
 
   // Define the links for different user roles
@@ -65,7 +66,7 @@ export default function UniversalSidebar({ children }) {
     ],
   };
 
-  const currentLinks = links[userRole] || []; // Get the links for the current user role
+  const currentLinks = links[currentUserRole] || [];
 
   return (
     <div className="flex h-screen w-full overflow-y-clip">
@@ -73,10 +74,10 @@ export default function UniversalSidebar({ children }) {
       <div className="hidden lg:block lg:w-64 lg:shrink-0 lg:border-r lg:bg-gray-100 dark:lg:bg-gray-800">
         <div className="flex h-full flex-col justify-between px-4 py-6">
           <div className="space-y-4">
-            {/* Display user name and role */}
             <div className="text-lg font-semibold">{userName}</div>
             <div className="text-sm font-medium text-gray-600">
-              {userRole.charAt(0).toUpperCase() + userRole.slice(1)}
+              {currentUserRole.charAt(0).toUpperCase() +
+                currentUserRole.slice(1)}
             </div>
             <nav className="space-y-1">
               <ul>
@@ -91,13 +92,23 @@ export default function UniversalSidebar({ children }) {
 
           {/* Placeholder buttons and Profile/Logout buttons */}
           <div className="mt-auto flex flex-col space-y-2">
-            <Button variant="outline" onClick={() => setUserRole("admin")}>
+            {/* Render buttons to switch displayed links */}
+            <Button
+              variant="outline"
+              onClick={() => setCurrentUserRole("admin")}
+            >
               Switch to Admin
             </Button>
-            <Button variant="outline" onClick={() => setUserRole("volunteer")}>
+            <Button
+              variant="outline"
+              onClick={() => setCurrentUserRole("volunteer")}
+            >
               Switch to Volunteer
             </Button>
-            <Button variant="outline" onClick={() => setUserRole("user")}>
+            <Button
+              variant="outline"
+              onClick={() => setCurrentUserRole("user")}
+            >
               Switch to User
             </Button>
           </div>
@@ -132,10 +143,10 @@ export default function UniversalSidebar({ children }) {
               <SheetContent side="right" className="w-64">
                 <div className="flex h-full flex-col justify-between px-4 py-6">
                   <div className="space-y-4">
-                    {/* Display user name and role */}
                     <div className="text-lg font-semibold">{userName}</div>
                     <div className="text-sm font-medium text-gray-600">
-                      {userRole.charAt(0).toUpperCase() + userRole.slice(1)}
+                      {currentUserRole.charAt(0).toUpperCase() +
+                        currentUserRole.slice(1)}
                     </div>
                     <nav className="space-y-1">
                       <ul>
