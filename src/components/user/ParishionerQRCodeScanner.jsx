@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import qrScannerIcon from "../../assets/svg/qrScanner.svg";
 import QrReader from "react-qr-reader";
 import { Button } from "@/shadcn/button";
@@ -42,6 +42,10 @@ const ParishionerQRCodeScanner = () => {
   const user = useUser(); // Retrieve user data from the custom hook
 
   const handleScan = async (scanData) => {
+    //clear the states before scanning
+    setSelectedMembers([]);
+    setSelectedTime("");
+
     if (scanData && scanData != "") {
       await fetchedScanEvent(scanData); // Pass scanData
       setOpenDialog(false);
@@ -67,53 +71,42 @@ const ParishionerQRCodeScanner = () => {
     }
   };
 
-  const fetchFamilyMembers = async () => {
-    if (!user || !user.user || !user.user.id) {
-      console.error("User data not available");
-      return;
-    }
-
+  const fetchFamilyMembers = useCallback(async () => {
     try {
-      // Fetch user data based on user UUID
+      if (!user?.user?.id) {
+        console.error("User data not available");
+        return;
+      }
+
       const { data: userData, error } = await supabase
         .from("user_list")
         .select("*")
         .eq("user_uuid", user.user.id)
         .single();
 
-      //   if (error || !userData) {
-      //     console.error(
-      //       "Error fetching user data:",
-      //       error?.message,
-      //       error?.details,
-      //     );
-      //     return;
-      //   }
+      if (error || !userData) {
+        console.error("Error fetching user data:", error?.message);
+        return;
+      }
+
       setGuardianData(userData);
 
-      // Use the fetched user data to get family members based on guardian ID
       const { data, error: fetchError } = await supabase
         .from("family_list")
         .select("*")
-        .eq("guardian_id", userData.user_id); // Using userData.user_id as guardian ID
+        .eq("guardian_id", userData.user_id);
 
       if (fetchError) throw fetchError;
 
-      if (!data || data.length === 0) {
-        console.warn(
-          "No family members found for this guardian ID:",
-          userData.user_id,
-        );
-      }
       setFamilyMembers(data);
     } catch (error) {
       console.error("Error fetching family members:", error.message);
     }
-  };
+  }, [user?.user?.id]); // Only re-create fetchFamilyMembers if user ID changes
 
   useEffect(() => {
     fetchFamilyMembers();
-  }, [user]);
+  }, [fetchFamilyMembers]);
 
   const handleSubmit = async () => {
     if (!selectedTime) {
@@ -136,7 +129,7 @@ const ParishionerQRCodeScanner = () => {
           .select("id")
           .eq("attendee_first_name", member.family_first_name)
           .eq("attendee_last_name", member.family_last_name)
-          .eq("selected_event", eventData[0]?.name || "Unknown Event");
+          .eq("selected_event_id", eventData[0]?.event_uuid || "Unknown Event");
 
         if (fetchError) throw fetchError;
 
@@ -182,6 +175,10 @@ const ParishionerQRCodeScanner = () => {
 
       // Show success message if all records are inserted
       setSuccessMessage("Attendance successfully submitted!");
+      setTimeout(() => {
+        setSuccessMessage("");
+        setSelectedMembers([]);
+      }, 1500);
       setError("");
       setOpenDialog(false);
     } catch (error) {
