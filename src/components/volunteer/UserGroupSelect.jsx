@@ -28,7 +28,7 @@ const UserGroupSelect = ({ onSelect, groupId }) => {
   return (
     <div>
       <label htmlFor="userGroup" className="mb-2 block">
-        Select User Group:
+        Filter by group:
       </label>
       <Select onValueChange={handleSelectChange} value={selectedGroup}>
         <SelectTrigger className="rounded border p-2">
