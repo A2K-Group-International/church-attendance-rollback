@@ -192,7 +192,7 @@ export default function VolunteerClassContents() {
   const deleteContent = async (data) => {
     if (data.files.length > 0) {
       const filePaths = data.files.map((file) => file.file_path);
-      console.log("file paths to be deleted", filePaths);
+      // console.log("file paths to be deleted", filePaths);
       const { data: deletedData, error: storageDeleteError } =
         await supabase.storage.from("Uploaded files").remove(filePaths);
 
@@ -483,11 +483,12 @@ export default function VolunteerClassContents() {
                         <DialogFooter className="mx-2 flex gap-2 sm:justify-between">
                           <Button
                             onClick={() => setIsDialogOpen(false)}
-                            variant="destructive"
+                            variant="default"
                           >
                             Cancel
                           </Button>
                           <Button
+                            variant="destructive"
                             onClick={() =>
                               onDelete({ id: values.id, files: currentFiles })
                             }
@@ -527,7 +528,7 @@ export default function VolunteerClassContents() {
                             onEditSubmit(data);
                           })}
                         >
-                          <Label htmlFor="title">Title</Label>
+                     
                           {/* <Input
                             {...registerEdit("edittitle", { required: true })}
                             placeholder="Title of Content"
