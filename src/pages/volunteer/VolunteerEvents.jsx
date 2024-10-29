@@ -99,6 +99,7 @@ export default function EventPage() {
   const [selectedCategory, setSelectedCategory] = useState(""); // If selected category, show sub category
   const [selectedSubCategory, setSelectedSubCategory] = useState([]);
   const [selectedCategoryName, setSelectedCategoryName] = useState("");
+  const [selectedGroup, setSelectedGroup] = useState(null);
   const [qrCodeValue, setQrCodeValue] = useState(""); // QR Code value
   const [groupId, setGroupId] = useState(null); // QR Code value
   const itemsPerPage = 8;
@@ -706,6 +707,8 @@ export default function EventPage() {
                   <p className="text-sm text-red-500">Event name is required</p>
                 )}
               </div>
+
+              <UserGroupSelect onSelect={setGroupId} groupId={groupId} />
 
               {/* Event Category */}
               <div className="space-y-2">
