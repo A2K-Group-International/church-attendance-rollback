@@ -277,7 +277,7 @@ export default function VolunteerAnnouncements() {
 
   return (
     // <VolunteerSidebar>
-    <main className="flex h-screen justify-center">
+    <main className="flex h-screen justify-center max-w-full">
       <div
         className="w-full max-w-2xl space-y-6 overflow-y-auto p-4 lg:p-8"
         style={{ maxHeight: "calc(100vh - 2rem)" }}

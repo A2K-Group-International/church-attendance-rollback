@@ -187,7 +187,7 @@ export default function VolunteerAnnouncementsInfo() {
   return (
     // <VolunteerSidebar>
     <main className="flex justify-center">
-      <div className="w-full max-w-2xl space-y-6 p-4 lg:p-8">
+      <div className="w-full max-w-2xl space-y-6 p-4 lg:p-8 max-h-dvh overflow-scroll">
         <Button onClick={handleBack} className="mb-4">
           Back to Announcements
         </Button>

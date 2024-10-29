@@ -88,7 +88,7 @@ export default function Eventspage() {
         <ParishionerQRCodeScanner />
       </div>
 
-      <div className="no-scrollbar mt-2 grid grid-cols-1 gap-4 overflow-scroll pb-44 md:grid-cols-2 lg:grid-cols-3">
+      <div className="no-scrollbar mt-2 grid grid-cols-1 gap-4 overflow-scroll pb-44 md:grid-cols-2 lg:grid-cols-3 max-h-screen">
         {eventItems.map((item) => (
           <Card
             key={item.id}
