@@ -18,7 +18,6 @@ import { Input } from "@/shadcn/input";
 import useUserData from "@/api/useUserData";
 import useClasses from "@/hooks/useClasses";
 
-
 export default function VolunteerClasses() {
   const { userData } = useUserData();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -28,7 +27,7 @@ export default function VolunteerClasses() {
     register: registerJoinClass,
     handleSubmit: handleJoinClass,
     reset: resetJoinClass,
-    setValue: setJoinValue
+    setValue: setJoinValue,
   } = useForm();
 
   const {
@@ -42,134 +41,136 @@ export default function VolunteerClasses() {
   } = useClasses(userData?.user_id);
 
   return (
-  
-      <div className="h-screen overflow-y-scroll p-8">
-        <div className="mb-4 flex justify-between">
-          <Title>Your Groups</Title>
-          <div className="flex gap-2">
-            <Dialog
-              open={isJoinDialogOpen}
-              onOpenChange={(open) => {
-                setIsJoinDialogOpen(open);
-                setValue("classCode","")
-                if (!open) resetJoinClass();
-              }}
-            >
-              <DialogTrigger>
-                <Button onClick={() => setIsJoinDialogOpen(true)}>
-                  Join Group
+    <div className="h-screen overflow-y-scroll p-8">
+      <div className="mb-4 flex justify-between">
+        <Title>Your Groups</Title>
+        <div className="flex gap-2">
+          <Dialog
+            open={isJoinDialogOpen}
+            onOpenChange={(open) => {
+              setIsJoinDialogOpen(open);
+              setValue("classCode", "");
+              if (!open) resetJoinClass();
+            }}
+          >
+            <DialogTrigger>
+              <Button onClick={() => setIsJoinDialogOpen(true)}>
+                Join Group
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="rounded-md">
+              <DialogHeader>
+                <DialogTitle className="text-2xl">Join Group</DialogTitle>
+                <Separator />
+              </DialogHeader>
+              <div>
+                <form
+                  id="joinForm"
+                  onSubmit={handleJoinClass((input) =>
+                    joinClassMutation.mutate({
+                      input,
+                      user_name: `${userData?.user_name} ${userData?.user_last_name}`,
+                      user_id: userData?.user_id,
+                      user_role: userData?.user_role,
+                      setIsJoinDialogOpen,
+                    }),
+                  )}
+                >
+                  <Label htmlFor="classCode">Group Code</Label>
+                  <Input
+                    {...registerJoinClass("classCode", {
+                      required: "Class code is required",
+                    })}
+                    placeholder="Place your group code here"
+                    className="mt-1"
+                    id="classcode"
+                  />
+                </form>
+              </div>
+              <DialogFooter className="mx-2 flex gap-2 sm:justify-between">
+                <Button
+                  onClick={() => setIsJoinDialogOpen(false)}
+                  variant="destructive"
+                >
+                  Cancel
                 </Button>
-              </DialogTrigger>
-              <DialogContent className="rounded-md">
-                <DialogHeader>
-                  <DialogTitle className="text-2xl">Join Group</DialogTitle>
-                  <Separator />
-                </DialogHeader>
-                <div>
-                  <form
-                    id="joinForm"
-                    onSubmit={handleJoinClass((input) =>
-                      joinClassMutation.mutate({
-                        input,
-                        user_name: `${userData?.user_name} ${userData?.user_last_name}`,
-                        user_id: userData?.user_id,
-                        user_role: userData?.user_role,
-                        setIsJoinDialogOpen,
-                      }),
-                    )}
-                  >
-                    <Label htmlFor="classCode">Class Code</Label>
-                    <Input
-                      {...registerJoinClass("classCode", {
-                        required: "Class code is required",
-                      })}
-                      placeholder="Place your group code here"
-                      className="mt-1"
-                      id="classcode"
-                    />
-                  </form>
-                </div>
-                <DialogFooter className="mx-2 flex gap-2 sm:justify-between">
-                  <Button
-                    onClick={() => setIsJoinDialogOpen(false)}
-                    variant="destructive"
-                  >
-                    Cancel
-                  </Button>
-                  <Button form="joinForm" type="submit" disabled={joinClassMutation.isPending}>
-                    {joinClassMutation.isPending ? "Joining..." : "Join Group"}
-                  </Button>
-                </DialogFooter>
-              </DialogContent>
-            </Dialog>
-            <Dialog
-              open={isDialogOpen}
-              onOpenChange={(open) => {
-                setIsDialogOpen(open);
-                setValue("classname","")
-                if (!open) reset();
-              }}
-            >
-              <DialogTrigger>
-                <Button onClick={() => setIsDialogOpen(true)}>Add Group</Button>
-              </DialogTrigger>
-              <DialogContent className="rounded-md">
-                <DialogHeader>
-                  <DialogTitle className="text-2xl">Create Group</DialogTitle>
-                  <Separator />
-                </DialogHeader>
-                <div>
-                  <form
-                    id="addClassForm"
-                    onSubmit={handleSubmit((input) =>
-                      addClassMutation.mutate({
-                        input,
-                        user_id: userData?.user_id,
-                        setIsDialogOpen,
-                      }),
-                    )}
-                  >
-                    <Label htmlFor="classname">Class Name</Label>
-                    <Input
-                      {...register("classname", {
-                        required: "Class name is required",
-                      })}
-                      placeholder="Bible Study"
-                      className="mt-1"
-                      // id="classname"
-                    />
-                  </form>
-                </div>
-                <DialogFooter className="mx-2 flex gap-2 sm:justify-between">
-                  <Button
-                    onClick={() => setIsDialogOpen(false)}
-                    variant="destructive"
-                  >
-                    Cancel
-                  </Button>
-                  <Button
-                    type="submit"
-                    form="addClassForm"
-                    disabled={addClassMutation.isPending}
-                  >
-                    {addClassMutation.isPending ? "Adding..." : "Add"}
-                  </Button>
-                </DialogFooter>
-              </DialogContent>
-            </Dialog>
-          </div>
+                <Button
+                  form="joinForm"
+                  type="submit"
+                  disabled={joinClassMutation.isPending}
+                >
+                  {joinClassMutation.isPending ? "Joining..." : "Join Group"}
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+          <Dialog
+            open={isDialogOpen}
+            onOpenChange={(open) => {
+              setIsDialogOpen(open);
+              setValue("classname", "");
+              if (!open) reset();
+            }}
+          >
+            <DialogTrigger>
+              <Button onClick={() => setIsDialogOpen(true)}>Add Group</Button>
+            </DialogTrigger>
+            <DialogContent className="rounded-md">
+              <DialogHeader>
+                <DialogTitle className="text-2xl">Create Group</DialogTitle>
+                <Separator />
+              </DialogHeader>
+              <div>
+                <form
+                  id="addClassForm"
+                  onSubmit={handleSubmit((input) =>
+                    addClassMutation.mutate({
+                      input,
+                      user_id: userData?.user_id,
+                      setIsDialogOpen,
+                    }),
+                  )}
+                >
+                  <Label htmlFor="classname">Class Name</Label>
+                  <Input
+                    {...register("classname", {
+                      required: "Class name is required",
+                    })}
+                    placeholder="Bible Study"
+                    className="mt-1"
+                    // id="classname"
+                  />
+                </form>
+              </div>
+              <DialogFooter className="mx-2 flex gap-2 sm:justify-between">
+                <Button
+                  onClick={() => setIsDialogOpen(false)}
+                  variant="destructive"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="submit"
+                  form="addClassForm"
+                  disabled={addClassMutation.isPending}
+                >
+                  {addClassMutation.isPending ? "Adding..." : "Add"}
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
         </div>
-
-        {isLoading ? (
-          <p>loading...</p>
-        ) : (
-          <ClassesTable
-            classes={data}
-            updateClassMutation={updateClassMutation}
-            deleteClassMutation={deleteClassMutation}
-          />
-        )}
       </div>
 
+      {isLoading ? (
+        <p>loading...</p>
+      ) : (
+        <ClassesTable
+          classes={data}
+          updateClassMutation={updateClassMutation}
+          deleteClassMutation={deleteClassMutation}
+        />
+      )}
+    </div>
   );
 }
