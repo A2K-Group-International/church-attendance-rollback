@@ -71,14 +71,12 @@ import QRCodeIcon from "../../assets/svg/qrCode.svg";
 import UserGroupSelect from "@/components/volunteer/UserGroupSelect";
 import { useUser } from "@/context/UserContext";
 
-
 const headers = ["QR Code", "Event Name", "Date", "Time", "Description"];
 
 export default function EventPage() {
-  
   const navigate = useNavigate(); // Initialize the navigate function
   const { userData } = useUser(); // Destructure userData directly
-  
+
   const [isEventsModalOpen, setIsEventsModalOpen] = useState(false); // event time data
   const [time, setTime] = useState([]); // event time data
   const [selectedDate, setSelectedDate] = useState(null); // event date data
@@ -106,7 +104,6 @@ export default function EventPage() {
     formState: { errors },
     watch,
   } = useForm(); // react-hook-forms
-
 
   const fetchGroupInfo = useCallback(async () => {
     if (!userData) return;
@@ -142,7 +139,6 @@ export default function EventPage() {
   }, [userData]);
 
   useEffect(() => {}, [userData]);
-
 
   const onSubmit = async (data) => {
     setIsSubmitted(true);
@@ -188,6 +184,7 @@ export default function EventPage() {
             schedule_sub_category: data.schedule_sub_category,
             creator_id: userData?.user_id,
             group_id: userData?.group_id,
+            creator_name: `${userData?.user_name} ${userData?.user_last_name}`,
           },
         ]);
 
@@ -208,6 +205,7 @@ export default function EventPage() {
       console.error("Unexpected error:", err);
     }
   };
+  console.log(userData);
 
   const resetForm = () => {
     reset();
@@ -238,7 +236,6 @@ export default function EventPage() {
       setLoading(false);
       return; // Exit early if userData is not available
     }
-
 
     try {
       // Build the query based on the presence of group_id

@@ -38,7 +38,6 @@ const ParishionerQRCodeScanner = () => {
   const [selectedTime, setSelectedTime] = useState("");
   const [error, setError] = useState(""); // State to hold error messages
   const [successMessage, setSuccessMessage] = useState(""); // State to hold success messages
-  const [selectedDate, setSelectedDate] = useState();
 
   const user = useUser(); // Retrieve user data from the custom hook
 
@@ -117,48 +116,73 @@ const ParishionerQRCodeScanner = () => {
   }, [user]);
 
   const handleSubmit = async () => {
-    // Check if a time is selected
     if (!selectedTime) {
       setError("Please select a time.");
       return;
     }
-
-    // Check if at least one family member is selected
     if (selectedMembers.length === 0) {
       setError("Please select at least one family member.");
       return;
     }
 
     try {
-      // Loop through each selected family member and insert data
-      for (const member of selectedMembers) {
-        const { error } = await supabase.from("new_attendance").insert({
-          main_applicant_first_name:
-            member.guardian === false ? guardianData.user_name : "N/A",
-          main_applicant_last_name:
-            member.guardian === false ? guardianData.user_last_name : null,
-          telephone:
-            member.guardian === false ? guardianData.user_contact : "N/A",
-          attendee_first_name: member.family_first_name,
-          attendee_last_name: member.family_last_name,
-          has_attended: false, // Default attendance status
-          selected_time: selectedTime,
-          selected_event_date: eventData.map((item) => item.schedule_date),
-          attendance_type: "family", // Modify if needed
-          // attendance_code: eventData.attendance_code, // Assuming eventData has this field
-          // children_age: member.family_age, // Assuming family member has an age field
-          selected_event: eventData.name, // Event name from eventData
-          // schedule_id: eventData.schedule_id, // Assuming eventData has a schedule ID field
-        });
+      // Array to hold names of family members who have already attended
+      const alreadyAttendedMembers = [];
 
-        if (error) {
-          throw error;
+      // First, check if any family member has already attended
+      for (const member of selectedMembers) {
+        const { data: existingAttendance, error: fetchError } = await supabase
+          .from("new_attendance")
+          .select("id")
+          .eq("attendee_first_name", member.family_first_name)
+          .eq("attendee_last_name", member.family_last_name)
+          .eq("selected_event", eventData[0]?.name || "Unknown Event");
+
+        if (fetchError) throw fetchError;
+
+        if (existingAttendance.length > 0) {
+          alreadyAttendedMembers.push(
+            `${member.family_first_name} ${member.family_last_name}`,
+          );
         }
       }
 
-      // Show success message and clear previous errors
+      // If any member has already attended, show alert and stop the function
+      if (alreadyAttendedMembers.length > 0) {
+        alert(
+          `The following members have already attended:\n${alreadyAttendedMembers.join("\n")}`,
+        );
+        return; // Stop further execution
+      }
+
+      // Proceed to insert attendance records if no member has already attended
+      for (const member of selectedMembers) {
+        const { error: insertError } = await supabase
+          .from("new_attendance")
+          .insert({
+            main_applicant_first_name: !member.guardian
+              ? guardianData.user_name
+              : "N/A",
+            main_applicant_last_name: !member.guardian
+              ? guardianData.user_last_name
+              : null,
+            telephone: !member.guardian ? guardianData.user_contact : "N/A",
+            attendee_first_name: member.family_first_name,
+            attendee_last_name: member.family_last_name,
+            has_attended: true,
+            selected_time: selectedTime,
+            selected_event_date: eventData[0]?.schedule_date || null,
+            attendance_type: "family",
+            selected_event: eventData[0]?.name || "Unknown Event",
+          });
+
+        if (insertError) throw insertError;
+      }
+
+      // Show success message if all records are inserted
       setSuccessMessage("Attendance successfully submitted!");
       setError("");
+      setOpenDialog(false);
     } catch (error) {
       console.error("Error submitting attendance data:", error);
       setError("An error occurred while submitting attendance data.");
@@ -190,12 +214,12 @@ const ParishionerQRCodeScanner = () => {
   };
 
   // Function to format time to 9:00 AM/PM
-  //   const formatTime = (time) => {
-  //     const [hours, minutes] = time.split("+")[0].split(":");
-  //     const hours12 = hours % 12 || 12; // Convert to 12-hour format
-  //     const ampm = hours < 12 ? "AM" : "PM"; // Determine AM/PM
-  //     return `${hours12}:${minutes.padStart(2, "0")} ${ampm}`; // Return formatted time
-  //   };
+  const formatTime = (time) => {
+    const [hours, minutes] = time.split("+")[0].split(":");
+    const hours12 = hours % 12 || 12; // Convert to 12-hour format
+    const ampm = hours < 12 ? "AM" : "PM"; // Determine AM/PM
+    return `${hours12}:${minutes.padStart(2, "0")} ${ampm}`; // Return formatted time
+  };
 
   return (
     <Dialog onOpenChange={setOpenDialog}>
@@ -225,6 +249,8 @@ const ParishionerQRCodeScanner = () => {
                 <CardHeader>
                   <CardTitle>{item.name}</CardTitle>
                   <CardDescription>{item.description}</CardDescription>
+                  <p>Organiser: {item.creator_name}</p>
+                  <p>{moment(item.schedule_date).format("MMMM DD YYYY")}</p>
                 </CardHeader>
                 <CardContent>
                   <Select value={selectedTime} onValueChange={handleTimeChange}>
@@ -234,7 +260,7 @@ const ParishionerQRCodeScanner = () => {
                     <SelectContent>
                       {item.time.map((time, index) => (
                         <SelectItem key={index} value={time}>
-                          {time}
+                          {formatTime(time)}
                         </SelectItem>
                       ))}
                     </SelectContent>

@@ -148,12 +148,6 @@ export default function UniversalSidebar({ children }) {
                 )}
               </>
             )}
-
-            {userData.user_role === "user" && (
-              <div>
-                <p>You cannot switch to any other role.</p>
-              </div>
-            )}
           </div>
 
           <div className="mt-4 flex items-center justify-between">
