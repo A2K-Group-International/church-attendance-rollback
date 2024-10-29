@@ -43,6 +43,7 @@ import { Input } from "../../shadcn/input";
 import downloadIcon from "../../assets/svg/download.svg";
 import { Icon } from "@iconify/react";
 import NewAttendanceRegister from "../../components/admin/Attendance/NewAttendanceRegister";
+import Registrationv1 from "../registration/Registrationv1";
 
 // Headers for table
 const headers = [
@@ -579,7 +580,8 @@ export default function Attendance() {
         </Button>
       </div>
       <div className="sm:mb-2 sm:ml-8 sm:w-44">
-        <NewAttendanceRegister BtnName="Add" />
+        <Registrationv1 btnName="Add" />
+        {/* <NewAttendanceRegister BtnName="Add" /> */}
         {/* <DialogWalkInRegister
             btnName="Add"
             title="Add manually"
