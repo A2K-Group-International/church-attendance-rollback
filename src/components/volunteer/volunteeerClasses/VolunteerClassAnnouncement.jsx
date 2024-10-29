@@ -136,8 +136,6 @@ export default function VolunteerClassAnnouncement() {
     return <div className=" flex justify-center"><p>nothing here yet.</p></div>
   }
 
-  console.log("data",data)
-
   return (
     <div className="flex w-full flex-col items-center justify-center gap-2 p-2">
       {userData?.user_role === "volunteer" && <form
@@ -283,11 +281,12 @@ export default function VolunteerClassAnnouncement() {
                         <DialogFooter className="mx-2 flex gap-2 sm:justify-between">
                           <Button
                             onClick={() => setIsDialogOpen(false)}
-                            variant="destructive"
+                            variant="default"
                           >
                             Cancel
                           </Button>
                           <Button
+                          variant="destructive"
                             onClick={() => {
 
                               // console.log("Files to delete:", values.files);

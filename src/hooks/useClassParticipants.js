@@ -1,14 +1,16 @@
+import { insertFamilyMembers } from "@/api/classesServices";
 import {
   approveParticipants,
   changeParticipantRole,
   fetchAllParticipants,
+  fetchFamilyMembers,
   removeParticipants,
 } from "@/api/ClassParticipantsServices";
 import { useToast } from "@/shadcn/use-toast";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 
-export default function useClassParticipants(class_id) {
+export default function useClassParticipants(class_id,user_id) {
   const [isChildDialogOpen, setIsChildDialogOpen] = useState(false);
   const [isParentDialogOpen, setIsParentDialogOpen] = useState(false);
   const [isVolunteerDialogOpen, setIsVolunteerDialogOpen] = useState(false);
@@ -19,6 +21,17 @@ export default function useClassParticipants(class_id) {
     queryKey: ["participants", class_id],
     queryFn: ()=> fetchAllParticipants(class_id),
   });
+
+  const {
+    data: familyMembers,
+    isLoading: LoadingFamily,
+  } = useQuery({
+    queryKey: ["familyParticipants",user_id],
+    queryFn: () => fetchFamilyMembers(user_id),
+    enabled: !!user_id
+  });
+
+
 
   const removeParticipantMutation = useMutation({
     mutationFn: removeParticipants,
@@ -91,6 +104,30 @@ export default function useClassParticipants(class_id) {
     },
   });
   
+  const addFamilyMemberMutation = useMutation({
+    mutationFn: insertFamilyMembers,
+    onSuccess: () => {
+      toast({
+        title: "Success",
+        description: "Participants request sent.",
+      });
+      // setIsChildDialogOpen(false);
+      // setIsParentDialogOpen(false);
+      // setIsVolunteerDialogOpen(false);
+    },
+    onError: (error) => {
+      console.error("Mutation error:", error);
+      toast({
+        title: "Something went wrong",
+        description: `${error.message}`,
+      });
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ["participants"] });
+    },
+  });
+  
+  
 
   return {
     isChildDialogOpen,
@@ -103,6 +140,8 @@ export default function useClassParticipants(class_id) {
     isLoading,
     removeParticipantMutation,
     approveParticipantMutation,
-    changeRoleMutation
+    changeRoleMutation,
+    familyMembers,
+    addFamilyMemberMutation
   };
 }
