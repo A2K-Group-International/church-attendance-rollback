@@ -100,7 +100,7 @@ export default function Eventspage() {
             </CardHeader>
             <CardContent>
               <CardDescription className="flex flex-col">
-                {console.log(item.creator_name)}
+                {/* {console.log(item.creator_name)} */}
                 <p>Organiser: {item.creator_name}</p>
                 <p>{item.content}</p>
 
