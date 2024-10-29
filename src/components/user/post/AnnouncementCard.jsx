@@ -171,11 +171,11 @@ const AnnouncementCard = ({
         </div>
       )}
       {/* Edited Tag */}
-      {post.edited && (
+      {/* {post.edited && (
         <p className="mb-4 text-sm italic text-gray-500 dark:text-gray-400">
           This post was edited.
         </p>
-      )}
+      )} */}
       {/* Separator */}
       <Separator className="my-4" />
       {/* User and Date Information */}

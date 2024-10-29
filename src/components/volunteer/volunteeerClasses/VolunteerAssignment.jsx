@@ -230,7 +230,7 @@ export default function VolunteerAssignment() {
                           {...editRegister("edittitle", { required: true })}
                         />
                         <Label>Description</Label>
-                        <Input
+                        <Textarea
                           {...editRegister("editdescription", {
                             required: true,
                           })}
