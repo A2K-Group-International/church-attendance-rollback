@@ -23,6 +23,7 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { userAttendance, fetchAllEvents } from "@/api/userService";
 import moment from "moment";
+import supabase from "@/api/supabase";
 
 const attendanceCodeSchema = z.object({
   attendanceCode: z
@@ -38,6 +39,7 @@ export default function EditRegistrationv1() {
   const [selectedEvent, setSelectedEvent] = useState(""); // Store selected event
   const [eventDate, setEventDate] = useState(""); // Store selected event date
   const [eventTimeList, setEventTimeList] = useState([]); // Store event times
+  const [selectedTime, setSelectedTime] = useState("");
 
   const {
     register,
@@ -88,17 +90,46 @@ export default function EditRegistrationv1() {
       setValue("telephone", dataAttendance[0].telephone);
 
       setSelectedEvent(dataAttendance[0].selected_event);
-      console.log(selectedEvent);
+      setEventDate(dataAttendance[0].seleted_event_date);
+      setSelectedTime(dataAttendance[0].selected_time);
     } catch (error) {
       console.error("Error:", error);
       alert("An error occurred while submitting the attendance.");
     }
   };
 
-  const handleEditSubmit = async (eventData) => {
-    // Handle the editing of the registration here
-    console.log("Editing registration data:", eventData);
-    // You can call your update API here
+  const handleSubmitUpdateInformation = async (data) => {
+    // Data contains all fields registered with useForm
+    const {
+      selected_event,
+      main_applicant_first_name,
+      main_applicant_last_name,
+      telephone,
+    } = data;
+
+    // Optionally add attendees if they need to be updated
+    const updatedAttendees = attendees.map((attendee) => ({
+      firstName: attendee.attendee_first_name,
+      lastName: attendee.attendee_last_name,
+    }));
+
+    try {
+      const { error } = await supabase.from("new_attendance").update({
+        selected_event,
+        main_applicant_first_name,
+        main_applicant_last_name,
+        telephone,
+        attendees: updatedAttendees, // Include attendees if needed
+      });
+      // .eq('id', eventId); // Replace `eventId` with the ID of the record you are editing
+
+      if (error) throw error;
+
+      console.log("Update successful");
+    } catch (error) {
+      console.error("Error updating registration data:", error.message);
+    }
+
     closeModal(); // Close modal after submission
   };
 
@@ -185,7 +216,7 @@ export default function EditRegistrationv1() {
         {/* Edit Registration Form */}
         {isEditing && (
           <form
-            onSubmit={handleSubmit(handleEditSubmit)}
+            onSubmit={handleSubmit(handleSubmitUpdateInformation)}
             className="no-scrollbar max-h-[30rem] overflow-scroll"
           >
             <div className="grid w-full items-center gap-4 p-2">
@@ -229,14 +260,17 @@ export default function EditRegistrationv1() {
 
               <div className="flex flex-col space-y-1.5">
                 <Label htmlFor="time">Select Time</Label>
-                <Select>
+                <Select onValueChange={setSelectedTime}>
                   <SelectTrigger>
                     <SelectValue placeholder="Select Time" />
                   </SelectTrigger>
                   <SelectContent position="popper">
-                    <SelectItem value="time1">Time 1</SelectItem>
-                    <SelectItem value="time2">Time 2</SelectItem>
-                    {/* Add more times dynamically if needed */}
+                    {eventTimeList.map((time, index) => (
+                      <SelectItem key={index} value={time}>
+                        {time}
+                      </SelectItem>
+                    ))}
+                    {console.log(selectedTime)}
                   </SelectContent>
                 </Select>
               </div>

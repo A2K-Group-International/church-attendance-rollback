@@ -106,8 +106,6 @@ export default function Attendance() {
         };
       });
 
-    console.log(attendedData); // Check the final attended data before exporting
-
     // Create a new workbook and worksheet for the attendance data
     const workbook = new ExcelJS.Workbook();
     const worksheet = workbook.addWorksheet("Attendance");
