@@ -33,7 +33,7 @@ const formSchema = z.object({
   selected_event: z.number().int().positive("Event selection is required."),
 });
 
-export default function Registrationv1({btnName}) {
+export default function Registrationv1({ btnName }) {
   const [eventList, setEventList] = useState([]); // Store event data
   const [eventTimeList, setEventTimeList] = useState([]); // Store event times
   const [selectedEvent, setSelectedEvent] = useState(""); // Store selected event
@@ -216,7 +216,7 @@ export default function Registrationv1({btnName}) {
             </div>
 
             {/* Parent/Carer Information */}
-            <Label>Parent/Carer Information</Label>
+            <Label>Main Applicant</Label>
             <div className="flex flex-col gap-2 md:flex-row">
               <Input
                 {...register("firstName")}
@@ -245,7 +245,7 @@ export default function Registrationv1({btnName}) {
             </div>
 
             {/* Children Information */}
-            <Label>Child Information</Label>
+            <Label>Attendee Information</Label>
             {children.map((child, index) => (
               <div key={index} className="flex flex-col gap-2 md:flex-row">
                 <Input
