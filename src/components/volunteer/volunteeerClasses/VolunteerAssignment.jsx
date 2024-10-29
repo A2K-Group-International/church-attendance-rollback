@@ -1,6 +1,10 @@
 import { Separator } from "@/shadcn/separator";
 import kebab from "@/assets/svg/threeDots.svg";
-import { Popover, PopoverContent, PopoverTrigger } from "@/shadcn/popover";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/shadcn/popover";
 import { Label } from "@/shadcn/label";
 import { Input } from "@/shadcn/input";
 import { Textarea } from "@/shadcn/textarea";
@@ -15,13 +19,11 @@ import {
 } from "@/shadcn/select";
 import { format } from "date-fns";
 import { Calendar as CalendarIcon } from "lucide-react";
-
 import { cn } from "@/lib/utils";
 import { Button } from "@/shadcn/button";
 import { Calendar } from "@/shadcn/calendar";
 import { useState } from "react";
 import { Controller, useForm } from "react-hook-form";
-import supabase from "@/api/supabase";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/shadcn/use-toast";
 import { useParams } from "react-router-dom";
@@ -34,12 +36,14 @@ import {
   DialogTrigger,
   DialogDescription,
 } from "@/shadcn/dialog";
+import useClassAssignment from "@/hooks/useClassAssignment";
+import useUserData from "@/api/useUserData";
 
 export default function VolunteerAssignment() {
   const [date, setDate] = useState("");
-  const { toast } = useToast();
+  const {userData} = useUserData()
   const { id } = useParams();
-  const queryClient = useQueryClient();
+
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const {
@@ -59,150 +63,14 @@ export default function VolunteerAssignment() {
     formState: { errors: editErrors },
   } = useForm();
 
-  const fetchAssignments = async () => {
-    const { error, data } = await supabase
-      .from("assignment_list")
-      .select("*")
-      .eq("class_id", id);
-
-    if (error) {
-      throw new Error(error || "unknown error");
-    }
-
-    return data;
-  };
-  const editAssignment = async ({ inputs, id }) => {
-    const dueDateUTC = new Date(date);
-    dueDateUTC.setHours(dueDateUTC.getHours() + 8); // Ensure to set the date in UTC
-    console.log("Due date (UTC):", dueDateUTC);
-    const { error, data } = await supabase
-      .from("assignment_list")
-      .update({
-        title: inputs.edittitle,
-        description: inputs.editdescription,
-        quiz_link: inputs.editquizlink,
-        quiz_for: inputs.editparticipant,
-        due: dueDateUTC,
-      })
-      .eq("id", id);
-
-    if (error) {
-      throw new Error(error || "unknown error");
-    }
-  };
-  const addAssignment = async (input) => {
-    const dueDateUTC = new Date(date);
-    dueDateUTC.setHours(dueDateUTC.getHours() + 8); 
-    const { error: addError } = await supabase.from("assignment_list").insert([
-      {
-        title: input.title,
-        description: input.description,
-        due: dueDateUTC,
-        quiz_link: input.quiz_link,
-        quiz_for: input.participant,
-        class_id: id,
-      },
-    ]);
-
-    if (addError) {
-      throw new Error(addError.error || "Unknown error");
-    }
-  };
-  const deleteAssignment = async (id) => {
-    const { error } = await supabase
-      .from("assignment_list")
-      .delete()
-      .eq("id", id);
-
-    if (error) {
-      throw new Error(error || "unknown error");
-    }
-  };
-
-  const deleteMutation = useMutation({
-    mutationFn: deleteAssignment,
-    onSuccess: () => {
-      toast({
-        title: "Success",
-        description: "Assignment deleted successfully.",
-      });
-    },
-    onError: (error) => {
-      toast({
-        title: "Something went wrong",
-        description: `${error.message}`,
-      });
-    },
-    onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ["assignments"] });
-    },
-  });
-
-  const addMutation = useMutation({
-    mutationFn: addAssignment,
-    onSuccess: () => {
-      toast({
-        title: "Success",
-        description: "Assignment added successfully.",
-      });
-      reset();
-      setDate("");
-    },
-    onError: (error) => {
-      // console.error("Mutation error:", error);
-      toast({
-        title: "Something went wrong",
-        description: `${error.message}`,
-      });
-    },
-    onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ["assignments"] });
-    },
-  });
-
-  const updateMutation = useMutation({
-    mutationFn: editAssignment,
-    onSuccess: () => {
-      toast({
-        title: "Success",
-        description: "Assignment edited successfully.",
-      });
-      editReset();
-      setDate("");
-      setIsEditDialogOpen(false);
-    },
-    onError: (error) => {
-      // console.error("Mutation error:", error);
-      toast({
-        title: "Something went wrong",
-        description: `${error.message}`,
-      });
-    },
-    onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ["assignments"] });
-    },
-  });
-
   const {
-    data: assignments,
-    isLoading,
     error,
-  } = useQuery({
-    queryFn: fetchAssignments,
-    queryKey: ["assignments"],
-  });
-
-  const handleAddAssignment = (input) => {
-    console.log("inputsdfsdas", input);
-    addMutation.mutate(input);
-  };
-  const handleDeleteAssignment = (id) => {
-    deleteMutation.mutate(id);
-  };
-  const handleEditAssignment = (inputs, id) => {
-    console.log(inputs, id);
-    updateMutation.mutate({ inputs, id });
-  };
+    assignments,
+    isLoading,
+    deleteAssignmentMutation,
+    updateAssignmentMutation,
+    addAssignmentMutation,
+  } = useClassAssignment(id);
 
   if (isLoading) {
     return <p>Loading...</p>;
@@ -211,27 +79,42 @@ export default function VolunteerAssignment() {
   if (error) {
     return <p>not found</p>;
   }
-  // const testDate = new Date('2024-10-02'); // Explicitly set to October 2, 2024
-  // console.log("Test Date:", testDate);
-  // console.log("Test Date (UTC):", testDate.toISOString());
-  console.log(date);
+
+  
+  if(assignments.length < 1 && userData?.user_role === "user"){
+   
+    return <div className=" flex justify-center"><p>nothing here yet.</p></div>
+  }
 
   return (
     <div className="flex w-full flex-col items-center justify-center gap-2 p-2">
-      <form
-        onSubmit={handleSubmit(handleAddAssignment)}
-          className="mx-4 w-full rounded-md border p-4 shadow-md lg:w-3/5"
+      {userData?.user_role === "volunteer" &&<form
+        onSubmit={handleSubmit((inputs) =>
+          addAssignmentMutation.mutate({
+            inputs,
+            date,
+            class_id: id,
+            reset,
+            setDate,
+          }),
+        )}
+        className="mx-4 w-full rounded-md border p-4 shadow-md lg:w-3/5"
       >
         <Label className="text-md font-bold">Title</Label>
-        <Input {...register("title", { required: true })} />
+        <Input
+          {...register("title", { required: true })}
+          placeholder={"Create assignment title"}
+        />
         <Label className="text-md font-bold">Description</Label>
         <Textarea
           {...register("description", { required: true })}
+          placeholder={"Create assignment description"}
           className="mb-1"
         />
         <Label className="text-md font-bold">Quiz Link</Label>
         <Input
           {...register("quiz_link", { required: true })}
+          placeholder={"Place link here"}
           className="mb-2"
         />
         <div className="flex flex-wrap justify-between gap-2">
@@ -285,9 +168,9 @@ export default function VolunteerAssignment() {
               />
             </PopoverContent>
           </Popover>
-          <Button type="submit">Add Quiz</Button>
+          <Button disabled={addAssignmentMutation.isPending} type="submit">{addAssignmentMutation.isPending ? "Adding Quiz":"Add Quiz"}</Button>
         </div>
-      </form>
+      </form>}
       {assignments?.map((assignment, index) => (
         <div
           key={index}
@@ -301,9 +184,9 @@ export default function VolunteerAssignment() {
             <div className="flex flex-col items-end">
               <Popover>
                 <PopoverTrigger>
-                  <img src={kebab} className="h-6 w-6" alt="kebab" />
+                {userData?.user_role === "volunteer" &&<img src={kebab} className="h-6 w-6" alt="kebab" />}
                 </PopoverTrigger>
-                <PopoverContent align="end" a className="w-28 p-0">
+                <PopoverContent align="end" className="w-28 p-0">
                   <Dialog
                     open={isEditDialogOpen}
                     onOpenChange={(isOpen) => {
@@ -318,9 +201,9 @@ export default function VolunteerAssignment() {
                     }}
                   >
                     <DialogTrigger>
-                      <div className="p-3 text-center hover:cursor-pointer">
+                    {userData?.user_role === "volunteer" &&<div className="p-3 text-center hover:cursor-pointer">
                         Edit
-                      </div>
+                      </div>}
                     </DialogTrigger>
                     <DialogContent className="rounded-md">
                       <DialogHeader>
@@ -331,8 +214,15 @@ export default function VolunteerAssignment() {
                       </DialogHeader>
                       <form
                         id="editform"
-                        onSubmit={editHandleSubmit((data) =>
-                          handleEditAssignment(data, assignment.id),
+                        onSubmit={editHandleSubmit((inputs) =>
+                          updateAssignmentMutation.mutate({
+                            inputs,
+                            date,
+                            assignment_id: assignment.id,
+                            editReset,
+                            setDate,
+                            setIsEditDialogOpen,
+                          }),
                         )}
                       >
                         <Label>Title</Label>
@@ -423,10 +313,9 @@ export default function VolunteerAssignment() {
                         <Button
                           type="submit"
                           form="editform"
-                          // disabled={deletemutation.isLoading}
+                          disabled={updateAssignmentMutation.isPending}
                         >
-                          {/* {mutation.isLoading ? "Saving..." : "Save"} */}
-                          Confirm
+                          {updateAssignmentMutation.isPending ? "Editting..." : "Edit"}
                         </Button>
                       </DialogFooter>
                     </DialogContent>
@@ -461,12 +350,13 @@ export default function VolunteerAssignment() {
                           Cancel
                         </Button>
                         <Button
-                          onClick={() => handleDeleteAssignment(assignment.id)}
+                          onClick={() =>
+                            deleteAssignmentMutation.mutate(assignment.id)
+                          }
 
-                          // disabled={deletemutation.isLoading}
+                          disabled={deleteAssignmentMutation.isPending}
                         >
-                          {/* {mutation.isLoading ? "Saving..." : "Save"} */}
-                          Confirm
+                          {deleteAssignmentMutation.isPending ? "Deleting..." : "Confirm"}
                         </Button>
                       </DialogFooter>
                     </DialogContent>

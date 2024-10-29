@@ -25,6 +25,7 @@ import {
   DialogTrigger,
   DialogDescription,
 } from "@/shadcn/dialog";
+import Comments from "@/components/Comments";
 
 export default function VolunteerClassContents() {
   const queryClient = useQueryClient();
@@ -42,19 +43,23 @@ export default function VolunteerClassContents() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [currentId, setCurrentId] = useState(null);
+  const [currentFiles, setCurrentFiles] = useState([]);
 
   // if(!userData){
   //   return <Navigate to="/" replace />;
   // }
 
   const handleFileUpload = (event) => {
-    const selectedFiles = Array.from(event.target.files); // Convert FileList to array
+     // Convert FileList to array
+    const selectedFiles = Array.from(event.target.files);
+    // Create a preview URL for the file
     const filePreviews = selectedFiles.map((file) => ({
       file,
-      preview: URL.createObjectURL(file), // Create a preview URL for the file
-    }));
-    setFiles((prevFiles) => [...prevFiles, ...filePreviews]); // Append new files with previews
-    setValue("files", selectedFiles); // Set files in react-hook-form
+      preview: URL.createObjectURL(file), 
+    }))
+    // Append new files with previews
+    setFiles((prevFiles) => [...prevFiles, ...filePreviews]); 
+    setValue("files", selectedFiles); 
   };
 
   const handleFileClick = (file) => {
@@ -81,8 +86,7 @@ export default function VolunteerClassContents() {
         if (filesError)
           throw new Error(filesError.message || "Error fetching files");
 
-        // Fetch public URLs for the files
-        // console.log("filedata",filesData)
+
         const fileURLs = await Promise.all(
           filesData.map(async (file) => {
             // console.log("filepaths",file.filepath)
@@ -106,15 +110,15 @@ export default function VolunteerClassContents() {
         // console.log("urls",fileURLs)
         return {
           ...contents,
-          files: fileURLs || [], // Attach files data to the content
+          files: fileURLs || [], 
         };
       }),
     );
 
-    return contentsWithFiles; // Return the updated contents with files
+    return contentsWithFiles;
   };
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isFetching } = useQuery({
     queryKey: ["classContents"],
     queryFn: fetchClassContents,
   });
@@ -122,7 +126,7 @@ export default function VolunteerClassContents() {
   const createContent = async (inputData) => {
 
     const uploadPromises = inputData.files.map(async (filewithpreview) => {
-      console.log("this is each files before uploading", filewithpreview);
+      // console.log("this is each files before uploading", filewithpreview);
       const { data, error } = await supabase.storage
         .from("Uploaded files")
         .upload(
@@ -173,15 +177,8 @@ export default function VolunteerClassContents() {
         if (error) throw new Error(error.message || "File insert error");
       });
 
-      // Wait for file insertions to complete
+
       await Promise.all(insertFilePromises);
-
-    // Create the announcement
-
-    console.log("Content created successfully");
-    // } catch (error) {
-    //   console.error("Error creating announcement:", error.message);
-    // }
   };
   const updateContent = async (data) => {
     const { input } = data; 
@@ -262,12 +259,6 @@ export default function VolunteerClassContents() {
   const updateMutation = useMutation({
     mutationFn: updateContent,
     onSuccess: () => {
-      // Update only the modified announcement
-      // queryClient.setQueryData(["classAnnouncements"], (oldData) =>
-      //     oldData.map((announcement) =>
-      //         announcement.id === data.id ? { ...announcement, ...data } : announcement
-      //     )
-      // );
 
       toast({
         title: "Success",
@@ -355,16 +346,20 @@ export default function VolunteerClassContents() {
     }
     return null;
   };
-  console.log("data", userData);
   
 
   if(isLoading){
     return(<p>Loading...</p>)
   }
+  
+  if(data.length < 1 && userData?.user_role === "user"){
+   
+    return <div className=" flex justify-center"><p>nothing here yet.</p></div>
+  }
 
   return (
     <div className="flex w-full flex-col items-center justify-center gap-2 p-2">
-      <form
+      {userData?.user_role === "volunteer" &&<form
         onSubmit={handleSubmit(uploadContentHandler)}
         className="w-full rounded-md border p-4 shadow-md lg:w-3/5"
       >
@@ -431,7 +426,7 @@ export default function VolunteerClassContents() {
             <Button type="submit">Post</Button>
           </div>
         </div>
-      </form>
+      </form>}
       {isLoading ? (
         <p>Loading...</p>
       ) : (
@@ -464,6 +459,7 @@ export default function VolunteerClassContents() {
                       open={isDialogOpen}
                       onOpenChange={(isOpen) => {
                         setCurrentId(values.id)
+                        setCurrentFiles(values.files)
                         setIsDialogOpen(isOpen)
                       }}
                     >
@@ -493,7 +489,7 @@ export default function VolunteerClassContents() {
                           </Button>
                           <Button
                             onClick={() =>
-                              onDelete({ id: values.id, files: values.files })
+                              onDelete({ id: values.id, files: currentFiles })
                             }
                             // disabled={deletemutation.isLoading}
                           >
@@ -574,13 +570,7 @@ export default function VolunteerClassContents() {
                 </div>
               </div>
               <Separator className="my-3" />
-              <div className="flex gap-2">
-                <Avatar className="h-8 w-8">
-                  <AvatarImage src="" />
-                  <AvatarFallback>{getInitial("Volunteer")}</AvatarFallback>
-                </Avatar>
-                <Input placeholder="Add comment" />
-              </div>
+               <Comments announcement_id={values?.id} columnName={"content_id"}/>
             </div>
           </div>
         ))
