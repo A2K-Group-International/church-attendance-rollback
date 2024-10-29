@@ -41,7 +41,7 @@ export default function ClassesTable({
         >
           <Link
             to={`/volunteer-classes/${classdata.id}`}
-            className="hover:cursor-pointer"
+            className=" flex-1 hover:cursor-pointer"
           >
             {classdata.class_name}
           </Link>
@@ -99,7 +99,7 @@ export default function ClassesTable({
                   <DialogContent className="rounded-md">
                     <DialogHeader>
                       <DialogTitle className="text-2xl">
-                        Create Class
+                        Edit Group Name
                       </DialogTitle>
                       <Separator />
                     </DialogHeader>
@@ -114,7 +114,7 @@ export default function ClassesTable({
                         )}
                         id="myform"
                       >
-                        <Label htmlFor="classname">Class Name</Label>
+                        <Label htmlFor="classname">Group Name</Label>
                         <Input
                           {...register("classname", {
                             required: "Class name is required",
@@ -163,21 +163,22 @@ export default function ClassesTable({
                   <DialogContent className="rounded-md">
                     <DialogHeader>
                       <DialogTitle className="text-2xl">
-                        Delete Class?
+                        Delete Group?
                       </DialogTitle>
                       <Separator />
                     </DialogHeader>
                     <DialogDescription>
-                      Are you sure you want to delete this class?
+                      Are you sure you want to delete this group?
                     </DialogDescription>
                     <DialogFooter className="mx-2 flex gap-2 sm:justify-between">
                       <Button
                         onClick={() => setdeleteDialogOpen(false)}
-                        variant="destructive"
+                        variant="default"
                       >
                         Cancel
                       </Button>
                       <Button
+                        variant={"destructive"}
                         onClick={() => {
                           // console.log("Files to delete:", values.files);
                           deleteClassMutation.mutate({class_id:classdata.id,setdeleteDialogOpen});

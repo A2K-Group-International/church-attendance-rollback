@@ -33,11 +33,17 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/shadcn/select";
+import { fetchFamilyMembers } from "@/api/ClassParticipantsServices";
+import { Checkbox } from "@/components/shadcn/checkbox";
+import { Label } from "@/shadcn/label";
+import { useForm, Controller } from "react-hook-form";
 
 export default function VolunteerParticipants() {
+  const { control, handleSubmit } = useForm();
   const { userData } = useUserData();
   const { id } = useParams();
   const { copyText } = useCopyText();
+  const [isAddFamilyDialogueOpen, setisAddFamilyDialogueOpen] = useState(false);
   const {
     isChildDialogOpen,
     isParentDialogOpen,
@@ -50,14 +56,27 @@ export default function VolunteerParticipants() {
     removeParticipantMutation,
     approveParticipantMutation,
     changeRoleMutation,
-  } = useClassParticipants(id);
+    familyMembers,
+    addFamilyMemberMutation
+  } = useClassParticipants(id, userData?.user_id);
 
   if (isLoading) {
     return <p>Loading...</p>;
   }
+  const onSubmit = (data) => {
+    // Get the selected family members' full objects
+    const selectedFamilyMembers = familyMembers.filter(member => 
+      data.familyMembers[member.family_member_id]
+    );
+    addFamilyMemberMutation.mutate({familyMembers:selectedFamilyMembers,classId:id})
+  
+    // console.log("Selected Family Members:", selectedFamilyMembers);
+  };
 
-  console.log("data getting", data);
-  console.log("user", userData);
+  // console.log("data getting", data);
+  // console.log("user", userData);
+
+  // console.log("selected family members", selectedMembers);
 
   return (
     <div className="flex w-full flex-col items-center justify-center p-2">
@@ -174,10 +193,7 @@ export default function VolunteerParticipants() {
                                     removeParticipantMutation.mutate({
                                       user_id: volunteer.user_id,
                                       participant_id: volunteer.id,
-                                      tablename:
-                                        userData.user_role === "user"
-                                          ? "parents"
-                                          : "volunteers",
+                                      tablename: "volunteers",
                                     })
                                   }
                                 >
@@ -196,7 +212,6 @@ export default function VolunteerParticipants() {
                 );
               }
 
-              // Return null if not volunteer
               return null;
             })}
           </div>
@@ -205,6 +220,74 @@ export default function VolunteerParticipants() {
           <div className="flex items-center justify-between">
             <h1 className="text-3xl font-semibold">Participants</h1>
             <p>{data?.parents.length + data?.children.length} Participants</p>
+
+            <Dialog
+              open={isAddFamilyDialogueOpen}
+              onOpenChange={setisAddFamilyDialogueOpen}
+            >
+              <DialogTrigger>
+                <Button>Add Family</Button>
+              </DialogTrigger>
+              <DialogContent className="rounded-md">
+                <DialogHeader>
+                  <DialogTitle className="text-2xl">Family Members</DialogTitle>
+                  <Separator />
+                </DialogHeader>
+                <p>Select Family Members to add.</p>
+                <form onSubmit={handleSubmit(onSubmit)}>
+                  {familyMembers?.map((member) => (
+                    <div
+                      className="flex items-center space-x-2"
+                      key={member.family_member_id}
+                    >
+                      <Controller
+                        name={`familyMembers[${member.family_member_id}]`}
+                        control={control}
+                        defaultValue={false}
+                        render={({ field }) => (
+                          <Checkbox
+                            {...field}
+                            checked={field.value} // Controlled state
+                            onCheckedChange={(checked) =>
+                              field.onChange(checked)
+                            } // Use onCheckedChange for Shadcn
+                          />
+                        )}
+                      />
+                      <Label
+                        htmlFor={`familyMembers[${member.family_member_id}]`}
+                        className="text-sm font-medium"
+                      >
+                        {member.family_first_name} {member.family_last_name}
+                      </Label>
+                    </div>
+                  ))}
+                  <Button className=" w-full mt-2" type="submit">Add Members</Button>
+                </form>
+
+                {/* <DialogFooter>
+                              <Button
+                                onClick={() => setIsChildDialogOpen(false)}
+                              >
+                                Cancel
+                              </Button>
+                              <Button
+                                variant="destructive"
+                                onClick={() =>
+                                  removeParticipantMutation.mutate({
+                                    participant_id: child.id,
+                                    tablename: "children",
+                                  })
+                                }
+                                disabled={removeParticipantMutation.isPending}
+                              >
+                                {removeParticipantMutation.isPending
+                                  ? "Removing"
+                                  : "Remove"}
+                              </Button>
+                            </DialogFooter> */}
+              </DialogContent>
+            </Dialog>
           </div>
           <Separator className="my-3" />
           <div>
@@ -223,7 +306,6 @@ export default function VolunteerParticipants() {
                   <div>
                     {userData?.user_role === "volunteer" && (
                       <div className="flex gap-2">
-                        
                         <Select
                           onValueChange={(newRole) =>
                             changeRoleMutation.mutate({
@@ -286,8 +368,9 @@ export default function VolunteerParticipants() {
                                 variant="destructive"
                                 onClick={() =>
                                   removeParticipantMutation.mutate({
+                                    user_id: child.user_id,
                                     participant_id: child.id,
-                                    tablename: "children",
+                                    tablename: "volunteers",
                                   })
                                 }
                                 disabled={removeParticipantMutation.isPending}
@@ -312,7 +395,7 @@ export default function VolunteerParticipants() {
             <Separator className="my-3" />
             {data.parents.map((parent, index) => (
               <div className="" key={index}>
-                <div className="flex justify-between ">
+                <div className="flex justify-between">
                   <div className="flex items-center gap-3 px-2">
                     <Avatar className="h-8 w-8">
                       <AvatarImage src="" />
@@ -396,8 +479,9 @@ export default function VolunteerParticipants() {
                                 variant="destructive"
                                 onClick={() =>
                                   removeParticipantMutation.mutate({
+                                    user_id: parent.user_id,
                                     participant_id: parent.id,
-                                    tablename: "parents",
+                                    tablename: "volunteers",
                                   })
                                 }
                                 disabled={removeParticipantMutation.isPending}

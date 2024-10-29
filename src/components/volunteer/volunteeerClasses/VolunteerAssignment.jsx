@@ -345,11 +345,12 @@ export default function VolunteerAssignment() {
                       <DialogFooter className="mx-2 flex gap-2 sm:justify-between">
                         <Button
                           onClick={() => setIsDialogOpen(false)}
-                          variant="destructive"
+                         
                         >
                           Cancel
                         </Button>
                         <Button
+                         variant="destructive"
                           onClick={() =>
                             deleteAssignmentMutation.mutate(assignment.id)
                           }
@@ -376,7 +377,7 @@ export default function VolunteerAssignment() {
               href={`${assignment.quiz_link}`}
               target="_blank"
             >
-              {assignment.title}
+              {assignment.quiz_link}
             </a>
           </div>
           <Separator className="my-3" />
