@@ -14,6 +14,7 @@ import ParishionerQRCodeScanner from "@/components/user/ParishionerQRCodeScanner
 export default function Eventspage() {
   const [eventItems, setEventItems] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [organiser, setOrganiser] = useState([]);
   const navigate = useNavigate();
 
   const formatTime = (timeStr) => {
@@ -29,18 +30,23 @@ export default function Eventspage() {
   useEffect(() => {
     const fetchEvents = async () => {
       try {
-        const { data, error } = await supabase.from("schedule").select("*");
+        const { data, error } = await supabase
+          .from("schedule")
+          .select("*")
+          .order("id", { ascending: false });
 
         if (error) throw error;
 
         const formattedEvents = data.map((event) => {
           const eventTimes = event.time; // array of available times
+
           return {
             id: event.id,
             title: event.name,
             content: event.description,
             date: event.schedule_date,
             times: eventTimes ? eventTimes.map(formatTime) : [],
+            creator_name: event.creator_name,
           };
         });
 
@@ -81,8 +87,7 @@ export default function Eventspage() {
         <ParishionerQRCodeScanner />
       </div>
 
-      <div className="no-scrollbar mt-8 grid grid-cols-1 gap-4 overflow-scroll md:grid-cols-2 lg:grid-cols-3">
-        {console.log(eventItems.map((item) => item))}
+      <div className="no-scrollbar grid mt-2 pb-44 grid-cols-1 gap-4 overflow-scroll md:grid-cols-2 lg:grid-cols-3">
         {eventItems.map((item) => (
           <Card
             key={item.id}
@@ -94,13 +99,17 @@ export default function Eventspage() {
             </CardHeader>
             <CardContent>
               <CardDescription className="flex flex-col">
+                {console.log(item.creator_name)}
+                <p>Organiser: {item.creator_name}</p>
                 <p>{item.content}</p>
+
                 <div className="mt-4">
                   <strong className="text-lg">Date:</strong>
                   <p className="text-gray-700 dark:text-gray-300">
                     {item.date}
                   </p>
                 </div>
+
                 <div className="mt-2">
                   <strong className="text-lg">
                     Time{item.times.length > 1 ? "s" : ""}:
@@ -112,6 +121,8 @@ export default function Eventspage() {
                       </p>
                     ) : (
                       <ul className="text-gray-700 dark:text-gray-300">
+                        {" "}
+                        {/* Correct <ul> usage */}
                         {item.times.map((time, index) => (
                           <li key={index}>{time}</li>
                         ))}

@@ -66,10 +66,13 @@ import { Textarea } from "../../shadcn/textarea";
 import CreatePoll from "./CreatePoll";
 import { useNavigate } from "react-router-dom";
 import QRCodeIcon from "../../assets/svg/qrCode.svg";
+import { useUser } from "../../context/UserContext";
 
-const headers = ["QR Code", "Event Name", "Date", "Time", "Description", ];
+const headers = ["QR Code", "Event Name", "Date", "Time", "Description"];
 
 export default function EventPage() {
+  const { userData } = useUser(); // Destructure userData directly
+
   const navigate = useNavigate();
   const handleNavigation = () => {
     navigate("/admin-calendar");
@@ -142,6 +145,8 @@ export default function EventPage() {
             description: data.description,
             schedule_category: selectedCategoryName,
             schedule_sub_category: data.schedule_sub_category,
+            creator_id: userData?.user_id,
+            creator_name: `${userData?.user_name} ${userData?.user_last_name}`,
           },
         ]);
 
