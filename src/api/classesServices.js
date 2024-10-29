@@ -77,8 +77,9 @@ export const joinClassAction = async ({
   user_name,
   user_id,
   user_role,
+  familyMembers
 }) => {
-  console.log("inputs", input, user_name, user_id,user_role );
+  console.log("inputs", input, user_name, user_id, user_role);
   let error;
   let data;
   if ((!input, !user_name, !user_id)) {
@@ -108,29 +109,13 @@ export const joinClassAction = async ({
     throw new Error("Request to join already sent!");
   }
 
-
-  // const { data: classExisting, error: existingError } = await supabase
-  //   .from("volunteer_joined_classes")
-  //   .select("*")
-  //   .eq("class_id", classId)
-  //   .eq("user_id", user_id)
-  //   .maybeSingle();
-
-  // if (classExisting) {
-  //   throw new Error("You have already requested to joined this class");
-  // }
-
-  // if (existingError) {
-  //   throw new Error(existingError.message || "Error checking class membership");
-  // }
-
   switch (user_role) {
     case "volunteer":
       // Check if the user already exists
       const volunteerCheck = await supabase
         .from("participant_volunteers")
         .select("*")
-        .eq("name", user_name)
+        .eq("user_id", user_id)
         .eq("class_id", classId)
         .single();
 
@@ -141,7 +126,15 @@ export const joinClassAction = async ({
       // Insert new volunteer
       const volunteerResponse = await supabase
         .from("participant_volunteers")
-        .insert([{ name: user_name,user_id:user_id, class_id: classId, is_approved: false }])
+        .insert([
+          {
+            user_type: "volunteer",
+            name: user_name,
+            user_id: user_id,
+            class_id: classId,
+            is_approved: false,
+          },
+        ])
         .single();
 
       error = volunteerResponse.error;
@@ -164,35 +157,43 @@ export const joinClassAction = async ({
       // Insert new parent
       const parentResponse = await supabase
         .from("participant_volunteers")
-        .insert([{ user_type:"parent", name: user_name, user_id:user_id,class_id: classId, is_approved: false }])
+        .insert([
+          {
+            user_type: "parent",
+            name: user_name,
+            user_id: user_id,
+            class_id: classId,
+            is_approved: false,
+          },
+        ])
         .single();
 
       error = parentResponse.error;
       data = parentResponse.data;
       break;
 
-    case "child":
-      // Check if the user already exists
-      const childCheck = await supabase
-        .from("participant_children")
-        .select("*")
-        .eq("name", user_name)
-        .eq("class_id", classId)
-        .single();
+    // case "child":
+    //   // Check if the user already exists
+    //   const childCheck = await supabase
+    //     .from("participant_children")
+    //     .select("*")
+    //     .eq("name", user_name)
+    //     .eq("class_id", classId)
+    //     .single();
 
-      if (childCheck.data) {
-        throw new Error("User already exists as a child in this class.");
-      }
+    //   if (childCheck.data) {
+    //     throw new Error("User already exists as a child in this class.");
+    //   }
 
-      // Insert new child
-      const childResponse = await supabase
-        .from("participant_children")
-        .insert([{ name: user_name,user_id:user_id, class_id: classId, is_approved: false }])
-        .single();
+    //   // Insert new child
+    //   const childResponse = await supabase
+    //     .from("participant_children")
+    //     .insert([{ name: user_name,user_id:user_id, class_id: classId, is_approved: false }])
+    //     .single();
 
-      error = childResponse.error;
-      data = childResponse.data;
-      break;
+    //   error = childResponse.error;
+    //   data = childResponse.data;
+    //   break;
 
     default:
       throw new Error("Invalid user role.");
@@ -209,9 +210,9 @@ export const joinClassAction = async ({
   //   },
   // ]);
 
-// if (approvalError) {
-//   throw new Error(approvalError.message || "Error adding approval entry");
-// }
+  // if (approvalError) {
+  //   throw new Error(approvalError.message || "Error adding approval entry");
+  // }
 
   // const { error: insertJoinError } = await supabase
   //   .from("volunteer_joined_classes")
@@ -227,6 +228,10 @@ export const joinClassAction = async ({
   // if (addError) {
   //   throw new Error(addError.message || "Error updating total count");
   // }
+  // After inserting the main user (volunteer or parent)
+// After inserting the main user (volunteer or parent)
+
+
   if (error) throw new Error(error.message || "Unknown error occurred");
 };
 
@@ -239,4 +244,44 @@ export const updateClass = async ({ input, class_id }) => {
 
   console.log("Supabase response:", error);
   if (error) throw new Error(error.message || "Unknown error occurred");
+};
+
+export const insertFamilyMembers = async ({familyMembers, classId}) => {
+
+  console.log("data getting",familyMembers,classId)
+  if (!familyMembers || familyMembers.length === 0) return;
+
+  const familyInsertPromises = familyMembers.map(async (member) => {
+    // Check if the family member already exists
+  const familyCheck = await supabase
+      .from("participant_volunteers")
+      .select("*")
+      .eq("user_id", member.family_member_id)
+      .eq("name", `${member.family_first_name} ${member.family_last_name}`)
+      .eq("class_id", classId)
+      .single();
+
+    if (familyCheck.data) {
+      throw new Error(`Family member ${member.family_first_name} ${member.family_last_name} already exists in this class.`);
+    }
+
+  // Insert new family member
+    return supabase
+      .from("participant_volunteers")
+      .insert([{
+        user_type: member.family_type ==="Child"? "child":"parent", // Set the correct user_type
+        name: `${member.family_first_name} ${member.family_last_name}`,
+        user_id: member.family_member_id,
+        class_id: classId,
+        is_approved: false,
+      }]);
+  });
+
+  const familyResponses = await Promise.all(familyInsertPromises);
+  const familyErrors = familyResponses.filter(response => response.error);
+
+  if (familyErrors.length > 0) {
+    const errorMessages = familyErrors.map(err => err.error.message).join(", ");
+    throw new Error(`Error inserting family members: ${errorMessages}`);
+  }
 };

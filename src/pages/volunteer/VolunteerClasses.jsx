@@ -41,9 +41,6 @@ export default function VolunteerClasses() {
     updateClassMutation,
   } = useClasses(userData?.user_id);
 
-
-  console.log("data i am getting", data)
-
   return (
   
       <div className="h-screen overflow-y-scroll p-8">

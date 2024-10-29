@@ -166,3 +166,20 @@ export const changeParticipantRole = async ({
   return { message: "Role updated successfully" };
 };
 
+
+export const fetchFamilyMembers = async (participant_user_id) => {
+  console.log("fetching family")
+  const { data, error } = await supabase
+    .from("family_list") 
+    .select("*") 
+    .eq("guardian_id", participant_user_id); 
+
+  if (error) {
+    throw new Error(error.message || "Error fetching family members");
+  }
+
+  return data;
+};
+
+
+
