@@ -33,7 +33,7 @@ const formSchema = z.object({
   selected_event: z.number().int().positive("Event selection is required."),
 });
 
-export default function Registrationv1() {
+export default function Registrationv1({btnName}) {
   const [eventList, setEventList] = useState([]); // Store event data
   const [eventTimeList, setEventTimeList] = useState([]); // Store event times
   const [selectedEvent, setSelectedEvent] = useState(""); // Store selected event
@@ -131,7 +131,7 @@ export default function Registrationv1() {
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <Button>Walk-In Register</Button>
+        <Button>{btnName}</Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-2xl">
         <DialogHeader>

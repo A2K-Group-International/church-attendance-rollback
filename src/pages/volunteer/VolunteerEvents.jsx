@@ -66,12 +66,19 @@ import { fetchCategory, fetchSubCategory } from "../../api/userService";
 // import CreateMeeting from "./CreateMeeting";
 import { Textarea } from "../../shadcn/textarea";
 import useUserData from "@/api/useUserData";
-
 import QRCodeIcon from "../../assets/svg/qrCode.svg";
 import UserGroupSelect from "@/components/volunteer/UserGroupSelect";
 import { useUser } from "@/context/UserContext";
+import EventAttendance from "../../components/volunteer/schedule/EventAttendance";
 
-const headers = ["QR Code", "Event Name", "Date", "Time", "Description"];
+const headers = [
+  "QR Code",
+  "Attendance",
+  "Event Name",
+  "Date",
+  "Time",
+  "Description",
+];
 
 export default function EventPage() {
   const navigate = useNavigate(); // Initialize the navigate function
@@ -383,6 +390,7 @@ export default function EventPage() {
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>,
+    <EventAttendance key={event.id} event_uuid={event.event_uuid} />,
     event.name,
     moment(event.schedule_date).format("MMMM Do YYYY"), // Format date using Moment.js
     event.time && event.time.length > 0

@@ -174,6 +174,7 @@ const ParishionerQRCodeScanner = () => {
             selected_event_date: eventData[0]?.schedule_date || null,
             attendance_type: "family",
             selected_event: eventData[0]?.name || "Unknown Event",
+            selected_event_id: eventData[0]?.event_uuid || null,
           });
 
         if (insertError) throw insertError;
