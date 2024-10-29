@@ -16,6 +16,7 @@ import {
 } from "../../shadcn/dialog";
 import supabase from "../../api/supabase";
 import MeetingCalendar from "../../components/admin/schedule/MeetingCalendar";
+import moment from "moment";
 
 // Schema for form validation using Zod
 const meetingSchema = z.object({
@@ -230,10 +231,10 @@ export default function CreateMeeting() {
                   {meeting.location}
                 </td>
                 <td className="border border-gray-300 px-4 py-2">
-                  {meeting.date}
+                  {moment(meeting.date).format("MMMM Do YY")}
                 </td>
                 <td className="border border-gray-300 px-4 py-2">
-                  {meeting.time}
+                  {moment(meeting.time, "HH:mm").format("h:mm a")}
                 </td>
                 <td className="border border-gray-300 px-4 py-2">
                   {meeting.details || "N/A"}

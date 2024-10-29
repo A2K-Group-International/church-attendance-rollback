@@ -59,7 +59,7 @@ export default function MeetingCalendar() {
           //   eventClick={}
           //   eventDidMount={}
           editable={true}
-          height={850}
+          height={600}
           eventTimeFormat={{
             hour: "2-digit",
             minute: "2-digit",

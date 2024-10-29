@@ -117,7 +117,6 @@ export default function EventPage() {
 
     // Check if userData.group_id is null or undefined
     if (userData.group_id == null) {
-      console.log("NO GROUP");
       setError("You are not a member of any group. Please contact an admin.");
       setLoading(false); // Stop loading immediately
       return; // Exit early
@@ -212,7 +211,6 @@ export default function EventPage() {
       console.error("Unexpected error:", err);
     }
   };
-  console.log(userData);
 
   const resetForm = () => {
     reset();
