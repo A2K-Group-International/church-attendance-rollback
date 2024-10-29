@@ -39,7 +39,7 @@ export default function UniversalSidebar({ children }) {
       { link: "/event", label: "Schedule", icon: CalendarIcon },
       // { link: "/admin-rotas", label: "Rotas", icon: PersonIcon },
       // { link: "/admin-calendar", label: "Calendar", icon: CalendarIcon },
-      { link: "/volunteers", label: "Request", icon: RequestIcon },
+      { link: "/volunteers", label: "Requests", icon: RequestIcon },
     ],
     volunteer: [
       {
