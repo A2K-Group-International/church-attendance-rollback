@@ -102,6 +102,7 @@ export default function EventPage() {
   const [selectedGroup, setSelectedGroup] = useState(null);
   const [qrCodeValue, setQrCodeValue] = useState(""); // QR Code value
   const [groupId, setGroupId] = useState(null); // QR Code value
+  const [groupData, setGroupData] = useState([]);
   const itemsPerPage = 8;
 
   const {
@@ -125,7 +126,7 @@ export default function EventPage() {
 
     try {
       setGroupId(userData.group_id);
-      setUserId(userData.user_id);
+      // setUserId(userData.user_id);
       const { data: groupData, error: groupError } = await supabase
         .from("group_list")
         .select("*")
@@ -706,7 +707,7 @@ export default function EventPage() {
                 )}
               </div>
 
-              <UserGroupSelect onSelect={setGroupId} groupId={groupId} />
+              {/* <UserGroupSelect onSelect={setGroupId} groupId={groupId} /> */}
 
               {/* Event Category */}
               <div className="space-y-2">
@@ -903,7 +904,10 @@ export default function EventPage() {
         <div className="text-red-500">{error}</div>
       ) : (
         <>
-          <UserGroupSelect onSelect={setGroupId} groupId={groupId} />
+          <div className="max-w-40">
+            <UserGroupSelect onSelect={setGroupId} groupId={groupId} />
+          </div>
+
           <Table headers={headers} rows={rows} />
           <Pagination>
             <PaginationContent>
