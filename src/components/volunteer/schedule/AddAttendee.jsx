@@ -164,7 +164,7 @@ export default function AddAttendee({ event_uuid }) {
           </div>
 
           <div className="grid w-full items-center gap-4 p-2">
-            <Label>Parent/Carer Information</Label>
+            <Label>Main Applicant</Label>
             <div className="flex flex-col gap-2 md:flex-row">
               <Input
                 {...register("main_applicant_first_name")}
