@@ -315,7 +315,7 @@ export default function GroupsPage() {
 
   return (
     // <AdminSidebar>
-    <main className="mx-auto max-w-7xl p-4 lg:p-8">
+    <main className="mx-auto max-h-screen max-w-7xl overflow-y-auto p-4 lg:p-8">
       {/* Header Section */}
       <div className="mb-6">
         <h1 className="text-3xl font-bold">Ministry Management</h1>
