@@ -170,7 +170,7 @@ export default function EventPage() {
 
   const resetForm = () => {
     reset();
-    setTime([]);
+    setTime([""]);
     setSelectedCategoryName("");
     setSelectedDate(null);
     setIsSubmitted(false);
@@ -366,7 +366,9 @@ export default function EventPage() {
                 className="flex flex-col gap-2"
               >
                 <div className="space-y-2">
-                  <Label htmlFor="name">Event Name</Label>
+                  <Label placeholder="sajflasjdlfkf" htmlFor="name">
+                    Event Name
+                  </Label>
                   <Input id="name" {...register("name", { required: true })} />
                   {errors.name && (
                     <p className="text-sm text-red-500">
@@ -402,7 +404,7 @@ export default function EventPage() {
                 </div>
 
                 {/* Event Category */}
-                <div className="space-y-2">
+                <div className="space-y-2 ">
                   <Label htmlFor="Event Category">Event Category</Label>
                   <div className="flex gap-x-2">
                     <div>
@@ -509,7 +511,7 @@ export default function EventPage() {
                   )}
                 </div>
 
-                <div className="space-y-2">
+                <div className="space-y-2 ">
                   <Label htmlFor="time">Time</Label>
                   {time.map((oldTime, index) => (
                     <div key={index} className="flex items-center space-x-2">
@@ -613,6 +615,7 @@ export default function EventPage() {
     fetchData();
   }, [selectedCategory]);
 
+  console.log("this is my time", time)
   return (
     <ScheduleLinks>
       <div className="mt-2 flex gap-x-2">
@@ -628,7 +631,7 @@ export default function EventPage() {
           <DialogTrigger asChild>
             <Button>New Event</Button>
           </DialogTrigger>
-          <DialogContent className="sm:max-w-[700px]">
+          <DialogContent className="sm:max-w-[700px] max-w-full">
             <DialogHeader>
               <DialogTitle>New Event</DialogTitle>
               <DialogDescription>Schedule an upcoming event.</DialogDescription>
@@ -636,105 +639,112 @@ export default function EventPage() {
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="name">Event Name</Label>
-                <Input id="name" {...register("name", { required: true })} />
+                <Input
+                  placeholder="Add event name here"
+                  id="name"
+                  {...register("name", { required: true })}
+                />
                 {errors.name && (
                   <p className="text-sm text-red-500">Event name is required</p>
                 )}
               </div>
 
               {/* Event Category */}
-              <div className="space-y-2">
-                <Label htmlFor="Event Category">Event Category</Label>
-                <div className="flex gap-x-2">
-                  <div>
-                    <Select
-                      onValueChange={(value) => {
-                        const selectedCategory = categoryData.find(
-                          (item) => item.category_id === value,
-                        );
-                        if (selectedCategory) {
-                          setSelectedCategoryName(
-                            selectedCategory.category_name,
-                          ); // Set the selected category name
-                          setValue("schedule_category", value); // Set the category_id in the form
-                          fetchSubCategories(value); // Passing the selected category ID
-                        }
-                      }}
-                    >
-                      <SelectTrigger className="w-[180px]">
-                        <SelectValue placeholder="Select Category">
-                          {selectedCategoryName || "Select Category"}
-                        </SelectValue>
-                      </SelectTrigger>
-                      <SelectContent>
-                        {categoryData.map((item) => (
-                          <SelectItem
-                            key={item.category_id}
-                            value={item.category_id}
-                          >
-                            {item.category_name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    {errors.schedule_category && (
-                      <p className="text-sm text-red-500">
-                        {errors.schedule_category.message}
-                      </p>
-                    )}
-                  </div>
-                  <div>
-                    {selectedCategoryName && selectedSubCategory.length > 0 && (
+              <div className="flex">
+                <div className="space-y-2">
+                  <Label htmlFor="Event Category">Event Category</Label>
+                  <div className="flex gap-x-2">
+                    <div>
                       <Select
                         onValueChange={(value) => {
-                          setValue("schedule_sub_category", value);
+                          const selectedCategory = categoryData.find(
+                            (item) => item.category_id === value,
+                          );
+                          if (selectedCategory) {
+                            setSelectedCategoryName(
+                              selectedCategory.category_name,
+                            ); // Set the selected category name
+                            setValue("schedule_category", value); // Set the category_id in the form
+                            fetchSubCategories(value); // Passing the selected category ID
+                          }
                         }}
                       >
-                        <SelectTrigger className="w-[180px] text-start">
-                          <SelectValue placeholder="Sub category" />
+                        <SelectTrigger className="w-[180px]">
+                          <SelectValue placeholder="Select Category">
+                            {selectedCategoryName || "Select Category"}
+                          </SelectValue>
                         </SelectTrigger>
                         <SelectContent>
-                          {selectedSubCategory.map((item) => (
+                          {categoryData.map((item) => (
                             <SelectItem
-                              key={item.sub_category_id}
-                              value={item.sub_category_name}
+                              key={item.category_id}
+                              value={item.category_id}
                             >
-                              {item.sub_category_name}
+                              {item.category_name}
                             </SelectItem>
                           ))}
                         </SelectContent>
                       </Select>
-                    )}
-                    {errors.schedule_sub_category && (
-                      <p className="text-sm text-red-500">
-                        {errors.schedule_sub_category.message}
-                      </p>
-                    )}
+                      {errors.schedule_category && (
+                        <p className="text-sm text-red-500">
+                          {errors.schedule_category.message}
+                        </p>
+                      )}
+                    </div>
+                    <div>
+                      {selectedCategoryName &&
+                        selectedSubCategory.length > 0 && (
+                          <Select
+                            onValueChange={(value) => {
+                              setValue("schedule_sub_category", value);
+                            }}
+                          >
+                            <SelectTrigger className="w-[180px] text-start">
+                              <SelectValue placeholder="Sub category" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {selectedSubCategory.map((item) => (
+                                <SelectItem
+                                  key={item.sub_category_id}
+                                  value={item.sub_category_name}
+                                >
+                                  {item.sub_category_name}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        )}
+                      {errors.schedule_sub_category && (
+                        <p className="text-sm text-red-500">
+                          {errors.schedule_sub_category.message}
+                        </p>
+                      )}
+                    </div>
                   </div>
                 </div>
-              </div>
 
-              {/* Schedule Privacy */}
-              <div className="space-y-2">
-                <Label htmlFor="schedule_privacy">Schedule Privacy</Label>
-                <Select
-                  onValueChange={(value) => {
-                    setValue("schedule_privacy", value);
-                  }}
-                >
-                  <SelectTrigger className="w-[180px]">
-                    <SelectValue placeholder="Select privacy" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="public">Public</SelectItem>
-                    <SelectItem value="private">Private</SelectItem>
-                  </SelectContent>
-                </Select>
-                {errors.schedule_privacy && (
-                  <p className="text-sm text-red-500">
-                    {errors.schedule_privacy.message}
-                  </p>
-                )}
+                {/* Schedule Privacy */}
+                <div className="space-y-2">
+                  <Label htmlFor="schedule_privacy">Schedule Privacy</Label>
+                  <Select
+                    onValueChange={(value) => {
+                      setValue("schedule_privacy", value);
+                    }}
+                  >
+                    <SelectTrigger className="w-[180px]">
+                      <SelectValue placeholder="Select privacy" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="public">Public</SelectItem>
+                      <SelectItem value="private">Private</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  {errors.schedule_privacy && (
+                    <p className="text-sm text-red-500">
+                      {errors.schedule_privacy.message}
+                    </p>
+                  )}
+                </div>
               </div>
 
               <div className="flex gap-x-5">
@@ -765,38 +775,41 @@ export default function EventPage() {
                   )}
                 </div>
 
-                <div className="space-y-2">
+                <div className=" ">
                   <Label htmlFor="time">Time</Label>
-                  {time.map((t, index) => (
-                    <div key={index} className="flex items-center space-x-2">
-                      <Input
-                        type="time"
-                        value={t}
-                        step="00:15"
-                        onChange={(e) =>
-                          handleChangeTime(index, e.target.value)
-                        }
-                        className="flex-grow"
-                      />
-                      <Button
-                        type="button"
-                        variant="outline"
-                        onClick={() => handleRemoveTimeInput(index)}
-                        className="shrink-0"
-                      >
-                        Remove
-                      </Button>
-                    </div>
-                  ))}
-                  <Button
-                    type="button"
-                    onClick={handleAddTimeInput}
-                    className="w-full"
-                  >
-                    Add Time
-                  </Button>
+                  <div className="bg-blue-0 h-28 space-y-2 overflow-y-scroll no-scrollbar">
+                    {time.map((t, index) => (
+                      <div key={index} className="flex items-center space-x-2">
+                        <Input
+                          type="time"
+                          value={t}
+                          step="00:15"
+                          onChange={(e) =>
+                            handleChangeTime(index, e.target.value)
+                          }
+                          className="flex-grow"
+                        />
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={() => handleRemoveTimeInput(index)}
+                          className="shrink-0"
+                        >
+                          Remove
+                        </Button>
+                      </div>
+                    ))}
+                    <Button
+                      type="button"
+                      onClick={handleAddTimeInput}
+                      className="w-full"
+                    >
+                      Add Time
+                    </Button>
+                  </div>
                 </div>
               </div>
+
               <div className="space-y-2">
                 <Label htmlFor="description">Description</Label>
                 <Textarea

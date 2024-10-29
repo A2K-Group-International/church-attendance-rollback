@@ -5,28 +5,28 @@ import { Textarea } from "@/shadcn/textarea";
 import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 
-export default function CommentInput({ post_id }) {
-  const { register, handleSubmit,reset } = useForm();
+export default function CommentInput({
+  announcement_id,
+  HandleAddComment,
+  columnName,
+}) {
+  const { register, handleSubmit, reset, error } = useForm();
   const { userData } = useUserData();
   const [isCommenting, setIsCommenting] = useState(false);
-
-  const { HandleAddComment } = useComment(reset);
-
-//   console.log("postid",post_id)
 
   return (
     <div className="flex-grow">
       <form
         onSubmit={handleSubmit((data) =>
-          HandleAddComment({ data, user_id: userData.user_id, post_id }),
+          HandleAddComment(data, userData.user_id, announcement_id, columnName,setIsCommenting,reset),
         )}
-        id="comment"
+        id={`comment${announcement_id}`}
         className="flex-1"
       >
         <Textarea
-          {...register("comment", { required: true })}
+          {...register(`comment${announcement_id}`)}
           onFocus={() => setIsCommenting(true)}
-          name="comment"
+          name={`comment${announcement_id}`}
           placeholder="Write Your Comment Here"
         />
       </form>
@@ -41,8 +41,9 @@ export default function CommentInput({ post_id }) {
             Cancel
           </Button>
           <Button
+            // onClick={()=>{console.log(announcement_id)}}
             type="submit"
-            form="comment"
+            form={`comment${announcement_id}`}
             className="bg-orange-400 hover:bg-orange-500"
           >
             Comment

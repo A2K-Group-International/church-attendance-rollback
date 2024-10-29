@@ -3,6 +3,8 @@ import { useForm } from "react-hook-form";
 import { Button } from "../../../shadcn/button"; // Adjust imports based on your project structure
 import { Input } from "../../../shadcn/input"; // Adjust imports based on your project structure
 import { Label } from "../../../shadcn/label"; // Adjust imports based on your project structure
+import { Textarea } from "../../../shadcn/textarea"; // Import Textarea if available
+
 const CreateGroupModal = ({
   isOpen,
   onClose,
@@ -42,10 +44,11 @@ const CreateGroupModal = ({
             <Label htmlFor="groupDescription" className="mb-1 block">
               Ministry Description
             </Label>
-            <Input
+            <Textarea
               id="groupDescription"
               {...register("groupDescription", { required: true })}
               placeholder="Enter group description"
+              rows={4} // Adjust rows as needed
               className="w-full"
             />
             {errors.groupDescription && (

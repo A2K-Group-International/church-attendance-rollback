@@ -34,6 +34,16 @@ export function useLogin() {
         return;
       }
 
+      // Check if the user's account is confirmed
+      if (!userData.is_confirmed) {
+        console.error(
+          "Account not yet approved. Please contact admin for approval.",
+        );
+        return alert(
+          "Account not yet approved. Please contact admin for approval.",
+        ); // Alert or handle error display
+      }
+
       // Set user data and loggedIn state in context
       setUserData(userData);
       setLoggedIn(true); // Set loggedIn state to true

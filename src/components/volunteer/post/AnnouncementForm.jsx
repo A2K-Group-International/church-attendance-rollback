@@ -41,6 +41,10 @@ const AnnouncementForm = ({
     console.log("Updated Announcement:", newAnnouncement);
   }, [newAnnouncement]);
 
+  if (!userGroups || userGroups.length === 0) {
+    return <p>Loading groups...</p>; // Display loading message
+  }
+
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       {/* Display error message if it exists */}
@@ -58,7 +62,7 @@ const AnnouncementForm = ({
               post_header: e.target.value,
             })
           }
-          required // Marking this field as required
+          required
           placeholder="Enter the announcement header..."
           className="w-full"
         />
@@ -75,7 +79,7 @@ const AnnouncementForm = ({
               post_content: e.target.value,
             })
           }
-          required // Marking this field as required
+          required
           placeholder="Enter your announcement here..."
           className="h-40 w-full"
         />
@@ -89,7 +93,6 @@ const AnnouncementForm = ({
           accept="image/jpeg,image/png,image/gif"
           onChange={handleImageUpload}
           className="w-full"
-          // removed required attribute for image upload
         />
         {imagePreview && (
           <div className="mt-2">
@@ -102,11 +105,10 @@ const AnnouncementForm = ({
         )}
       </div>
 
-      {/* Group selection option using ShadCN Select */}
       <div className="space-y-2">
         <Label htmlFor="user_group">Select User Group</Label>
         <Select
-          value={newAnnouncement.groupId} // Controlled value
+          value={newAnnouncement.groupId}
           onValueChange={(value) => {
             const selectedGroup = userGroups.find(
               (group) => group.group_id === value,
@@ -114,15 +116,14 @@ const AnnouncementForm = ({
             if (selectedGroup) {
               setNewAnnouncement({
                 ...newAnnouncement,
-                groupId: selectedGroup.group_id, // Set groupId
-                groupName: selectedGroup.group_name, // Set groupName
+                groupId: selectedGroup.group_id,
+                groupName: selectedGroup.group_name,
               });
-              // Log the selected group's ID and name
               console.log("Selected Group ID:", selectedGroup.group_id);
               console.log("Selected Group Name:", selectedGroup.group_name);
             }
           }}
-          required // Make the group selection required
+          required
         >
           <SelectTrigger>
             <SelectValue placeholder="Select a group" />
@@ -137,7 +138,6 @@ const AnnouncementForm = ({
         </Select>
       </div>
 
-      {/* Privacy option using ShadCN Select */}
       <div className="space-y-2">
         <Label htmlFor="announcement_privacy">Announcement Privacy</Label>
         <Select
@@ -145,7 +145,7 @@ const AnnouncementForm = ({
           onValueChange={(value) =>
             setNewAnnouncement({ ...newAnnouncement, privacy: value })
           }
-          required // Make privacy selection required
+          required
         >
           <SelectTrigger>
             <SelectValue placeholder="Select privacy" />

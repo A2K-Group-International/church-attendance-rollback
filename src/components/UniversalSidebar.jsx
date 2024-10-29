@@ -12,6 +12,7 @@ import DashboardIcon from "../assets/svg/dashboard.svg";
 import CheckListIcon from "../assets/svg/checklist.svg";
 import PersonIcon from "../assets/svg/person.svg";
 import { useUser } from "../context/UserContext";
+import BlackBoardIcon from "@/assets/svg/blackboard.svg"
 
 export default function UniversalSidebar({ children }) {
   const { userData, loggedIn } = useUser();
@@ -34,7 +35,7 @@ export default function UniversalSidebar({ children }) {
     admin: [
       { link: "/admin-dashboard", label: "Dashboard", icon: DashboardIcon },
       { link: "/attendance", label: "Attendance", icon: CheckListIcon },
-      { link: "/groups", label: "Groups", icon: PersonIcon },
+      { link: "/groups", label: "Ministries", icon: PersonIcon },
       { link: "/event", label: "Schedule", icon: CalendarIcon },
       // { link: "/admin-rotas", label: "Rotas", icon: PersonIcon },
       // { link: "/admin-calendar", label: "Calendar", icon: CalendarIcon },
@@ -56,6 +57,10 @@ export default function UniversalSidebar({ children }) {
         label: "Rota Management",
         icon: CalendarIcon,
       },
+      // { link: "/volunteer-upload", label: "Upload", icon: CalendarIcon },
+      // { link: "/volunteer-profile", label: "Profile", icon: CalendarIcon },
+      { link: "/volunteer-classes", label: "Groups", icon: BlackBoardIcon },
+      // { link: "/volunteer-requests", label: "Requests", icon: RequestIcon },
     ],
     user: [
       {
@@ -65,6 +70,8 @@ export default function UniversalSidebar({ children }) {
       },
       { link: "/events-page", label: "Events", icon: CalendarIcon },
       { link: "/family", label: "Family", icon: FamilyIcon },
+      { link: "/volunteer-classes", label: "Groups", icon: BlackBoardIcon },
+      // { link: "/parishioner-request", label: "Request", icon: RequestIcon },
     ],
   };
 
@@ -143,7 +150,7 @@ export default function UniversalSidebar({ children }) {
                     variant="outline"
                     onClick={() => setCurrentUserRole("user")}
                   >
-                    Switch to User
+                    Switch to Parishioner
                   </Button>
                 )}
               </>

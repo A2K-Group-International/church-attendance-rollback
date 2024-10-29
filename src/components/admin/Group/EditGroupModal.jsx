@@ -3,6 +3,7 @@ import { useForm } from "react-hook-form";
 import { Button } from "../../../shadcn/button"; // Adjust imports based on your project structure
 import { Input } from "../../../shadcn/input"; // Adjust imports based on your project structure
 import { Label } from "../../../shadcn/label"; // Adjust imports based on your project structure
+import { Textarea } from "../../../shadcn/textarea"; // Import Textarea if available
 
 const EditGroupModal = ({
   isOpen,
@@ -34,12 +35,12 @@ const EditGroupModal = ({
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
       <div className="w-full max-w-md rounded-lg bg-white p-6 shadow-lg">
-        <h2 className="mb-4 text-xl font-bold">Edit Group</h2>
+        <h2 className="mb-4 text-xl font-bold">Edit Ministry</h2>
         {editError && <p className="mb-4 text-red-600">{editError}</p>}
         <form onSubmit={handleSubmit(onSubmit)}>
           <div className="mb-4">
             <Label htmlFor="groupName" className="mb-1 block">
-              Group Name
+              Ministry Name
             </Label>
             <Input
               id="groupName"
@@ -48,17 +49,18 @@ const EditGroupModal = ({
               className="w-full"
             />
             {errors.groupName && (
-              <p className="mt-1 text-red-600">Group name is required.</p>
+              <p className="mt-1 text-red-600">Ministry name is required.</p>
             )}
           </div>
           <div className="mb-4">
             <Label htmlFor="groupDescription" className="mb-1 block">
-              Group Description
+              Ministry Description
             </Label>
-            <Input
+            <Textarea
               id="groupDescription"
               {...register("groupDescription", { required: true })}
               placeholder="Enter group description"
+              rows={4} // Adjust rows as needed
               className="w-full"
             />
             {errors.groupDescription && (
