@@ -1,5 +1,6 @@
 import React, { createContext, useState, useContext, useEffect } from "react";
 import supabase from "../api/supabase"; // Adjust the import as needed
+import Spinner from "../components/Spinner";
 
 export const UserContext = createContext();
 
@@ -95,7 +96,7 @@ export const UserProvider = ({ children }) => {
       }}
     >
       {loading ? (
-        <p>Loading user data...</p>
+        <Spinner />
       ) : error ? (
         <p className="text-red-500">{error}</p>
       ) : (
