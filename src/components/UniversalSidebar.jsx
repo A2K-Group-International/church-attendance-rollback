@@ -12,7 +12,7 @@ import DashboardIcon from "../assets/svg/dashboard.svg";
 import CheckListIcon from "../assets/svg/checklist.svg";
 import PersonIcon from "../assets/svg/person.svg";
 import { useUser } from "../context/UserContext";
-import BlackBoardIcon from "@/assets/svg/blackboard.svg"
+import BlackBoardIcon from "@/assets/svg/blackboard.svg";
 
 export default function UniversalSidebar({ children }) {
   const { userData, loggedIn } = useUser();
@@ -52,11 +52,11 @@ export default function UniversalSidebar({ children }) {
         label: "Organised Events",
         icon: CalendarIcon,
       },
-      {
-        link: "/volunteer-duties",
-        label: "Rota Management",
-        icon: CalendarIcon,
-      },
+      // {
+      //   link: "/volunteer-duties",
+      //   label: "Rota Management",
+      //   icon: CalendarIcon,
+      // },
       // { link: "/volunteer-upload", label: "Upload", icon: CalendarIcon },
       // { link: "/volunteer-profile", label: "Profile", icon: CalendarIcon },
       { link: "/volunteer-classes", label: "Groups", icon: BlackBoardIcon },
