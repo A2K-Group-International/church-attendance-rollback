@@ -12,6 +12,7 @@ import DashboardIcon from "../assets/svg/dashboard.svg";
 import CheckListIcon from "../assets/svg/checklist.svg";
 import PersonIcon from "../assets/svg/person.svg";
 import { useUser } from "../context/UserContext";
+import BlackBoardIcon from "@/assets/svg/blackboard.svg"
 
 export default function UniversalSidebar({ children }) {
   const { userData, loggedIn } = useUser();
@@ -51,11 +52,15 @@ export default function UniversalSidebar({ children }) {
         label: "Organised Events",
         icon: CalendarIcon,
       },
-      // {
-      //   link: "/volunteer-duties",
-      //   label: "Rota Management",
-      //   icon: CalendarIcon,
-      // },
+      {
+        link: "/volunteer-duties",
+        label: "Rota Management",
+        icon: CalendarIcon,
+      },
+      // { link: "/volunteer-upload", label: "Upload", icon: CalendarIcon },
+      // { link: "/volunteer-profile", label: "Profile", icon: CalendarIcon },
+      { link: "/volunteer-classes", label: "Groups", icon: BlackBoardIcon },
+      // { link: "/volunteer-requests", label: "Requests", icon: RequestIcon },
     ],
     user: [
       {
@@ -65,6 +70,8 @@ export default function UniversalSidebar({ children }) {
       },
       { link: "/events-page", label: "Events", icon: CalendarIcon },
       { link: "/family", label: "Family", icon: FamilyIcon },
+      { link: "/volunteer-classes", label: "Groups", icon: BlackBoardIcon },
+      // { link: "/parishioner-request", label: "Request", icon: RequestIcon },
     ],
   };
 

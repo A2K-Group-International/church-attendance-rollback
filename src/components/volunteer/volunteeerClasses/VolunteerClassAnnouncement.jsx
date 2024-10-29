@@ -26,9 +26,9 @@ import {
   DialogDescription,
 } from "@/shadcn/dialog";
 import Comments from "@/components/Comments";
+import useClassAnnouncements from "@/hooks/useClassAnnouncements";
 
 export default function VolunteerClassAnnouncement() {
-  const queryClient = useQueryClient();
   const { userData } = useUserData();
   const [files, setFiles] = useState([]);
   const { register, handleSubmit, reset, setValue } = useForm();
@@ -38,290 +38,60 @@ export default function VolunteerClassAnnouncement() {
     setValue: setEditValue,
     reset: resetEdit,
   } = useForm();
-  const { toast } = useToast();
+
   const { id } = useParams();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [currentId, setCurrentId] = useState(null);
+  const [currentFiles, setCurrentFiles] = useState([]);
 
-  // if(!userData){
-  //   return <Navigate to="/" replace />;
-  // }
+  const {
+    data,
+    isLoading,
+    isFetching,
+    updateAnnouncementMutation,
+    deleteAnnouncementMutation,
+    createAnnouncementMutation,
+  } = useClassAnnouncements(id);
 
   const handleFileUpload = (event) => {
-    const selectedFiles = Array.from(event.target.files); // Convert FileList to array
+    // Convert FileList to array
+    const selectedFiles = Array.from(event.target.files);
+
     const filePreviews = selectedFiles.map((file) => ({
       file,
-      preview: URL.createObjectURL(file), // Create a preview URL for the file
+      // Create a preview URL for the file
+      preview: URL.createObjectURL(file),
     }));
-    setFiles((prevFiles) => [...prevFiles, ...filePreviews]); // Append new files with previews
-    setValue("files", selectedFiles); // Set files in react-hook-form
+    // Append new files with previews
+    setFiles((prevFiles) => [...prevFiles, ...filePreviews]);
+    setValue("files", selectedFiles);
   };
 
   const handleFileClick = (file) => {
     window.open(file);
   };
 
-  const fetchClassAnnouncements = async () => {
-    const { data: announcements, error: announcementError } = await supabase
-      .from("volunteer_announcements")
-      .select("*")
-      .eq("class_id", id)
-      .order("created_at", { ascending: false });
-
-    if (announcementError)
-      throw new Error(announcementError.message || "Unknown error occurred");
-
-    const announcementsWithFiles = await Promise.all(
-      announcements.map(async (announcement) => {
-        const { data: filesData, error: filesError } = await supabase
-          .from("announcement_files")
-          .select("*")
-          .eq("announcement_id", announcement.id);
-
-        if (filesError)
-          throw new Error(filesError.message || "Error fetching files");
-
-        // Fetch public URLs for the files
-        // console.log("filedata",filesData)
-        const fileURLs = await Promise.all(
-          filesData.map(async (file) => {
-            // console.log("filepaths",file.filepath)
-            const { data: fileURL, error: fileURLError } =
-              await supabase.storage
-                .from("Uploaded files")
-                .getPublicUrl(file.filepath);
-
-            if (fileURLError)
-              throw new Error(
-                fileURLError.message || "Error fetching file URL",
-              );
-            return {
-              fileURL,
-              filepath: file.filepath,
-              filetype: file.filetype,
-              filename: file.filename,
-            };
-          }),
-        );
-        // console.log("urls",fileURLs)
-        return {
-          ...announcement,
-          files: fileURLs || [], // Attach files data to the announcement
-        };
-      }),
-    );
-
-    return announcementsWithFiles; // Return the updated announcements with files
-  };
-
-  const { data, isLoading } = useQuery({
-    queryKey: ["classAnnouncements"],
-    queryFn: fetchClassAnnouncements,
-  });
-
-  const createAnnouncement = async (inputData) => {
- 
-      const uploadPromises = inputData.files.map(async (filewithpreview) => {
-        console.log("this is each files before uploading", filewithpreview);
-        const { data, error } = await supabase.storage
-          .from("Uploaded files")
-          .upload(
-            `class_announcements/${filewithpreview.file.name}`,
-            filewithpreview.file,
-          );
-
-        if (error) throw new Error(error.message || "File upload error");
-
-        return {
-          filepath: data.path,
-          filetype: filewithpreview.file.type,
-          filename: filewithpreview.file.name,
-        };
-      });
-
-      const uploadedFiles = await Promise.all(uploadPromises);
-
-      const { data,error } = await supabase
-        .from("volunteer_announcements")
-        .insert([
-          {
-            postBy: userData.user_name,
-            title: inputData.input.title,
-            content: inputData.input.content,
-            class_id: id,
-            user_id: userData.user_id,
-          },
-        ])
-        .select("id");
-
-      if (error) throw new Error(error.message || "Unknown error occurred");
-      // console.log("data added", data[0].id);
-
-      const insertFilePromises = uploadedFiles.map(async (file) => {
-        const { error } = await supabase.from("announcement_files").insert([
-          {
-            announcement_id: data[0].id,
-            filepath: file.filepath,
-            filetype: file.filetype,
-            filename: file.filename,
-          },
-        ]);
-
-        if (error) throw new Error(error.message || "File insert error");
-      });
-
-      // Wait for file insertions to complete
-      await Promise.all(insertFilePromises);
-    
-
-    // Create the announcement
-
-    console.log("Announcement created successfully");
-    // } catch (error) {
-    //   console.error("Error creating announcement:", error.message);
-    // }
-  };
-  const updateAnnouncement = async (data) => {
-    const { input } = data; // Destructure input and id from data
-    const { error } = await supabase
-      .from("volunteer_announcements")
-      .update({ title: input.edittitle, content: input.editcontent })
-      .eq("id", currentId); // Ensure you are using the correct ID
-
-    if (error) throw new Error(error.message || "Update Failed");
-  };
-  const deleteAnnouncement = async (data) => {
-    if (data.files.length > 0) {
-      const filePaths = data.files.map((file) => file.filepath);
-      console.log("file paths to be deleted", filePaths);
-      const { data: deletedData, error: storageDeleteError } =
-        await supabase.storage.from("Uploaded files").remove(filePaths);
-
-      if (storageDeleteError)
-        throw new Error(
-          storageDeleteError.message || "Failed to delete file from storage",
-        );
-
-      console.log("Files deleted from storage:", deletedData);
-    }
-
-    const { error } = await supabase
-      .from("volunteer_announcements")
-      .delete()
-      .eq("id", currentId);
-
-    if (error) throw new Error(error.message || "File insert error");
-  };
-
-  const createMutation = useMutation({
-    mutationFn: createAnnouncement,
-    onSuccess: () => {
-      toast({
-        title: "Success",
-        description: "Announcement created.",
-      });
-      reset();
-      setFiles([]);
-    },
-    onError: (error) => {
-      console.error("Mutation error:", error);
-      toast({
-        title: "Something went wrong",
-        description: `${error.message}`,
-      });
-    },
-    onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ["classAnnouncements"] });
-    },
-  });
-  const deleteMutation = useMutation({
-    mutationFn: deleteAnnouncement,
-    onSuccess: () => {
-      toast({
-        title: "Success",
-        description: "Announcement deleted.",
-      });
-
-      reset();
-      setIsDialogOpen(false);
-      setFiles([]);
-    },
-    onError: (error) => {
-      console.error("Mutation error:", error);
-      toast({
-        title: "Something went wrong",
-        description: `${error.message}`,
-      });
-    },
-    onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ["classAnnouncements"] });
-    },
-  });
-  const updateMutation = useMutation({
-    mutationFn: updateAnnouncement,
-    onSuccess: () => {
-      // Update only the modified announcement
-      // queryClient.setQueryData(["classAnnouncements"], (oldData) =>
-      //     oldData.map((announcement) =>
-      //         announcement.id === data.id ? { ...announcement, ...data } : announcement
-      //     )
-      // );
-
-      toast({
-        title: "Success",
-        description: "Announcement edited successfully.",
-      });
-      resetEdit();
-      setIsEditDialogOpen(false);
-    },
-    onError: (error) => {
-      console.error("Mutation error:", error);
-      toast({
-        title: "Error",
-        description: `${error.message}`,
-      });
-    },
-    onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ["classAnnouncements"] });
-    },
-  });
-
-  const onEditSubmit = (input) => {
-    const data = { input };
-    updateMutation.mutate(data);
-  };
-
-  const onSubmit = (input) => {
-    const data = {
-      input,
-      files,
-    };
-
-    createMutation.mutate(data);
-  };
-  const onDelete = (fileData) => {
-    deleteMutation.mutate(fileData);
-  };
-
   const renderFiles = (file, index) => {
-    if (file.filetype.startsWith("image")) {
+    if (file.filetype.includes("image")) {
       // Render image
       return (
         <img
-          className=" cursor-pointer snap-start object-contain"
+          className="h-full w-full flex-1 cursor-pointer snap-start object-contain"
           onClick={() => handleFileClick(file.fileURL.publicUrl)}
           key={index}
           src={file.fileURL.publicUrl}
           alt="announcement image"
+          onError={() =>
+            console.error("Image failed to load:", file.fileURL.publicUrl)
+          } // Log error
         />
       );
     } else if (file.filetype.startsWith("video")) {
       // Render video
       return (
         <video
-          className="h-full w-full cursor-pointer snap-start object-contain"
-          onClick={() => handleFileClick(file.fileURL.publicUrl)}
+          className="h-full w-full flex-1 cursor-pointer snap-start object-contain"
           controls
           key={index}
         >
@@ -332,37 +102,56 @@ export default function VolunteerClassAnnouncement() {
     } else if (file.filetype.startsWith("application")) {
       // Render download link
       return (
-        <div key={index} className="flex p-3 m-2 rounded-md border gap-2 items-center justify-center">
+        <div
+          key={index}
+          className="mx-1 flex w-full flex-1 flex-grow items-center justify-center gap-2 rounded-md border p-3"
+        >
           <a
             href={file.fileURL.publicUrl}
-            className=" w-fit cursor-pointer underline hover:cursor-pointer"
+            className="w-full flex-1 flex-grow cursor-pointer underline hover:cursor-pointer"
             download
           >
             {file.filename}
           </a>
         </div>
       );
-    }else{
+    } else {
       <a
-      href={file.fileURL.publicUrl}
-      className="mx-2 w-full cursor-pointer  underline hover:cursor-pointer lg:w-[35rem]"
-      download
-    >
-      {file.filename}
-    </a>
+        href={file.fileURL.publicUrl}
+        className="mx-2 h-full w-full flex-1 flex-grow cursor-pointer underline hover:cursor-pointer lg:w-[35rem]"
+        download
+      >
+        {file.filename}
+      </a>;
     }
     return null;
   };
-  // console.log("data", currentId);
 
   if (isLoading) {
     return <p>Loading...</p>;
   }
 
+  if(data.length < 1 && userData?.user_role === "user"){
+   
+    return <div className=" flex justify-center"><p>nothing here yet.</p></div>
+  }
+
+  console.log("data",data)
+
   return (
     <div className="flex w-full flex-col items-center justify-center gap-2 p-2">
-      <form
-        onSubmit={handleSubmit(onSubmit)}
+      {userData?.user_role === "volunteer" && <form
+        onSubmit={handleSubmit((inputs) =>
+          createAnnouncementMutation.mutate({
+            inputs,
+            files,
+            class_id: id,
+            user_name: userData?.user_name,
+            user_id: userData?.user_id,
+            reset,
+            setFiles,
+          }),
+        )}
         className="w-full rounded-md border p-4 shadow-md lg:w-3/5"
       >
         <Input
@@ -429,10 +218,15 @@ export default function VolunteerClassAnnouncement() {
             />
           </div>
           <div>
-            <Button type="submit">Post</Button>
+            <Button
+              disabled={createAnnouncementMutation.isPending}
+              type="submit"
+            >
+              {createAnnouncementMutation.isPending ? "Posting" : "Post"}
+            </Button>
           </div>
         </div>
-      </form>
+      </form>}
       {isLoading ? (
         <p>Loading...</p>
       ) : (
@@ -466,14 +260,15 @@ export default function VolunteerClassAnnouncement() {
                       onOpenChange={(isOpen) => {
                         setCurrentId(values.id);
                         setIsDialogOpen(isOpen);
+                        setCurrentFiles(values.files);
                       }}
                     >
                       <DialogTrigger>
-                        <img
+                      {userData?.user_role === "volunteer" &&<img
                           src={deleteIcon}
                           alt="delete"
                           className="h-6 w-6"
-                        />
+                        />}
                       </DialogTrigger>
                       <DialogContent className="rounded-md">
                         <DialogHeader>
@@ -493,13 +288,21 @@ export default function VolunteerClassAnnouncement() {
                             Cancel
                           </Button>
                           <Button
-                            onClick={() =>
-                              onDelete({ id: values.id, files: values.files })
-                            }
-                            // disabled={deletemutation.isLoading}
+                            onClick={() => {
+
+                              // console.log("Files to delete:", values.files);
+                              deleteAnnouncementMutation.mutate({
+                                files: currentFiles,
+                                announcement_id: currentId,
+                                setFiles,
+                                setIsDialogOpen,
+                              });
+                            }}
+                            disabled={deleteAnnouncementMutation.isPending}
                           >
-                            {/* {mutation.isLoading ? "Saving..." : "Save"} */}
-                            Confirm
+                            {deleteAnnouncementMutation.isPending
+                              ? "Deleting..."
+                              : "Delete"}
                           </Button>
                         </DialogFooter>
                       </DialogContent>
@@ -517,7 +320,7 @@ export default function VolunteerClassAnnouncement() {
                       }}
                     >
                       <DialogTrigger>
-                        <img src={editIcon} alt="edit" className="h-6 w-6" />
+                      {userData?.user_role === "volunteer" &&<img src={editIcon} alt="edit" className="h-6 w-6" />}
                       </DialogTrigger>
                       <DialogContent className="rounded-md">
                         <DialogHeader>
@@ -528,9 +331,14 @@ export default function VolunteerClassAnnouncement() {
                         </DialogHeader>
                         <form
                           id="editform"
-                          onSubmit={handleEditSubmit((data) => {
-                            onEditSubmit(data);
-                          })}
+                          onSubmit={handleEditSubmit((input) =>
+                            updateAnnouncementMutation.mutate({
+                              input,
+                              announcement_id: currentId,
+                              resetEdit,
+                              setIsEditDialogOpen,
+                            }),
+                          )}
                         >
                           <Label htmlFor="title">Title</Label>
                           <Input
@@ -552,8 +360,14 @@ export default function VolunteerClassAnnouncement() {
                           >
                             Cancel
                           </Button>
-                          <Button form="editform" type="submit">
-                            Edit
+                          <Button
+                            disabled={updateAnnouncementMutation.isPending}
+                            form="editform"
+                            type="submit"
+                          >
+                            {updateAnnouncementMutation.isPending
+                              ? "Editting..."
+                              : "Edit"}
                           </Button>
                         </DialogFooter>
                       </DialogContent>
@@ -569,15 +383,17 @@ export default function VolunteerClassAnnouncement() {
                 </p>
                 {/* <p>{values.id}</p> */}
 
-                <div className="flex snap-x snap-mandatory overflow-x-auto">
+                <div className="flex overflow-x-auto">
                   {values.files &&
                     values.files.map((file, index) => renderFiles(file, index))}
                 </div>
               </div>
               <Separator className="mt-3" />
 
-              <Comments post_id={values.id}/>
-
+              <Comments
+                announcement_id={values?.id}
+                columnName={"announcement_id"}
+              />
             </div>
           </div>
         ))

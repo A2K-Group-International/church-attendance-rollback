@@ -5,6 +5,7 @@ import people from "@/assets/svg/people.svg";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogFooter,
   DialogTitle,
@@ -17,77 +18,20 @@ import { Input } from "@/shadcn/input";
 import { Button } from "@/shadcn/button";
 import { useForm } from "react-hook-form";
 import clsx from "clsx";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import supabase from "@/api/supabase";
-import { useToast } from "@/shadcn/use-toast";
+import useCopyText from "@/hooks/useCopyText";
 
-export default function ClassesTable({ classes, handleCopy, deleteClass }) {
+export default function ClassesTable({
+  classes,
+  updateClassMutation,
+  deleteClassMutation,
+}) {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const { register, handleSubmit } = useForm();
-  const { toast } = useToast();
-  const queryClient = useQueryClient();
+  const [deleteDialogOpen,setdeleteDialogOpen] = useState(false)
 
-  const updateClass = async ({ input, id }) => {
-    console.log("these are the data", input, id);
-    const { error } = await supabase
-      .from("volunteer_classes")
-      .update({ class_name: input.classname })
-      .eq("id", id);
-
-    console.log("Supabase response:", error);
-    if (error) throw new Error(error.message || "Unknown error occurred");
-  };
-  const updateMutateClass = (input, id) => {
-    console.log(input, id);
-    updateMutation.mutate({ input, id });
-  };
-  const updateMutation = useMutation({
-    mutationFn: updateClass,
-    onSuccess: () => {
-      toast({
-        title: "Success",
-        description: "Class Updated.",
-      });
-      setIsDialogOpen(false);
-    },
-
-    onError: (error) => {
-      console.error("Mutation error:", error); // Ensure that the actual error is being logged
-      toast({
-        title: "Something went wrong",
-        description: `${error.message}`, // Use error.message to avoid logging blank objects
-      });
-    },
-    onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ["classes"] });
-    },
-  });
-  // const getTotalParticipants = async () => {
-  //   const [totalParentsResponse, totalChildrenResponse] = await Promise.all([
-  //     supabase
-  //       .from("participant_parents")
-  //       .select("*", { count: "exact" }),
-  //     supabase
-  //       .from("participant_children")
-  //       .select("*", { count: "exact" }),
-  //   ]);
-
-  //   if (totalParentsResponse.error) throw new Error(totalParentsResponse.error.message);
-  //   if (totalChildrenResponse.error) throw new Error(totalChildrenResponse.error.message);
-
-  //   const total =
-  //     (totalParentsResponse.count || 0) + (totalChildrenResponse.count || 0);
-  //   return total;
-  // };
+  const { register, handleSubmit, setValue: editSetValue } = useForm();
+  const { copyText } = useCopyText();
 
 
-
-  // const { data: totalParticipants } = useQuery({
-  //   queryKey: ["totalParticipants"],
-  //   queryFn: getTotalParticipants,
-  // });
-
-  // console.log("total",totalParticipants)
   return (
     <div className="flex flex-col gap-3">
       {classes?.map((classdata, id) => (
@@ -131,7 +75,7 @@ export default function ClassesTable({ classes, handleCopy, deleteClass }) {
                 })}
               >
                 <div
-                  onClick={() => handleCopy(classdata.class_code)}
+                  onClick={() => copyText(classdata.class_code)}
                   className={clsx("p-3 text-start hover:cursor-pointer", {
                     invisible: classdata.status === "joined",
                   })}
@@ -139,8 +83,15 @@ export default function ClassesTable({ classes, handleCopy, deleteClass }) {
                   Copy Code
                 </div>
 
-                <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-                  <DialogTrigger>
+                <Dialog
+                  open={isDialogOpen}
+                  onOpenChange={(open) => {
+                    setIsDialogOpen(open);
+                    open && editSetValue("classname", classdata.class_name);
+                    !open && reset();
+                  }}
+                >
+                  <DialogTrigger className="w-full">
                     <div className="p-3 text-start hover:cursor-pointer">
                       Edit
                     </div>
@@ -154,8 +105,12 @@ export default function ClassesTable({ classes, handleCopy, deleteClass }) {
                     </DialogHeader>
                     <div>
                       <form
-                        onSubmit={handleSubmit((data) =>
-                          updateMutateClass(data, classdata.id),
+                        onSubmit={handleSubmit((input) =>
+                          updateClassMutation.mutate({
+                            input,
+                            class_id: classdata.id,
+                            setIsDialogOpen,
+                          }),
                         )}
                         id="myform"
                       >
@@ -164,7 +119,7 @@ export default function ClassesTable({ classes, handleCopy, deleteClass }) {
                           {...register("classname", {
                             required: "Class name is required",
                           })}
-                          defaultValue={classdata.class_name}
+                          // defaultValue={classdata.class_name}
                           placeholder="Bible Study"
                           className="mt-1"
                           id="classname"
@@ -182,20 +137,60 @@ export default function ClassesTable({ classes, handleCopy, deleteClass }) {
                         form="myform"
                         type="submit"
                         // onClick={handleSubmit(updateClass, classdata.id)}
-                        // disabled={mutation.isLoading}
+                        disabled={updateClassMutation.isPending}
                       >
-                        {/* {mutation.isLoading ? "Saving..." : "Save"} */}
-                        Save
+                        {updateClassMutation.isPending ? "Saving..." : "Save"}
                       </Button>
                     </DialogFooter>
                   </DialogContent>
                 </Dialog>
-                <div
-                  onClick={() => deleteClass(classdata.id)}
-                  className="p-3 text-start text-red-500 hover:cursor-pointer"
+
+                <Dialog
+                  open={deleteDialogOpen}
+                  onOpenChange={(isOpen) => {
+
+                    setdeleteDialogOpen(isOpen);
+                  }}
                 >
-                  Delete
-                </div>
+                  <DialogTrigger>
+                    <div
+                      // onClick={() => deleteClassMutation.mutate(classdata.id)}
+                      className="p-3 text-start text-red-500 hover:cursor-pointer"
+                    >
+                      Delete
+                    </div>
+                  </DialogTrigger>
+                  <DialogContent className="rounded-md">
+                    <DialogHeader>
+                      <DialogTitle className="text-2xl">
+                        Delete Class?
+                      </DialogTitle>
+                      <Separator />
+                    </DialogHeader>
+                    <DialogDescription>
+                      Are you sure you want to delete this class?
+                    </DialogDescription>
+                    <DialogFooter className="mx-2 flex gap-2 sm:justify-between">
+                      <Button
+                        onClick={() => setdeleteDialogOpen(false)}
+                        variant="destructive"
+                      >
+                        Cancel
+                      </Button>
+                      <Button
+                        onClick={() => {
+                          // console.log("Files to delete:", values.files);
+                          deleteClassMutation.mutate({class_id:classdata.id,setdeleteDialogOpen});
+                        }}
+                        disabled={deleteClassMutation.isPending}
+                      >
+                        {deleteClassMutation.isPending
+                          ? "Deleting..."
+                          : "Delete"}
+                      </Button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
               </PopoverContent>
             </Popover>
           </div>
