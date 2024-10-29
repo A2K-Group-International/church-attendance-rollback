@@ -95,11 +95,11 @@ export default function Attendance() {
   const handleExportExcel = async () => {
     const attendedData = attendeesData
       .filter((item) => item.has_attended)
-      .map((item) => {
+      .map((item, index) => {
         return {
-          "#": item.id,
-          "Attendee Name": `${item.attendee_first_name} ${item.attendee_last_name}`,
-          "Main Applicant Name": `${item.main_applicant_first_name} ${item.main_applicant_last_name}`,
+          "#": index + 1,
+          "Name of Attendees": `${item.attendee_first_name} ${item.attendee_last_name}`,
+          "Main Applicant": `${item.main_applicant_first_name} ${item.main_applicant_last_name}`,
           Telephone: item.telephone,
           Event: item.selected_event,
           Status: "Attended",
@@ -112,8 +112,17 @@ export default function Attendance() {
     const workbook = new ExcelJS.Workbook();
     const worksheet = workbook.addWorksheet("Attendance");
 
+    const excelheaders = [
+      "#",
+      "Name of Attendees",
+      "Main Applicant",
+      "Telephone",
+      "Event",
+      "Status",
+    ];
+
     // Set the headers for the worksheet columns
-    worksheet.columns = headers.map((header) => ({ header, key: header }));
+    worksheet.columns = excelheaders.map((header) => ({ header, key: header }));
 
     // Add the attended data to the worksheet
     attendedData.forEach((dataRow) => {
