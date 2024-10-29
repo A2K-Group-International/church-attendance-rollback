@@ -68,9 +68,66 @@ export default function Attendance() {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(0);
   const itemsPerPage = 7;
+  const [attendeesData, setAttendeesData] = useState([]);
 
   //isEditing
   const [editId, setEditId] = useState(null);
+
+  const fetchAttendees = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("new_attendance")
+        .select("*")
+        .eq("has_attended", true);
+
+      if (error) throw error;
+      setAttendeesData(data);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  useEffect(() => {
+    fetchAttendees();
+  }, []);
+
+  //export as excel
+  const handleExportExcel = async () => {
+    const attendedData = attendeesData
+      .filter((item) => item.has_attended)
+      .map((item) => {
+        return {
+          "#": item.id,
+          "Attendee Name": `${item.attendee_first_name} ${item.attendee_last_name}`,
+          "Main Applicant Name": `${item.main_applicant_first_name} ${item.main_applicant_last_name}`,
+          Telephone: item.telephone,
+          Event: item.selected_event,
+          Status: "Attended",
+        };
+      });
+
+    console.log(attendedData); // Check the final attended data before exporting
+
+    // Create a new workbook and worksheet for the attendance data
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet("Attendance");
+
+    // Set the headers for the worksheet columns
+    worksheet.columns = headers.map((header) => ({ header, key: header }));
+
+    // Add the attended data to the worksheet
+    attendedData.forEach((dataRow) => {
+      worksheet.addRow(dataRow);
+    });
+
+    // Create a buffer and download the Excel file
+    const buffer = await workbook.xlsx.writeBuffer();
+    const dataBlob = new Blob([buffer], {
+      type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    });
+
+    saveAs(dataBlob, "attendance_records.xlsx");
+  };
 
   //hook form
   const {
@@ -84,7 +141,7 @@ export default function Attendance() {
   const onSubmit = async (data) => {
     try {
       const { error } = await supabase
-        .from("attendance_pending")
+        .from("new_attendance")
         .update(data)
         .eq("id", editId);
 
@@ -318,39 +375,6 @@ export default function Attendance() {
       setError("Error updating attendance. Please try again.");
       console.error("Error in handleSwitchChange function:", error);
     }
-  };
-
-  // Filter attended data and format it for the Excel file
-  const handleExportExcel = async () => {
-    const attendedData = data
-      .filter((item) => item.has_attended)
-      .map((item) => ({
-        "#": item.id,
-        "Children Name": `${item.children_first_name} ${item.children_last_name}`,
-        "Guardian Name": `${item.guardian_first_name} ${item.guardian_last_name}`,
-        Telephone: item.guardian_telephone,
-        Status: "Attended",
-      }));
-
-    // Create a new workbook and worksheet for the attendance data
-    const workbook = new ExcelJS.Workbook();
-    const worksheet = workbook.addWorksheet("Attendance");
-
-    // Set the headers for the worksheet columns
-    worksheet.columns = headers.map((header) => ({ header, key: header }));
-
-    // Add the attended data to the worksheet
-    attendedData.forEach((dataRow) => {
-      worksheet.addRow(dataRow);
-    });
-
-    // Create a buffer and download the Excel file
-    const buffer = await workbook.xlsx.writeBuffer();
-    const dataBlob = new Blob([buffer], {
-      type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-    });
-
-    saveAs(dataBlob, "attendance_records.xlsx");
   };
 
   const rows = data.map((item, index) => [
