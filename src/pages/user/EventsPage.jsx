@@ -33,6 +33,7 @@ export default function Eventspage() {
         const { data, error } = await supabase
           .from("schedule")
           .select("*")
+          .eq("schedule_privacy", "public")
           .order("id", { ascending: false });
 
         if (error) throw error;
@@ -87,7 +88,7 @@ export default function Eventspage() {
         <ParishionerQRCodeScanner />
       </div>
 
-      <div className="no-scrollbar grid mt-2 pb-44 grid-cols-1 gap-4 overflow-scroll md:grid-cols-2 lg:grid-cols-3">
+      <div className="no-scrollbar mt-2 grid grid-cols-1 gap-4 overflow-scroll pb-44 md:grid-cols-2 lg:grid-cols-3">
         {eventItems.map((item) => (
           <Card
             key={item.id}
