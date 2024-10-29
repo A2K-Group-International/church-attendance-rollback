@@ -113,7 +113,7 @@ export default function VolunteerClasses() {
             }}
           >
             <DialogTrigger>
-              <Button onClick={() => setIsDialogOpen(true)}>Add Group</Button>
+              <Button onClick={() => setIsDialogOpen(true)}>New Group</Button>
             </DialogTrigger>
             <DialogContent className="rounded-md">
               <DialogHeader>
@@ -131,7 +131,7 @@ export default function VolunteerClasses() {
                     }),
                   )}
                 >
-                  <Label htmlFor="classname">Class Name</Label>
+                  <Label htmlFor="classname">Group Name</Label>
                   <Input
                     {...register("classname", {
                       required: "Class name is required",
