@@ -10,9 +10,18 @@ export const fetchAllParticipants = async (class_id) => {
     supabase
       .from("participant_volunteers")
       .select("*")
-      .eq("class_id", class_id).eq("user_type","volunteer"),
-    supabase.from("participant_volunteers").select("*").eq("class_id", class_id).eq("user_type","parent"),
-    supabase.from("participant_volunteers").select("*").eq("class_id", class_id).eq("user_type","child"),
+      .eq("class_id", class_id)
+      .eq("user_type", "volunteer"),
+    supabase
+      .from("participant_volunteers")
+      .select("*")
+      .eq("class_id", class_id)
+      .eq("user_type", "parent"),
+    supabase
+      .from("participant_volunteers")
+      .select("*")
+      .eq("class_id", class_id)
+      .eq("user_type", "child"),
     supabase
       .from("volunteer_classes")
       .select("user_list(*)")
@@ -44,7 +53,9 @@ export const approveParticipants = async ({
   participant_id,
   columnName,
   classId,
+  family_id,
 }) => {
+  console.log("my user id", user_id);
   const { error } = await supabase
     .from(columnName)
     .update({ is_approved: true })
@@ -63,20 +74,36 @@ export const approveParticipants = async ({
   if (classError || !classData) {
     throw new Error("Class not found");
   }
+  if (user_id) {
+    const { error: insertJoinError } = await supabase
+      .from("volunteer_joined_classes")
+      .insert([{ user_id: user_id, class_id: classId }]);
+    if (insertJoinError)
+      throw new Error(insertJoinError.message || "Unknown error occurred");
 
-  const { error: insertJoinError } = await supabase
-    .from("volunteer_joined_classes")
-    .insert([{ user_id: user_id, class_id: classId }]);
-  if (insertJoinError)
-    throw new Error(insertJoinError.message || "Unknown error occurred");
+    const { error: addError } = await supabase
+      .from("volunteer_classes")
+      .update({ class_total_students: classData.class_total_students + 1 })
+      .eq("id", classId);
 
-  const { error: addError } = await supabase
-    .from("volunteer_classes")
-    .update({ class_total_students: classData.class_total_students + 1 })
-    .eq("id", classId);
+    if (addError) {
+      throw new Error(addError.message || "Error updating total count");
+    }
+  } else {
+    const { error: insertJoinError } = await supabase
+      .from("volunteer_joined_classes")
+      .insert([{ family_id: family_id, class_id: classId }]);
+    if (insertJoinError)
+      throw new Error(insertJoinError.message || "Unknown error occurred");
 
-  if (addError) {
-    throw new Error(addError.message || "Error updating total count");
+    const { error: addError } = await supabase
+      .from("volunteer_classes")
+      .update({ class_total_students: classData.class_total_students + 1 })
+      .eq("id", classId);
+
+    if (addError) {
+      throw new Error(addError.message || "Error updating total count");
+    }
   }
 };
 
@@ -84,8 +111,9 @@ export const removeParticipants = async ({
   participant_id,
   tablename,
   user_id,
+  family_id
 }) => {
-  console.log("my params", participant_id, tablename);
+  console.log("my params",family_id, user_id, participant_id, tablename);
 
   const { data: participantData, error: fetchError } = await supabase
     .from(`participant_${tablename}`)
@@ -120,7 +148,7 @@ export const removeParticipants = async ({
 
   const updatedTotal = classData.class_total_students - 1;
 
-  console.log("minus 1 to total");
+  // console.log("minus 1 to total");
 
   const { error: updateError } = await supabase
     .from("volunteer_classes")
@@ -130,24 +158,37 @@ export const removeParticipants = async ({
   if (updateError) {
     throw new Error(updateError.message || "unknown error");
   }
-  const { error: removejoinError } = await supabase
-  .from("volunteer_joined_classes")
-  .delete()
-  .eq("user_id", user_id)
-  .eq("class_id", classId);
 
-if (removejoinError) {
-  throw new Error(removejoinError.message || "An unknown error occurred during deletion.");
-}
+  if (user_id) {
+    const { error: removejoinError } = await supabase
+      .from("volunteer_joined_classes")
+      .delete()
+      .eq("user_id", user_id)
+      .eq("class_id", classId);
+
+    if (removejoinError) {
+      throw new Error(
+        removejoinError.message || "An unknown error occurred during deletion.",
+      );
+    }
+  } else {
+    const { error: removejoinError } = await supabase
+      .from("volunteer_joined_classes")
+      .delete()
+      .eq("family_id", family_id)
+      .eq("class_id", classId);
+
+    if (removejoinError) {
+      throw new Error(
+        removejoinError.message || "An unknown error occurred during deletion.",
+      );
+    }
+  }
 
   return data;
 };
 
-export const changeParticipantRole = async ({
-  participant_id,
-  newRole,
-
-}) => {
+export const changeParticipantRole = async ({ participant_id, newRole }) => {
   // Ensure the new role is valid
   const validRoles = ["parent", "child", "volunteer"];
   if (!validRoles.includes(newRole)) {
@@ -155,7 +196,7 @@ export const changeParticipantRole = async ({
   }
 
   const { error } = await supabase
-    .from( "participant_volunteers")
+    .from("participant_volunteers")
     .update({ user_type: newRole })
     .eq("id", participant_id);
 
@@ -166,13 +207,12 @@ export const changeParticipantRole = async ({
   return { message: "Role updated successfully" };
 };
 
-
 export const fetchFamilyMembers = async (participant_user_id) => {
-  console.log("fetching family")
+  console.log("fetching family");
   const { data, error } = await supabase
-    .from("family_list") 
-    .select("*") 
-    .eq("guardian_id", participant_user_id); 
+    .from("family_list")
+    .select("*")
+    .eq("guardian_id", participant_user_id);
 
   if (error) {
     throw new Error(error.message || "Error fetching family members");
@@ -180,6 +220,3 @@ export const fetchFamilyMembers = async (participant_user_id) => {
 
   return data;
 };
-
-
-
