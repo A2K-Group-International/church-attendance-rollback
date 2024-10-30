@@ -9,12 +9,33 @@ import {
   FaGlobe,
   FaLock,
 } from "react-icons/fa";
-
 import { Separator } from "../../../shadcn/separator";
 import useReactions from "@/api/useReactions";
-
 import PropTypes from "prop-types";
-import useUserData from "@/api/useUserData";
+
+const SkeletonCount = () => (
+  <div className="h-4 w-6 animate-pulse rounded bg-gray-300" />
+);
+
+const ReactionButton = ({ reaction, count, active, onClick }) => {
+  const icons = {
+    like: <FaThumbsUp size={24} />,
+    love: <FaHeart size={24} />,
+    celebrate: <FaStar size={24} />,
+  };
+
+  return (
+    <div className="flex items-center space-x-1">
+      <div
+        className={`cursor-pointer ${active ? "text-blue-500" : "text-gray-400"}`}
+        onClick={() => onClick(reaction)}
+      >
+        {icons[reaction]}
+      </div>
+      <span className="text-gray-600 dark:text-gray-300">{count}</span>
+    </div>
+  );
+};
 
 const ConfirmationDialog = ({ isOpen, onClose, onConfirm }) => {
   if (!isOpen) return null;
@@ -50,20 +71,14 @@ const AnnouncementCard = ({
   const { reactions, loading, fetchReactions, userReaction } = useReactions(
     post.post_id,
     userId,
-  ); // Destructure reactions and loading
-
-  const skeletonStyle = "w-6 h-4 bg-gray-300 animate-pulse rounded";
-
-  // Remove this line
+  );
 
   const [menuOpen, setMenuOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isImageModalOpen, setIsImageModalOpen] = useState(false);
 
-  // Toggle menu open/close state
   const toggleMenu = () => setMenuOpen((prev) => !prev);
 
-  // Close menu when clicking outside of it
   useEffect(() => {
     const handleClickOutside = (event) => {
       const menu = document.querySelector(".menu");
@@ -92,11 +107,11 @@ const AnnouncementCard = ({
   };
 
   const handleIconClick = async (reaction) => {
-    const newReaction = userReaction === reaction ? null : reaction; // Use userReaction instead
+    const newReaction = userReaction === reaction ? null : reaction;
 
     try {
       await handleReaction(post.post_id, newReaction);
-      await fetchReactions(); // Fetch reactions again to get updated counts
+      await fetchReactions();
     } catch (error) {
       console.error("Error handling reaction:", error);
     }
@@ -113,10 +128,9 @@ const AnnouncementCard = ({
 
   const confirmDelete = () => {
     onDelete(post.post_id);
-    setIsDeleteDialogOpen(false); // Close the dialog after deletion
+    setIsDeleteDialogOpen(false);
   };
 
-  // Handle closing the image modal when clicking outside
   const handleCloseImageModal = (event) => {
     if (event.target === event.currentTarget) {
       setIsImageModalOpen(false);
@@ -124,28 +138,24 @@ const AnnouncementCard = ({
   };
 
   return (
-    <div className="flex flex-col rounded-lg bg-white p-6 shadow-md dark:bg-gray-800">
+    <div className="flex flex-col rounded-lg bg-white p-4 shadow-md dark:bg-gray-800 sm:p-6">
       {/* Post Header */}
-      {/* Group Name */}
       {post.group_name && (
-        <p className="mb-2 text-lg font-semibold text-blue-600 dark:text-blue-400">
+        <p className="mb-1 text-lg font-semibold text-blue-600 dark:text-blue-400">
           {post.group_name}
         </p>
       )}
       <div className="flex items-center justify-between">
-        <h2 className="mb-2 text-xl font-bold text-gray-900 dark:text-gray-100">
+        <h2 className="mb-1 text-xl font-bold text-gray-900 dark:text-gray-100">
           {post.post_header}
         </h2>
-
-        {/* Public/Private Icon */}
         <div className="flex items-center space-x-2">
           {post.public ? (
             <FaGlobe title="Public" className="text-green-500" />
           ) : (
             <FaLock title="Private" className="text-red-500" />
           )}
-
-          {post.post_user_id === userId && ( // Check if the current user is the post owner
+          {post.post_user_id === userId && (
             <div className="relative ml-2">
               <button
                 onClick={toggleMenu}
@@ -160,7 +170,7 @@ const AnnouncementCard = ({
                   <button
                     onClick={() => {
                       onEdit(post.post_id);
-                      setMenuOpen(false); // Close menu after action
+                      setMenuOpen(false);
                     }}
                     className="block w-full px-4 py-2 text-left hover:bg-gray-100"
                   >
@@ -168,8 +178,8 @@ const AnnouncementCard = ({
                   </button>
                   <button
                     onClick={() => {
-                      setIsDeleteDialogOpen(true); // Open confirmation dialog
-                      setMenuOpen(false); // Close menu after action
+                      setIsDeleteDialogOpen(true);
+                      setMenuOpen(false);
                     }}
                     className="block w-full px-4 py-2 text-left hover:bg-gray-100"
                   >
@@ -183,9 +193,10 @@ const AnnouncementCard = ({
       </div>
 
       {/* Post Content */}
-      <p className="mb-4 text-gray-700 dark:text-gray-300">
+      <p className="mb-4 text-sm text-gray-700 dark:text-gray-300 sm:text-base">
         {renderPostContent(post.post_content)}
       </p>
+
       {/* Image Section */}
       {post.uploaded_image && (
         <div className="relative mb-4 h-48 w-full overflow-hidden">
@@ -193,20 +204,20 @@ const AnnouncementCard = ({
             src={post.uploaded_image}
             alt="Post"
             className="h-full w-full cursor-pointer object-cover"
-            onClick={() => setIsImageModalOpen(true)} // Open modal on image click
+            onClick={() => setIsImageModalOpen(true)}
           />
         </div>
       )}
+
       {/* Edited Tag */}
       {post.edited && (
         <p className="mb-4 text-sm italic text-gray-500 dark:text-gray-400">
           This post was edited.
         </p>
       )}
-      {/* Separator */}
-      <Separator className="my-4" />
+
       {/* User and Date Information */}
-      <div className="flex items-center text-sm text-gray-500 dark:text-gray-400">
+      <div className="flex items-center text-xs text-gray-500 dark:text-gray-400 sm:text-sm">
         <div className="mr-2 flex-shrink-0">
           <div className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-500 text-sm font-semibold text-white">
             {getInitials(post.user_name)}
@@ -221,70 +232,49 @@ const AnnouncementCard = ({
           </span>
         </div>
       </div>
-      <Separator className="my-4" />
+
       <div className="mt-4 flex items-center justify-between">
         <div className="flex space-x-4">
-          <div className="flex items-center space-x-1">
-            <FaThumbsUp
-              className={`cursor-pointer ${userReaction === "like" ? "text-blue-500" : "text-gray-400"}`}
-              size={24}
-              onClick={() => handleIconClick("like")}
-            />
-            <span className="text-gray-600 dark:text-gray-300">
-              {loading ? (
-                <div className={skeletonStyle}></div>
-              ) : (
-                reactions?.like || 0
-              )}
-            </span>
-          </div>
-          <div className="flex items-center space-x-1">
-            <FaHeart
-              className={`cursor-pointer ${userReaction === "love" ? "text-red-500" : "text-gray-400"}`}
-              size={24}
-              onClick={() => handleIconClick("love")}
-            />
-            <span className="text-gray-600 dark:text-gray-300">
-              {loading ? (
-                <div className={skeletonStyle}></div>
-              ) : (
-                reactions?.love || 0
-              )}
-            </span>
-          </div>
-          <div className="flex items-center space-x-1">
-            <FaStar
-              className={`cursor-pointer ${userReaction === "celebrate" ? "text-yellow-500" : "text-gray-400"}`}
-              size={24}
-              onClick={() => handleIconClick("celebrate")}
-            />
-            <span className="text-gray-600 dark:text-gray-300">
-              {loading ? (
-                <div className={skeletonStyle}></div>
-              ) : (
-                reactions?.celebrate || 0
-              )}
-            </span>
-          </div>
+          {/* Reactions */}
+          <ReactionButton
+            reaction="like"
+            count={loading ? <SkeletonCount /> : reactions?.like || 0}
+            active={userReaction === "like"}
+            onClick={handleIconClick}
+          />
+          <ReactionButton
+            reaction="love"
+            count={loading ? <SkeletonCount /> : reactions?.love || 0}
+            active={userReaction === "love"}
+            onClick={handleIconClick}
+          />
+          <ReactionButton
+            reaction="celebrate"
+            count={loading ? <SkeletonCount /> : reactions?.celebrate || 0}
+            active={userReaction === "celebrate"}
+            onClick={handleIconClick}
+          />
         </div>
         <Link
           to={`/volunteer-announcements-info/${post.post_id}`}
-          className="text-blue-500 hover:underline"
+          className="text-xs text-blue-500 hover:underline sm:text-sm"
         >
           Read more
         </Link>
       </div>
+
       {/* Confirmation Dialog */}
       <ConfirmationDialog
         isOpen={isDeleteDialogOpen}
         onClose={() => setIsDeleteDialogOpen(false)}
         onConfirm={confirmDelete}
       />
+
       {/* Image Modal */}
       {isImageModalOpen && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50"
-          onClick={handleCloseImageModal} // Close on clicking outside
+          onClick={handleCloseImageModal}
         >
           <div className="relative rounded bg-white p-4">
             <img
@@ -301,19 +291,21 @@ const AnnouncementCard = ({
 
 AnnouncementCard.propTypes = {
   post: PropTypes.shape({
-    post_id: PropTypes.number.isRequired,
-    user_name: PropTypes.string.isRequired,
-    post_user_id: PropTypes.number.isRequired,
-    created_at: PropTypes.string.isRequired,
+    post_id: PropTypes.string.isRequired,
     post_header: PropTypes.string.isRequired,
     post_content: PropTypes.string.isRequired,
-    uploaded_image: PropTypes.string, // Add uploaded_image to PropTypes
-    edited: PropTypes.bool.isRequired, // Add edited to PropTypes
+    uploaded_image: PropTypes.string,
+    edited: PropTypes.bool,
+    created_at: PropTypes.string.isRequired,
+    group_name: PropTypes.string,
+    public: PropTypes.bool,
+    user_id: PropTypes.string.isRequired,
+    user_name: PropTypes.string.isRequired,
   }).isRequired,
   handleReaction: PropTypes.func.isRequired,
   onEdit: PropTypes.func.isRequired,
   onDelete: PropTypes.func.isRequired,
-  userId: PropTypes.number.isRequired,
+  userId: PropTypes.string.isRequired,
 };
 
 export default AnnouncementCard;

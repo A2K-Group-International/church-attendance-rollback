@@ -19,10 +19,13 @@ import AnnouncementCard from "../../components/volunteer/post/AnnouncementCard";
 import AnnouncementForm from "../../components/volunteer/post/AnnouncementForm";
 import AnnouncementEdit from "../../components/volunteer/post/AnnouncementEdit"; // Import the edit component
 import { useUser } from "@/context/UserContext";
-import GroupSelect from "@/components/volunteer/post/GroupSelect";
+// import GroupSelect from "@/components/volunteer/post/GroupSelect";
+import VolunteerGroups from "@/components/volunteer/post/VolunteerGroups";
+import GroupSelectionDialog from "@/components/volunteer/post/GroupSelectionDialog";
 
 export default function VolunteerAnnouncements() {
   const [groupId, setGroupId] = useState(null);
+  const [isGroupDialogOpen, setIsGroupDialogOpen] = useState(false);
 
   const [groupData, setGroupData] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -39,7 +42,7 @@ export default function VolunteerAnnouncements() {
   const [visibleCount, setVisibleCount] = useState(10); // For pagination
   const [uploadedImage, setUploadedImage] = useState(null); // State for the uploaded image
 
-  const { userData } = useUser();
+  const { userData, userGroups } = useUser();
   const {
     announcements,
     loading: announcementsLoading,
@@ -276,111 +279,132 @@ export default function VolunteerAnnouncements() {
   };
 
   return (
-    // <VolunteerSidebar>
-    <main className="flex h-screen justify-center max-w-full">
-      <div
-        className="w-full max-w-2xl space-y-6 overflow-y-auto p-4 lg:p-8"
-        style={{ maxHeight: "calc(100vh - 2rem)" }}
-      >
-        {loading ? (
-          <Spinner />
-        ) : (
-          <>
-            <header className="mb-4 flex items-center justify-between">
-              <div>
-                <h1 className="text-2xl font-bold">Announcements</h1>
-                {userData && (
-                  <p className="text-gray-600">
-                    Welcome, {userData.user_name} {userData.user_last_name}
-                  </p>
-                )}
-              </div>
-              <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-                <DialogTrigger asChild>
-                  <Button className="ml-4">Create Announcement</Button>
-                </DialogTrigger>
-                <DialogContent className="sm:max-w-[500px]">
-                  <DialogHeader>
-                    <DialogTitle>Create New Announcement</DialogTitle>
-                    <DialogDescription>
-                      Post a new announcement for your group.
-                    </DialogDescription>
-                  </DialogHeader>
-                  <AnnouncementForm
-                    newAnnouncement={newAnnouncement}
-                    setNewAnnouncement={setNewAnnouncement}
-                    handleSubmit={handleSubmit} // Pass the handleSubmit to the form
-                    error={error} // Pass the error state here
-                    groupName={
-                      groupData && groupData[0] ? groupData[0].group_name : ""
-                    } // Pass the group name here
-                    setUploadedImage={setUploadedImage} // Pass the function to set uploaded image
-                  />
-                </DialogContent>
-              </Dialog>
-            </header>
+    <main className="flex min-h-screen w-full flex-col justify-center overflow-hidden">
+      <div className="flex h-full w-full flex-col lg:flex-row">
+        <div className="hidden p-4 lg:block lg:w-1/4">
+          <VolunteerGroups groups={userGroups} onSelectGroup={setGroupId} />
+        </div>
 
-            <GroupSelect
-              selectedGroupId={groupId}
-              setSelectedGroupId={setGroupId}
-            />
+        <div className="p-4 lg:hidden">
+          <Button className="w-full" onClick={() => setIsGroupDialogOpen(true)}>
+            Select Group
+          </Button>
+        </div>
 
-            <div className="mt-4">
-              <Input
-                type="text"
-                placeholder="Search announcements..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="mb-4"
+        <div
+          className="max-w-2xl flex-1 space-y-6 overflow-y-auto p-4 lg:p-8"
+          style={{ maxHeight: "calc(100vh - 2rem)" }}
+        >
+          {announcementsLoading ? (
+            <Spinner />
+          ) : (
+            <>
+              <header className="mb-4 flex items-center justify-between">
+                <div>
+                  <h1 className="text-2xl font-bold">Announcements</h1>
+                  {userData && (
+                    <p className="text-gray-600">
+                      Welcome, {userData.user_name} {userData.user_last_name}
+                    </p>
+                  )}
+                </div>
+                <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+                  <DialogTrigger asChild>
+                    <Button className="ml-4">Create Announcement</Button>
+                  </DialogTrigger>
+                  <DialogContent className="sm:max-w-[500px]">
+                    <DialogHeader>
+                      <DialogTitle>Create New Announcement</DialogTitle>
+                      <DialogDescription>
+                        Post a new announcement for your group.
+                      </DialogDescription>
+                    </DialogHeader>
+                    <AnnouncementForm
+                      newAnnouncement={newAnnouncement}
+                      setNewAnnouncement={setNewAnnouncement}
+                      handleSubmit={handleSubmit}
+                      error={error}
+                      groupName={newAnnouncement.groupName}
+                      setUploadedImage={setUploadedImage}
+                    />
+                  </DialogContent>
+                </Dialog>
+              </header>
+
+              <GroupSelectionDialog
+                isOpen={isGroupDialogOpen}
+                onClose={() => setIsGroupDialogOpen(false)} // Close the correct dialog
+                groups={userGroups}
+                onSelectGroup={(id) => {
+                  setGroupId(id);
+                  setIsGroupDialogOpen(false); // Close the dialog after selecting a group
+                }}
               />
-            </div>
 
-            <div className="space-y-4">
-              {filteredAnnouncements.slice(0, visibleCount).map((post) => (
-                <AnnouncementCard
-                  handleReaction={handleReaction}
-                  key={post.post_id}
-                  post={post} // This contains all announcement data including reactions
-                  userId={userData.user_id}
-                  onEdit={() => {
-                    setAnnouncementToEdit(post);
-                    setIsEditDialogOpen(true);
-                  }}
-                  onDelete={handleDelete}
+              <div className="mt-4">
+                <Input
+                  type="text"
+                  placeholder="Search announcements..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="mb-4"
                 />
-              ))}
-            </div>
+              </div>
 
-            {filteredAnnouncements.length > visibleCount && (
-              <Button onClick={loadMoreAnnouncements} className="mt-4">
-                Load More
-              </Button>
-            )}
+              <div className="flex min-h-screen flex-col justify-start rounded-lg bg-gray-50 p-6 shadow-sm">
+                {/* Adds background to the announcements section */}
+                <div className="flex-1 space-y-4">
+                  {filteredAnnouncements.length > 0 ? (
+                    filteredAnnouncements.slice(0, visibleCount).map((post) => (
+                      <AnnouncementCard
+                        handleReaction={handleReaction}
+                        key={post.post_id}
+                        post={post}
+                        userId={userData.user_id}
+                        onEdit={() => {
+                          setAnnouncementToEdit(post);
+                          setIsEditDialogOpen(true);
+                        }}
+                        onDelete={handleDelete}
+                      />
+                    ))
+                  ) : (
+                    <p className="text-center text-gray-500">
+                      No announcements to display
+                    </p>
+                  )}
+                </div>
+              </div>
 
-            {error && <div className="text-red-500">{error}</div>}
-            {announcementsError && (
-              <div className="text-red-500">{announcementsError}</div>
-            )}
+              {filteredAnnouncements.length > visibleCount && (
+                <Button onClick={loadMoreAnnouncements} className="mt-4">
+                  Load More
+                </Button>
+              )}
 
-            {/* Edit Announcement Dialog */}
-            {announcementToEdit && (
-              <Dialog
-                open={isEditDialogOpen}
-                onOpenChange={setIsEditDialogOpen}
-              >
-                <DialogContent className="sm:max-w-[500px]">
-                  <AnnouncementEdit
-                    announcement={announcementToEdit}
-                    setAnnouncement={setAnnouncementToEdit} // Set the edited announcement
-                    handleEdit={handleEdit} // Pass the edit function
-                  />
-                </DialogContent>
-              </Dialog>
-            )}
-          </>
-        )}
+              {error && <div className="text-red-500">{error}</div>}
+              {announcementsError && (
+                <div className="text-red-500">{announcementsError}</div>
+              )}
+
+              {announcementToEdit && (
+                <Dialog
+                  open={isEditDialogOpen}
+                  onOpenChange={setIsEditDialogOpen}
+                >
+                  <DialogContent className="sm:max-w-[500px]">
+                    <AnnouncementEdit
+                      announcement={announcementToEdit}
+                      setAnnouncement={setAnnouncementToEdit}
+                      handleEdit={handleEdit}
+                    />
+                  </DialogContent>
+                </Dialog>
+              )}
+            </>
+          )}
+        </div>
       </div>
     </main>
-    // </VolunteerSidebar>
   );
 }
