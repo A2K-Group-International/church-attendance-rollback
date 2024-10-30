@@ -340,7 +340,7 @@ export default function GroupsPage() {
         handleOpenAssignModal={handleOpenAssignModal}
         initiateRemoveMember={initiateRemoveMember}
       />
-      <LoadingDialog isOpen={loading} /> {/* Loading dialog */}
+      {/* <LoadingDialog isOpen={loading} /> Loading dialog */}
       {/* Pagination */}
       <div className="mt-8 flex items-center justify-center space-x-4">
         <Button

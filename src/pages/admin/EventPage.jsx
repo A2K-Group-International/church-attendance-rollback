@@ -133,6 +133,7 @@ export default function EventPage() {
           .eq("id", editId);
 
         if (error) throw error;
+        fetchEvents();
         alert("Event updated successfully!");
       } else {
         // Insert new event
@@ -229,6 +230,7 @@ export default function EventPage() {
       if (error) throw error;
       //update local state to reflect the deletion
       // setData((prevData) => prevData.filter((item) => item.id !== id));
+      fetchEvents();
     } catch (error) {
       console.error("Error Deleting event", error);
     }
@@ -243,8 +245,8 @@ export default function EventPage() {
         setValue("name", itemToEdit.name);
         setSelectedDate(moment(itemToEdit.schedule_date)); // Set the date for Calendar
         setValue("schedule_privacy", itemToEdit.schedule_privacy);
-        setValue("schedule_privacy", itemToEdit.schedule_category);
-        setValue("schedule_privacy", itemToEdit.schedule_sub_category);
+        setValue("schedule_category", itemToEdit.schedule_category);
+        setValue("scheudle_sub_category", itemToEdit.schedule_sub_category);
         setValue("description", itemToEdit.description || "");
         if (itemToEdit.time && Array.isArray(itemToEdit.time)) {
           // Map through the time array and format each time
@@ -351,8 +353,13 @@ export default function EventPage() {
       <DropdownMenuContent>
         <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
           <AlertDialog>
-            <AlertDialogTrigger onClick={() => handleEditBtn(event.id)}>
-              Edit
+            <AlertDialogTrigger asChild>
+              <button
+                onClick={() => handleEditBtn(event.id)}
+                className="h-full w-full p-2 text-left"
+              >
+                Edit
+              </button>
             </AlertDialogTrigger>
             <AlertDialogContent>
               <AlertDialogHeader>
@@ -404,7 +411,7 @@ export default function EventPage() {
                 </div>
 
                 {/* Event Category */}
-                <div className="space-y-2 ">
+                <div className="space-y-2">
                   <Label htmlFor="Event Category">Event Category</Label>
                   <div className="flex gap-x-2">
                     <div>
@@ -511,7 +518,7 @@ export default function EventPage() {
                   )}
                 </div>
 
-                <div className="space-y-2 ">
+                <div className="space-y-2">
                   <Label htmlFor="time">Time</Label>
                   {time.map((oldTime, index) => (
                     <div key={index} className="flex items-center space-x-2">
@@ -553,7 +560,9 @@ export default function EventPage() {
         </DropdownMenuItem>
         <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
           <AlertDialog>
-            <AlertDialogTrigger>Delete</AlertDialogTrigger>
+            <AlertDialogTrigger asChild>
+              <button className="h-full w-full p-2 text-left">Delete</button>
+            </AlertDialogTrigger>
             <AlertDialogContent>
               <AlertDialogHeader>
                 <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
@@ -615,7 +624,7 @@ export default function EventPage() {
     fetchData();
   }, [selectedCategory]);
 
-  console.log("this is my time", time)
+  console.log("this is my time", time);
   return (
     <ScheduleLinks>
       <div className="mt-2 flex gap-x-2">
@@ -631,7 +640,7 @@ export default function EventPage() {
           <DialogTrigger asChild>
             <Button>New Event</Button>
           </DialogTrigger>
-          <DialogContent className="sm:max-w-[700px] max-w-full">
+          <DialogContent className="max-w-full sm:max-w-[700px]">
             <DialogHeader>
               <DialogTitle>New Event</DialogTitle>
               <DialogDescription>Schedule an upcoming event.</DialogDescription>
@@ -777,7 +786,7 @@ export default function EventPage() {
 
                 <div className=" ">
                   <Label htmlFor="time">Time</Label>
-                  <div className="bg-blue-0 h-28 space-y-2 overflow-y-scroll no-scrollbar">
+                  <div className="bg-blue-0 no-scrollbar h-28 space-y-2 overflow-y-scroll">
                     {time.map((t, index) => (
                       <div key={index} className="flex items-center space-x-2">
                         <Input
