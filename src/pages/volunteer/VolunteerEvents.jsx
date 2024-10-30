@@ -1,7 +1,6 @@
 import ScheduleLinks from "../../components/volunteer/schedule/ScheduleLinks";
 import { useState, useEffect, useCallback } from "react";
 import supabase from "../../api/supabase";
-import { useNavigate } from "react-router-dom"; // Import useNavigate
 import moment from "moment";
 import QRCode from "react-qr-code";
 import { useForm } from "react-hook-form";
@@ -11,8 +10,6 @@ import { Button } from "../../shadcn/button";
 import { Input } from "../../shadcn/input";
 import { Label } from "../../shadcn/label";
 import { Calendar } from "../../shadcn/calendar";
-import EventsOverviewModal from "../../components/volunteer/schedule/EventsOverviewModal";
-import CalendarDialog from "@/components/volunteer/schedule/CalendarDialog";
 import {
   Dialog,
   DialogContent,
@@ -23,6 +20,7 @@ import {
   DialogTrigger,
   DialogClose,
 } from "../../shadcn/dialog";
+
 import {
   Popover,
   PopoverContent,
@@ -63,28 +61,21 @@ import {
 } from "../../shadcn/alert-dialog";
 import { Icon } from "@iconify/react";
 import { fetchCategory, fetchSubCategory } from "../../api/userService";
-// import CreateMeeting from "./CreateMeeting";
+
 import { Textarea } from "../../shadcn/textarea";
-import useUserData from "@/api/useUserData";
+
+import { useNavigate } from "react-router-dom";
 import QRCodeIcon from "../../assets/svg/qrCode.svg";
-import UserGroupSelect from "@/components/volunteer/UserGroupSelect";
-import { useUser } from "@/context/UserContext";
-import EventAttendance from "../../components/volunteer/schedule/EventAttendance";
+import { useUser } from "../../context/UserContext";
 
-const headers = [
-  "QR Code",
-  "Attendance",
-  "Event Name",
-  "Date",
-  "Time",
-  "Description",
-];
+const headers = ["QR Code", "Event Name", "Date", "Time", "Description"];
 
-export default function EventPage() {
-  const navigate = useNavigate(); // Initialize the navigate function
-  const { userData } = useUser(); // Destructure userData directly
+export default function VolunteerEvents() {
+  const { userData, userGroups } = useUser(); // Destructure userData directly
+  console.log(userGroups);
 
-  const [isEventsModalOpen, setIsEventsModalOpen] = useState(false); // event time data
+  const navigate = useNavigate();
+
   const [time, setTime] = useState([]); // event time data
   const [selectedDate, setSelectedDate] = useState(null); // event date data
   const [isSubmitted, setIsSubmitted] = useState(false); // for disabling the button submission
@@ -99,12 +90,9 @@ export default function EventPage() {
   const [selectedCategory, setSelectedCategory] = useState(""); // If selected category, show sub category
   const [selectedSubCategory, setSelectedSubCategory] = useState([]);
   const [selectedCategoryName, setSelectedCategoryName] = useState("");
-  const [selectedGroup, setSelectedGroup] = useState(null);
   const [qrCodeValue, setQrCodeValue] = useState(""); // QR Code value
-  const [groupId, setGroupId] = useState(null); // QR Code value
-  const [groupData, setGroupData] = useState([]);
   const itemsPerPage = 8;
-
+  const [groupData, setGroupData] = useState([]); // List of category
   const {
     register,
     handleSubmit,
@@ -113,40 +101,6 @@ export default function EventPage() {
     formState: { errors },
     watch,
   } = useForm(); // react-hook-forms
-
-  const fetchGroupInfo = useCallback(async () => {
-    if (!userData) return;
-
-    // Check if userData.group_id is null or undefined
-    if (userData.group_id == null) {
-      setError("You are not a member of any group. Please contact an admin.");
-      setLoading(false); // Stop loading immediately
-      return; // Exit early
-    }
-
-    try {
-      setGroupId(userData.group_id);
-      // setUserId(userData.user_id);
-      const { data: groupData, error: groupError } = await supabase
-        .from("group_list")
-        .select("*")
-        .eq("group_id", userData.group_id);
-
-      if (groupError) throw groupError;
-      setGroupData(groupData);
-    } catch (err) {
-      setError("Error fetching group information. Please try again.");
-      console.error("Error fetching group information:", err);
-    } finally {
-      setLoading(false); // Ensure loading is set to false
-    }
-  }, [userData]);
-
-  useEffect(() => {
-    fetchGroupInfo;
-  }, [userData]);
-
-  useEffect(() => {}, [userData]);
 
   const onSubmit = async (data) => {
     setIsSubmitted(true);
@@ -178,6 +132,7 @@ export default function EventPage() {
           .eq("id", editId);
 
         if (error) throw error;
+        fetchEvents();
         alert("Event updated successfully!");
       } else {
         // Insert new event
@@ -191,7 +146,6 @@ export default function EventPage() {
             schedule_category: selectedCategoryName,
             schedule_sub_category: data.schedule_sub_category,
             creator_id: userData?.user_id,
-            group_id: userData?.group_id,
             creator_name: `${userData?.user_name} ${userData?.user_last_name}`,
           },
         ]);
@@ -216,7 +170,7 @@ export default function EventPage() {
 
   const resetForm = () => {
     reset();
-    setTime([]);
+    setTime([""]);
     setSelectedCategoryName("");
     setSelectedDate(null);
     setIsSubmitted(false);
@@ -227,42 +181,24 @@ export default function EventPage() {
     setSelectedDate(moment(date));
     setValue("schedule", date);
   };
+
   const fetchEvents = useCallback(async () => {
     setLoading(true);
-    setError(null); // Reset error state at the start
-
-    // Wait until userData is available
-
-    // if (!userData || !userData.group_id) {
-    //   setLoading(false);
-    //   return; // Exit early if userData or group_id is not available
-    // }
-    const groupId = userData.group_id; // Get groupId once it's confirmed available
-
-    if (!userData) {
-      setLoading(false);
-      return; // Exit early if userData is not available
-    }
+    setError(null);
 
     try {
-      // Build the query based on the presence of group_id
-      const query = supabase
+      const {
+        data: fetchedData,
+        error,
+        count,
+      } = await supabase
         .from("schedule")
         .select("*", { count: "exact" })
-
-        .eq("creator_id", userData.user_id) // Use groupId for filtering
-
+        .eq("creator_id", userData.user_id) // Add this line to filter by creator_id
         .range(
           (currentPage - 1) * itemsPerPage,
           currentPage * itemsPerPage - 1,
         );
-
-      // Apply group filter only if groupId is available
-      if (groupId) {
-        query.eq("group_id", groupId); // Filter by group_id if available
-      }
-
-      const { data: fetchedData, error, count } = await query;
 
       if (error) throw error;
 
@@ -274,7 +210,7 @@ export default function EventPage() {
     } finally {
       setLoading(false);
     }
-  }, [currentPage, itemsPerPage, groupId, userData]); // Add groupId as a dependency
+  }, [currentPage, itemsPerPage, userData.user_id]);
 
   useEffect(() => {
     fetchEvents();
@@ -292,10 +228,11 @@ export default function EventPage() {
       const { error } = await supabase.from("schedule").delete().eq("id", id);
 
       if (error) throw error;
-      // update local state to reflect the deletion
-      // setData((prevData) => prevData.filter((item) => item.id !== id));
+
+      // Refresh data after deletion
+      fetchEvents();
     } catch (error) {
-      console.error("Error Deleting event", error);
+      console.error("Error deleting event:", error);
     }
   };
 
@@ -308,8 +245,8 @@ export default function EventPage() {
         setValue("name", itemToEdit.name);
         setSelectedDate(moment(itemToEdit.schedule_date)); // Set the date for Calendar
         setValue("schedule_privacy", itemToEdit.schedule_privacy);
-        setValue("schedule_privacy", itemToEdit.schedule_category);
-        setValue("schedule_privacy", itemToEdit.schedule_sub_category);
+        setValue("schedule_category", itemToEdit.schedule_category);
+        setValue("scheudle_sub_category", itemToEdit.schedule_sub_category);
         setValue("description", itemToEdit.description || "");
         if (itemToEdit.time && Array.isArray(itemToEdit.time)) {
           // Map through the time array and format each time
@@ -390,7 +327,6 @@ export default function EventPage() {
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>,
-    <EventAttendance key={event.id} event_uuid={event.event_uuid} />,
     event.name,
     moment(event.schedule_date).format("MMMM Do YYYY"), // Format date using Moment.js
     event.time && event.time.length > 0
@@ -407,8 +343,9 @@ export default function EventPage() {
     >
       {event.description || "N/A"}
     </div>,
+
     <DropdownMenu key={event.id}>
-      <DropdownMenuTrigger asChild>
+      <DropdownMenuTrigger>
         <button aria-label="Options">
           <Icon icon="tabler:dots" width="2em" height="2em" />
         </button>
@@ -416,8 +353,13 @@ export default function EventPage() {
       <DropdownMenuContent>
         <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
           <AlertDialog>
-            <AlertDialogTrigger onClick={() => handleEditBtn(event.id)}>
-              Edit
+            <AlertDialogTrigger asChild>
+              <button
+                onClick={() => handleEditBtn(event.id)}
+                className="h-full w-full p-2 text-left"
+              >
+                Edit
+              </button>
             </AlertDialogTrigger>
             <AlertDialogContent>
               <AlertDialogHeader>
@@ -431,7 +373,9 @@ export default function EventPage() {
                 className="flex flex-col gap-2"
               >
                 <div className="space-y-2">
-                  <Label htmlFor="name">Event Name</Label>
+                  <Label placeholder="sajflasjdlfkf" htmlFor="name">
+                    Event Name
+                  </Label>
                   <Input id="name" {...register("name", { required: true })} />
                   {errors.name && (
                     <p className="text-sm text-red-500">
@@ -616,7 +560,9 @@ export default function EventPage() {
         </DropdownMenuItem>
         <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
           <AlertDialog>
-            <AlertDialogTrigger>Delete</AlertDialogTrigger>
+            <AlertDialogTrigger asChild>
+              <button className="h-full w-full p-2 text-left">Delete</button>
+            </AlertDialogTrigger>
             <AlertDialogContent>
               <AlertDialogHeader>
                 <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
@@ -685,7 +631,7 @@ export default function EventPage() {
           open={isDialogOpen}
           onOpenChange={(open) => {
             if (open) {
-              resetForm();
+              resetForm(); // Call your form reset function here
             }
             setIsDialogOpen(open);
           }}
@@ -693,7 +639,7 @@ export default function EventPage() {
           <DialogTrigger asChild>
             <Button>New Event</Button>
           </DialogTrigger>
-          <DialogContent className="sm:max-w-[700px]">
+          <DialogContent className="max-w-full sm:max-w-[700px]">
             <DialogHeader>
               <DialogTitle>New Event</DialogTitle>
               <DialogDescription>Schedule an upcoming event.</DialogDescription>
@@ -701,107 +647,112 @@ export default function EventPage() {
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="name">Event Name</Label>
-                <Input id="name" {...register("name", { required: true })} />
+                <Input
+                  placeholder="Add event name here"
+                  id="name"
+                  {...register("name", { required: true })}
+                />
                 {errors.name && (
                   <p className="text-sm text-red-500">Event name is required</p>
                 )}
               </div>
 
-              {/* <UserGroupSelect onSelect={setGroupId} groupId={groupId} /> */}
-
               {/* Event Category */}
-              <div className="space-y-2">
-                <Label htmlFor="Event Category">Event Category</Label>
-                <div className="flex gap-x-2">
-                  <div>
-                    <Select
-                      onValueChange={(value) => {
-                        const selectedCategory = categoryData.find(
-                          (item) => item.category_id === value,
-                        );
-                        if (selectedCategory) {
-                          setSelectedCategoryName(
-                            selectedCategory.category_name,
-                          ); // Set the selected category name
-                          setValue("schedule_category", value); // Set the category_id in the form
-                          fetchSubCategories(value); // Passing the selected category ID
-                        }
-                      }}
-                    >
-                      <SelectTrigger className="w-[180px]">
-                        <SelectValue placeholder="Select Category">
-                          {selectedCategoryName || "Select Category"}
-                        </SelectValue>
-                      </SelectTrigger>
-                      <SelectContent>
-                        {categoryData.map((item) => (
-                          <SelectItem
-                            key={item.category_id}
-                            value={item.category_id}
-                          >
-                            {item.category_name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    {errors.schedule_category && (
-                      <p className="text-sm text-red-500">
-                        {errors.schedule_category.message}
-                      </p>
-                    )}
-                  </div>
-                  <div>
-                    {selectedCategoryName && selectedSubCategory.length > 0 && (
+              <div className="flex">
+                <div className="space-y-2">
+                  <Label htmlFor="Event Category">Event Category</Label>
+                  <div className="flex gap-x-2">
+                    <div>
                       <Select
                         onValueChange={(value) => {
-                          setValue("schedule_sub_category", value);
+                          const selectedCategory = categoryData.find(
+                            (item) => item.category_id === value,
+                          );
+                          if (selectedCategory) {
+                            setSelectedCategoryName(
+                              selectedCategory.category_name,
+                            ); // Set the selected category name
+                            setValue("schedule_category", value); // Set the category_id in the form
+                            fetchSubCategories(value); // Passing the selected category ID
+                          }
                         }}
                       >
-                        <SelectTrigger className="w-[180px] text-start">
-                          <SelectValue placeholder="Sub category" />
+                        <SelectTrigger className="w-[180px]">
+                          <SelectValue placeholder="Select Category">
+                            {selectedCategoryName || "Select Category"}
+                          </SelectValue>
                         </SelectTrigger>
                         <SelectContent>
-                          {selectedSubCategory.map((item) => (
+                          {categoryData.map((item) => (
                             <SelectItem
-                              key={item.sub_category_id}
-                              value={item.sub_category_name}
+                              key={item.category_id}
+                              value={item.category_id}
                             >
-                              {item.sub_category_name}
+                              {item.category_name}
                             </SelectItem>
                           ))}
                         </SelectContent>
                       </Select>
-                    )}
-                    {errors.schedule_sub_category && (
-                      <p className="text-sm text-red-500">
-                        {errors.schedule_sub_category.message}
-                      </p>
-                    )}
+                      {errors.schedule_category && (
+                        <p className="text-sm text-red-500">
+                          {errors.schedule_category.message}
+                        </p>
+                      )}
+                    </div>
+                    <div>
+                      {selectedCategoryName &&
+                        selectedSubCategory.length > 0 && (
+                          <Select
+                            onValueChange={(value) => {
+                              setValue("schedule_sub_category", value);
+                            }}
+                          >
+                            <SelectTrigger className="w-[180px] text-start">
+                              <SelectValue placeholder="Sub category" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {selectedSubCategory.map((item) => (
+                                <SelectItem
+                                  key={item.sub_category_id}
+                                  value={item.sub_category_name}
+                                >
+                                  {item.sub_category_name}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        )}
+                      {errors.schedule_sub_category && (
+                        <p className="text-sm text-red-500">
+                          {errors.schedule_sub_category.message}
+                        </p>
+                      )}
+                    </div>
                   </div>
                 </div>
-              </div>
 
-              {/* Schedule Privacy */}
-              <div className="space-y-2">
-                <Label htmlFor="schedule_privacy">Schedule Privacy</Label>
-                <Select
-                  onValueChange={(value) => {
-                    setValue("schedule_privacy", value);
-                  }}
-                >
-                  <SelectTrigger className="w-[180px]">
-                    <SelectValue placeholder="Select privacy" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="public">Public</SelectItem>
-                    <SelectItem value="private">Private</SelectItem>
-                  </SelectContent>
-                </Select>
-                {errors.schedule_privacy && (
-                  <p className="text-sm text-red-500">
-                    {errors.schedule_privacy.message}
-                  </p>
-                )}
+                {/* Schedule Privacy */}
+                <div className="space-y-2">
+                  <Label htmlFor="schedule_privacy">Schedule Privacy</Label>
+                  <Select
+                    onValueChange={(value) => {
+                      setValue("schedule_privacy", value);
+                    }}
+                  >
+                    <SelectTrigger className="w-[180px]">
+                      <SelectValue placeholder="Select privacy" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="public">Public</SelectItem>
+                      <SelectItem value="private">Private</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  {errors.schedule_privacy && (
+                    <p className="text-sm text-red-500">
+                      {errors.schedule_privacy.message}
+                    </p>
+                  )}
+                </div>
               </div>
 
               <div className="flex gap-x-5">
@@ -832,38 +783,41 @@ export default function EventPage() {
                   )}
                 </div>
 
-                <div className="space-y-2">
+                <div className=" ">
                   <Label htmlFor="time">Time</Label>
-                  {time.map((t, index) => (
-                    <div key={index} className="flex items-center space-x-2">
-                      <Input
-                        type="time"
-                        value={t}
-                        step="00:15"
-                        onChange={(e) =>
-                          handleChangeTime(index, e.target.value)
-                        }
-                        className="flex-grow"
-                      />
-                      <Button
-                        type="button"
-                        variant="outline"
-                        onClick={() => handleRemoveTimeInput(index)}
-                        className="shrink-0"
-                      >
-                        Remove
-                      </Button>
-                    </div>
-                  ))}
-                  <Button
-                    type="button"
-                    onClick={handleAddTimeInput}
-                    className="w-full"
-                  >
-                    Add Time
-                  </Button>
+                  <div className="bg-blue-0 no-scrollbar h-28 space-y-2 overflow-y-scroll">
+                    {time.map((t, index) => (
+                      <div key={index} className="flex items-center space-x-2">
+                        <Input
+                          type="time"
+                          value={t}
+                          step="00:15"
+                          onChange={(e) =>
+                            handleChangeTime(index, e.target.value)
+                          }
+                          className="flex-grow"
+                        />
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={() => handleRemoveTimeInput(index)}
+                          className="shrink-0"
+                        >
+                          Remove
+                        </Button>
+                      </div>
+                    ))}
+                    <Button
+                      type="button"
+                      onClick={handleAddTimeInput}
+                      className="w-full"
+                    >
+                      Add Time
+                    </Button>
+                  </div>
                 </div>
               </div>
+
               <div className="space-y-2">
                 <Label htmlFor="description">Description</Label>
                 <Textarea
@@ -887,14 +841,8 @@ export default function EventPage() {
             </form>
           </DialogContent>
         </Dialog>
-        {/* <Button
-          onClick={() => {
-            console.log("Navigating to Volunteer Main Calendar...");
-            setIsEventsModalOpen(true);
-          }}
-        >
-          Overview
-        </Button> */}
+        {/* <Button onClick={handleNavigation}>Overview</Button> */}
+
         {/* <CreateMeeting />
             <CreatePoll /> */}
       </div>
@@ -904,10 +852,6 @@ export default function EventPage() {
         <div className="text-red-500">{error}</div>
       ) : (
         <>
-          <div className="max-w-40">
-            <UserGroupSelect onSelect={setGroupId} groupId={groupId} />
-          </div>
-
           <Table headers={headers} rows={rows} />
           <Pagination>
             <PaginationContent>
@@ -939,13 +883,6 @@ export default function EventPage() {
           </Pagination>
         </>
       )}
-      <CalendarDialog
-        userData={userData}
-        isOpen={isEventsModalOpen}
-        onClose={() => setIsEventsModalOpen(false)}
-        onRequestClose={() => setIsEventsModalOpen(false)}
-        events={events} // Pass the array of event data
-      />
     </ScheduleLinks>
   );
 }

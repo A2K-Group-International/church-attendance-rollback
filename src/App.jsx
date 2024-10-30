@@ -9,7 +9,7 @@ import Home from "./pages/Home";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import Attendance from "./pages/admin/Attendance";
 import UsersPage from "./pages/admin/UserPage";
-import Schedule from "./pages/admin/Schedule";
+// import Schedule from "./pages/admin/Schedule";
 import AdminRotas from "./pages/admin/AdminRotas";
 import AdminCalendar from "./pages/admin/AdminCalendar";
 import UserAnnouncements from "./pages/user/UserAnnouncements";

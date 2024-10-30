@@ -1,8 +1,10 @@
 import React from "react";
 import PropTypes from "prop-types";
-import GroupCard from "./GroupCard"; // Import the new GroupCard component
+import GroupCard from "./GroupCard"; // Import the GroupCard component
+import Spinner from "../../../components/Spinner";
 
 const GroupList = ({
+  loading,
   data,
   error,
   handleEditGroup,
@@ -12,8 +14,12 @@ const GroupList = ({
 }) => {
   return (
     <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-      {error ? (
-        <div className="p-8 text-center">
+      {loading ? (
+        <div className="col-span-full flex items-center justify-center p-8">
+          <Spinner size="large" /> {/* Add a spinner */}
+        </div>
+      ) : error ? (
+        <div className="col-span-full p-8 text-center">
           <p className="text-destructive">{error}</p>
         </div>
       ) : data.length > 0 ? (
@@ -28,7 +34,7 @@ const GroupList = ({
           />
         ))
       ) : (
-        <div className="p-8 text-center">
+        <div className="col-span-full p-8 text-center">
           <p>No groups found.</p>
         </div>
       )}
@@ -38,6 +44,7 @@ const GroupList = ({
 
 // Define prop types for better type checking
 GroupList.propTypes = {
+  loading: PropTypes.bool,
   data: PropTypes.array.isRequired,
   error: PropTypes.string,
   handleEditGroup: PropTypes.func.isRequired,
