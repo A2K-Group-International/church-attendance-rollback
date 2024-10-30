@@ -39,7 +39,7 @@ import { Label } from "@/shadcn/label";
 import { useForm, Controller } from "react-hook-form";
 
 export default function VolunteerParticipants() {
-  const { control, handleSubmit } = useForm();
+  const { control, handleSubmit, reset } = useForm();
   const { userData } = useUserData();
   const { id } = useParams();
   const { copyText } = useCopyText();
@@ -57,7 +57,7 @@ export default function VolunteerParticipants() {
     approveParticipantMutation,
     changeRoleMutation,
     familyMembers,
-    addFamilyMemberMutation
+    addFamilyMemberMutation,
   } = useClassParticipants(id, userData?.user_id);
 
   if (isLoading) {
@@ -65,11 +65,16 @@ export default function VolunteerParticipants() {
   }
   const onSubmit = (data) => {
     // Get the selected family members' full objects
-    const selectedFamilyMembers = familyMembers.filter(member => 
-      data.familyMembers[member.family_member_id]
+    const selectedFamilyMembers = familyMembers.filter(
+      (member) => data.familyMembers[member.family_member_id],
     );
-    addFamilyMemberMutation.mutate({familyMembers:selectedFamilyMembers,classId:id})
-  
+    addFamilyMemberMutation.mutate({
+      familyMembers: selectedFamilyMembers,
+      classId: id,
+      setisAddFamilyDialogueOpen,
+      reset
+    });
+
     // console.log("Selected Family Members:", selectedFamilyMembers);
   };
 
@@ -146,6 +151,7 @@ export default function VolunteerParticipants() {
                             onClick={() =>
                               approveParticipantMutation.mutate({
                                 user_id: volunteer.user_id,
+                                family_id: volunteer.family_id,
                                 participant_id: volunteer.id,
                                 columnName: "participant_volunteers",
                                 classId: id,
@@ -191,8 +197,9 @@ export default function VolunteerParticipants() {
                                   disabled={removeParticipantMutation.isPending}
                                   onClick={() =>
                                     removeParticipantMutation.mutate({
-                                      user_id: volunteer.user_id,
-                                      participant_id: volunteer.id,
+                                      user_id: volunteer?.user_id,
+                                      family_id: volunteer.family_id,
+                                      participant_id: volunteer?.id,
                                       tablename: "volunteers",
                                     })
                                   }
@@ -262,7 +269,9 @@ export default function VolunteerParticipants() {
                       </Label>
                     </div>
                   ))}
-                  <Button className=" w-full mt-2" type="submit">Add Members</Button>
+                  <Button className="mt-2 w-full" type="submit">
+                    Add Members
+                  </Button>
                 </form>
 
                 {/* <DialogFooter>
@@ -293,213 +302,223 @@ export default function VolunteerParticipants() {
           <div>
             <h2 className="text-2xl font-semibold">Children</h2>
             <Separator className="my-3" />
-            {data.children.map((child, index) => (
-              <div className="" key={index}>
-                <div className="flex justify-between">
-                  <div className="flex items-center gap-3 px-2">
-                    <Avatar className="h-8 w-8">
-                      <AvatarImage src="" />
-                      <AvatarFallback>{getInitial(child.name)}</AvatarFallback>
-                    </Avatar>
-                    <div>{child.name}</div>
-                  </div>
-                  <div>
-                    {userData?.user_role === "volunteer" && (
-                      <div className="flex gap-2">
-                        <Select
-                          onValueChange={(newRole) =>
-                            changeRoleMutation.mutate({
-                              participant_id: child.id,
-                              newRole,
-                            })
-                          }
-                        >
-                          <SelectTrigger className="w-[180px]">
-                            <SelectValue placeholder="Change Role" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectGroup>
-                              {/* <SelectLabel>Change Role for user</SelectLabel> */}
-                              <SelectItem value="child">Child</SelectItem>
-                              <SelectItem value="volunteer">
-                                Volunteer
-                              </SelectItem>
-
-                              <SelectItem value="parent">Parent</SelectItem>
-                            </SelectGroup>
-                          </SelectContent>
-                        </Select>
-                        {!child.is_approved && (
-                          <Button
-                            onClick={() =>
-                              approveParticipantMutation.mutate({
-                                user_id: child.user_id,
+            {data.children.map((child, index) =>
+              userData?.user_role === "volunteer" || child.is_approved ? ( 
+                <div className="" key={index}>
+                  <div className="flex justify-between">
+                    <div className="flex items-center gap-3 px-2">
+                      <Avatar className="h-8 w-8">
+                        <AvatarImage src="" />
+                        <AvatarFallback>
+                          {getInitial(child.name)}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div>{child.name}</div>
+                    </div>
+                    <div>
+                      {userData?.user_role === "volunteer" && (
+                        <div className="flex gap-2">
+                          <Select
+                            onValueChange={(newRole) =>
+                              changeRoleMutation.mutate({
                                 participant_id: child.id,
-                                columnName: "participant_volunteers",
-                                classId: id,
+                                newRole,
                               })
                             }
                           >
-                            Approve
-                          </Button>
-                        )}
-                        <Dialog
-                          open={isChildDialogOpen}
-                          onOpenChange={setIsChildDialogOpen}
-                        >
-                          <DialogTrigger>
-                            <Button variant={"destructive"}>Remove</Button>
-                          </DialogTrigger>
-                          <DialogContent className="rounded-md">
-                            <DialogHeader>
-                              <DialogTitle className="text-2xl">
-                                Remove {child.name}?
-                              </DialogTitle>
-                              <Separator />
-                            </DialogHeader>
-                            <p>Are you Sure you want to remove {child.name}?</p>
-                            <DialogFooter>
-                              <Button
-                                onClick={() => setIsChildDialogOpen(false)}
-                              >
-                                Cancel
-                              </Button>
-                              <Button
-                                variant="destructive"
-                                onClick={() =>
-                                  removeParticipantMutation.mutate({
-                                    user_id: child.user_id,
-                                    participant_id: child.id,
-                                    tablename: "volunteers",
-                                  })
-                                }
-                                disabled={removeParticipantMutation.isPending}
-                              >
-                                {removeParticipantMutation.isPending
-                                  ? "Removing"
-                                  : "Remove"}
-                              </Button>
-                            </DialogFooter>
-                          </DialogContent>
-                        </Dialog>
-                      </div>
-                    )}
+                            <SelectTrigger className="w-[180px]">
+                              <SelectValue placeholder="Change Role" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectGroup>
+                                <SelectItem value="child">Child</SelectItem>
+                                <SelectItem value="volunteer">
+                                  Volunteer
+                                </SelectItem>
+                                <SelectItem value="parent">Parent</SelectItem>
+                              </SelectGroup>
+                            </SelectContent>
+                          </Select>
+                          {!child.is_approved && (
+                            <Button
+                              onClick={() =>
+                                approveParticipantMutation.mutate({
+                                  user_id: child.user_id,
+                                  family_id: child.family_id,
+                                  participant_id: child.id,
+                                  columnName: "participant_volunteers",
+                                  classId: id,
+                                })
+                              }
+                            >
+                              Approve
+                            </Button>
+                          )}
+                          <Dialog
+                            open={isChildDialogOpen}
+                            onOpenChange={setIsChildDialogOpen}
+                          >
+                            <DialogTrigger>
+                              <Button variant={"destructive"}>Remove</Button>
+                            </DialogTrigger>
+                            <DialogContent className="rounded-md">
+                              <DialogHeader>
+                                <DialogTitle className="text-2xl">
+                                  Remove {child.name}?
+                                </DialogTitle>
+                                <Separator />
+                              </DialogHeader>
+                              <p>
+                                Are you sure you want to remove {child.name}?
+                              </p>
+                              <DialogFooter>
+                                <Button
+                                  onClick={() => setIsChildDialogOpen(false)}
+                                >
+                                  Cancel
+                                </Button>
+                                <Button
+                                  variant="destructive"
+                                  onClick={() =>
+                                    removeParticipantMutation.mutate({
+                                      user_id: child.user_id,
+                                      family_id: child.family_id,
+                                      participant_id: child.id,
+                                      tablename: "volunteers",
+                                    })
+                                  }
+                                  disabled={removeParticipantMutation.isPending}
+                                >
+                                  {removeParticipantMutation.isPending
+                                    ? "Removing"
+                                    : "Remove"}
+                                </Button>
+                              </DialogFooter>
+                            </DialogContent>
+                          </Dialog>
+                        </div>
+                      )}
+                    </div>
                   </div>
+                  <Separator className="my-3" />
                 </div>
-                <Separator className="my-3" />
-              </div>
-            ))}
+              ) : null,
+            )}
           </div>
           <div>
             <h2 className="text-2xl font-semibold">Parents</h2>
             <Separator className="my-3" />
-            {data.parents.map((parent, index) => (
-              <div className="" key={index}>
-                <div className="flex justify-between">
-                  <div className="flex items-center gap-3 px-2">
-                    <Avatar className="h-8 w-8">
-                      <AvatarImage src="" />
-                      <AvatarFallback>{getInitial(parent.name)}</AvatarFallback>
-                    </Avatar>
-                    <div>{parent.name}</div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <p
-                      onClick={() => copyText(parent.contact)}
-                      className="hover:cursor-pointer hover:text-orange-400"
-                    >
-                      {parent.phone_number}
-                    </p>
-                    <img src={contact} alt="contact" className="h-6 w-6" />
-                  </div>
-                  <div className="flex items-center justify-between gap-2">
+            {data.parents.map((parent, index) =>
+              parent.is_approved || userData?.user_role === "volunteer" ? (
+                <div className="" key={index}>
+                  <div className="flex justify-between">
+                    <div className="flex items-center gap-3 px-2">
+                      <Avatar className="h-8 w-8">
+                        <AvatarImage src="" />
+                        <AvatarFallback>
+                          {getInitial(parent.name)}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div>{parent.name}</div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <p
+                        onClick={() => copyText(parent.contact)}
+                        className="hover:cursor-pointer hover:text-orange-400"
+                      >
+                        {parent.phone_number}
+                      </p>
+                      <img src={contact} alt="contact" className="h-6 w-6" />
+                    </div>
                     {userData?.user_role === "volunteer" && (
-                      <div className="flex gap-2">
-                        <Select
-                          onValueChange={(newRole) =>
-                            changeRoleMutation.mutate({
-                              participant_id: parent.id,
-                              newRole,
-                            })
-                          }
-                        >
-                          <SelectTrigger className="w-[180px]">
-                            <SelectValue placeholder="Change Role" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectGroup>
-                              {/* <SelectLabel>Change Role for user</SelectLabel> */}
-                              <SelectItem value="child">Child</SelectItem>
-                              <SelectItem value="volunteer">
-                                Volunteer
-                              </SelectItem>
-
-                              <SelectItem value="parent">Parent</SelectItem>
-                            </SelectGroup>
-                          </SelectContent>
-                        </Select>
-                        {!parent.is_approved && (
-                          <Button
-                            onClick={() =>
-                              approveParticipantMutation.mutate({
-                                user_id: parent.user_id,
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="flex gap-2">
+                          <Select
+                            onValueChange={(newRole) =>
+                              changeRoleMutation.mutate({
                                 participant_id: parent.id,
-                                columnName: "participant_volunteers",
-                                classId: id,
+                                newRole,
                               })
                             }
                           >
-                            Approve
-                          </Button>
-                        )}
-                        <Dialog
-                          open={isParentDialogOpen}
-                          onOpenChange={setIsParentDialogOpen}
-                        >
-                          <DialogTrigger>
-                            <Button variant={"destructive"}>Remove</Button>
-                          </DialogTrigger>
-                          <DialogContent className="rounded-md">
-                            <DialogHeader>
-                              <DialogTitle className="text-2xl">
-                                Remove {parent.name}?
-                              </DialogTitle>
-                              <Separator />
-                            </DialogHeader>
-                            <p>
-                              Are you Sure you want to remove {parent.name}?
-                            </p>
-                            <DialogFooter>
-                              <Button
-                                onClick={() => setIsParentDialogOpen(false)}
-                              >
-                                Cancel
-                              </Button>
-                              <Button
-                                variant="destructive"
-                                onClick={() =>
-                                  removeParticipantMutation.mutate({
-                                    user_id: parent.user_id,
-                                    participant_id: parent.id,
-                                    tablename: "volunteers",
-                                  })
-                                }
-                                disabled={removeParticipantMutation.isPending}
-                              >
-                                {removeParticipantMutation.isPending
-                                  ? "Removing"
-                                  : "Remove"}
-                              </Button>
-                            </DialogFooter>
-                          </DialogContent>
-                        </Dialog>
+                            <SelectTrigger className="w-[180px]">
+                              <SelectValue placeholder="Change Role" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectGroup>
+                                <SelectItem value="child">Child</SelectItem>
+                                <SelectItem value="volunteer">
+                                  Volunteer
+                                </SelectItem>
+                                <SelectItem value="parent">Parent</SelectItem>
+                              </SelectGroup>
+                            </SelectContent>
+                          </Select>
+                          {!parent.is_approved && (
+                            <Button
+                              onClick={() =>
+                                approveParticipantMutation.mutate({
+                                  user_id: parent.user_id,
+                                  family_id: parent.family_id,
+                                  participant_id: parent.id,
+                                  columnName: "participant_volunteers",
+                                  classId: id,
+                                })
+                              }
+                            >
+                              Approve
+                            </Button>
+                          )}
+                          <Dialog
+                            open={isParentDialogOpen}
+                            onOpenChange={setIsParentDialogOpen}
+                          >
+                            <DialogTrigger>
+                              <Button variant={"destructive"}>Remove</Button>
+                            </DialogTrigger>
+                            <DialogContent className="rounded-md">
+                              <DialogHeader>
+                                <DialogTitle className="text-2xl">
+                                  Remove {parent.name}?
+                                </DialogTitle>
+                                <Separator />
+                              </DialogHeader>
+                              <p>
+                                Are you sure you want to remove {parent.name}?
+                              </p>
+                              <DialogFooter>
+                                <Button
+                                  onClick={() => setIsParentDialogOpen(false)}
+                                >
+                                  Cancel
+                                </Button>
+                                <Button
+                                  variant="destructive"
+                                  onClick={() =>
+                                    removeParticipantMutation.mutate({
+                                      user_id: parent.user_id,
+                                      family_id: parent.family_id,
+                                      participant_id: parent.id,
+                                      tablename: "volunteers",
+                                    })
+                                  }
+                                  disabled={removeParticipantMutation.isPending}
+                                >
+                                  {removeParticipantMutation.isPending
+                                    ? "Removing"
+                                    : "Remove"}
+                                </Button>
+                              </DialogFooter>
+                            </DialogContent>
+                          </Dialog>
+                        </div>
                       </div>
                     )}
                   </div>
+                  <Separator className="my-3" />
                 </div>
-                <Separator className="my-3" />
-              </div>
-            ))}
+              ) : null,
+            )}
           </div>
         </div>
       </div>

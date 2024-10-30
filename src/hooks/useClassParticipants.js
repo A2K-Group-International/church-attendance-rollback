@@ -106,12 +106,13 @@ export default function useClassParticipants(class_id,user_id) {
   
   const addFamilyMemberMutation = useMutation({
     mutationFn: insertFamilyMembers,
-    onSuccess: () => {
+    onSuccess: (data,{reset,setisAddFamilyDialogueOpen}) => {
       toast({
         title: "Success",
         description: "Participants request sent.",
       });
-      // setIsChildDialogOpen(false);
+      reset()
+      setisAddFamilyDialogueOpen()
       // setIsParentDialogOpen(false);
       // setIsVolunteerDialogOpen(false);
     },

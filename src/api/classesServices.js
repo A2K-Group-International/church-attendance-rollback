@@ -256,7 +256,7 @@ export const insertFamilyMembers = async ({familyMembers, classId}) => {
   const familyCheck = await supabase
       .from("participant_volunteers")
       .select("*")
-      .eq("user_id", member.family_member_id)
+      .eq("family_id", member.family_member_id)
       .eq("name", `${member.family_first_name} ${member.family_last_name}`)
       .eq("class_id", classId)
       .single();
@@ -269,9 +269,9 @@ export const insertFamilyMembers = async ({familyMembers, classId}) => {
     return supabase
       .from("participant_volunteers")
       .insert([{
-        user_type: member.family_type ==="Child"? "child":"parent", // Set the correct user_type
+        user_type: member.family_type ==="Child"? "child":"parent", 
         name: `${member.family_first_name} ${member.family_last_name}`,
-        user_id: member.family_member_id,
+        family_id: member.family_member_id,
         class_id: classId,
         is_approved: false,
       }]);
