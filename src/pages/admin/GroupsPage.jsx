@@ -100,7 +100,6 @@ export default function GroupsPage() {
   }, [currentPage]);
 
   // Fetch all volunteers (for assignment)
-  // Fetch all volunteers (for assignment)
   const fetchAllVolunteers = useCallback(async () => {
     try {
       const { data: volunteers, error } = await supabase
@@ -340,7 +339,7 @@ export default function GroupsPage() {
         handleOpenAssignModal={handleOpenAssignModal}
         initiateRemoveMember={initiateRemoveMember}
       />
-      {/* <LoadingDialog isOpen={loading} /> Loading dialog */}
+
       {/* Pagination */}
       <div className="mt-8 flex items-center justify-center space-x-4">
         <Button
