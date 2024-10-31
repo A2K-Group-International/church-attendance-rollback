@@ -24,10 +24,23 @@ const ReactionButton = ({ reaction, count, active, onClick }) => {
     celebrate: <FaStar size={24} />,
   };
 
+  const getColor = () => {
+    switch (reaction) {
+      case "like":
+        return active ? "text-blue-500" : "text-gray-400";
+      case "love":
+        return active ? "text-red-500" : "text-gray-400";
+      case "celebrate":
+        return active ? "text-yellow-500" : "text-gray-400";
+      default:
+        return "text-gray-400";
+    }
+  };
+
   return (
     <div className="flex items-center space-x-1">
       <div
-        className={`cursor-pointer ${active ? "text-blue-500" : "text-gray-400"}`}
+        className={`cursor-pointer ${getColor()}`}
         onClick={() => onClick(reaction)}
       >
         {icons[reaction]}
