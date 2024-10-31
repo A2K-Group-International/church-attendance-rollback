@@ -292,7 +292,7 @@ export default function VolunteerAnnouncements() {
         </div>
 
         <div
-          className="max-w-2xl flex-1 space-y-6 overflow-y-auto p-4 lg:p-8"
+          className="no-scrollbar max-w-2xl flex-1 space-y-6 overflow-y-auto p-4 lg:p-8"
           style={{ maxHeight: "calc(100vh - 2rem)" }}
         >
           {announcementsLoading ? (
