@@ -67,6 +67,7 @@ import { Textarea } from "../../shadcn/textarea";
 import { useNavigate } from "react-router-dom";
 import QRCodeIcon from "../../assets/svg/qrCode.svg";
 import { useUser } from "../../context/UserContext";
+import EventAttendance from "@/components/volunteer/schedule/EventAttendance";
 
 const headers = ["QR Code", "Event Name", "Date", "Time", "Description"];
 
@@ -246,7 +247,7 @@ export default function VolunteerEvents() {
         setSelectedDate(moment(itemToEdit.schedule_date)); // Set the date for Calendar
         setValue("schedule_privacy", itemToEdit.schedule_privacy);
         setValue("schedule_category", itemToEdit.schedule_category);
-        setValue("scheudle_sub_category", itemToEdit.schedule_sub_category);
+        setValue("schedule_sub_category", itemToEdit.schedule_sub_category);
         setValue("description", itemToEdit.description || "");
         if (itemToEdit.time && Array.isArray(itemToEdit.time)) {
           // Map through the time array and format each time
@@ -327,6 +328,7 @@ export default function VolunteerEvents() {
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>,
+    <EventAttendance key={event.id} event_uuid={event.event_uuid} />,
     event.name,
     moment(event.schedule_date).format("MMMM Do YYYY"), // Format date using Moment.js
     event.time && event.time.length > 0
