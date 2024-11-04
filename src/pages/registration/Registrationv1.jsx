@@ -39,7 +39,7 @@ export default function Registrationv1({ btnName }) {
   const [selectedEvent, setSelectedEvent] = useState(""); // Store selected event
   const [eventDate, setEventDate] = useState(""); // Store selected event date
   const [selectedEventTime, setSelectedEventTime] = useState(""); // Store selected event time
-  const [children, setChildren] = useState([{ firstName: "", lastName: "" }]); // Store children details
+  const [children, setChildren] = useState([]); // Store children details
 
   // React Hook Form initialization with Zod validation
   const {
@@ -57,11 +57,26 @@ export default function Registrationv1({ btnName }) {
       Math.floor(Math.random() * (999999 - 100000 + 1)) + 100000;
     return randomNumber;
   };
+  console.log(children);
 
   const onSubmit = async (data) => {
     const randomCode = handleGenerateRandomCode();
 
     try {
+      // If no additional attendees, create a default attendee array with the main applicant's info
+      const attendees =
+        children.length > 0
+          ? children.map((child) => ({
+              first_name: child.firstName, // attendee_first_name
+              last_name: child.lastName, // attendee_last_name
+            }))
+          : [
+              {
+                first_name: data.firstName, // main_applicant_first_name as attendee_first_name
+                last_name: data.lastName, // main_applicant_last_name as attendee_last_name
+              },
+            ];
+
       const result = await insertFamilyAttendee(
         data.firstName, // main_applicant_first_name
         data.lastName, // main_applicant_last_name
@@ -69,10 +84,7 @@ export default function Registrationv1({ btnName }) {
         selectedEvent, // selected_event
         eventDate, // selected_event_date
         selectedEventTime, // selected_time
-        children.map((child) => ({
-          first_name: child.firstName, // attendee_first_name
-          last_name: child.lastName, // attendee_last_name
-        })),
+        attendees,
         randomCode,
       );
 
@@ -245,7 +257,7 @@ export default function Registrationv1({ btnName }) {
             </div>
 
             {/* Children Information */}
-            <Label>Attendee Information</Label>
+            <Label>Do you have any additional attendees? (optional)</Label>
             {children.map((child, index) => (
               <div key={index} className="flex flex-col gap-2 md:flex-row">
                 <Input
@@ -262,14 +274,9 @@ export default function Registrationv1({ btnName }) {
                   }
                   placeholder="Last name"
                 />
-                {children.length > 1 && (
-                  <Button
-                    type="button"
-                    onClick={() => handleRemoveChild(index)}
-                  >
-                    Remove
-                  </Button>
-                )}
+                <Button type="button" onClick={() => handleRemoveChild(index)}>
+                  Remove
+                </Button>
               </div>
             ))}
             <div>
