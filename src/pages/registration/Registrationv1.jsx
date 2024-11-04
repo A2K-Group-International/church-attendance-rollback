@@ -258,6 +258,7 @@ export default function Registrationv1({ btnName }) {
 
             {/* Children Information */}
             <Label>Do you have any additional attendees? (optional)</Label>
+            {children.length > 0 && <Label>Attendee Information</Label>}
             {children.map((child, index) => (
               <div key={index} className="flex flex-col gap-2 md:flex-row">
                 <Input
