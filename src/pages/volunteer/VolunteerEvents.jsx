@@ -63,7 +63,6 @@ import { Icon } from "@iconify/react";
 import { fetchCategory, fetchSubCategory } from "../../api/userService";
 
 import { Textarea } from "../../shadcn/textarea";
-import EventAttendance from "@/components/volunteer/schedule/EventAttendance";
 
 import { useNavigate } from "react-router-dom";
 import QRCodeIcon from "../../assets/svg/qrCode.svg";
