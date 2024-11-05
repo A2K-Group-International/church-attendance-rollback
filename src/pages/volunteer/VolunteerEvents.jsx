@@ -63,13 +63,21 @@ import { Icon } from "@iconify/react";
 import { fetchCategory, fetchSubCategory } from "../../api/userService";
 
 import { Textarea } from "../../shadcn/textarea";
+import EventAttendance from "@/components/volunteer/schedule/EventAttendance";
 
 import { useNavigate } from "react-router-dom";
 import QRCodeIcon from "../../assets/svg/qrCode.svg";
 import { useUser } from "../../context/UserContext";
 import EventAttendance from "@/components/volunteer/schedule/EventAttendance";
 
-const headers = ["QR Code", "Event Name", "Date", "Time", "Description"];
+const headers = [
+  "QR Code",
+  "Attendace",
+  +"Event Name",
+  "Date",
+  "Time",
+  "Description",
+];
 
 export default function VolunteerEvents() {
   const { userData, userGroups } = useUser(); // Destructure userData directly
@@ -79,6 +87,9 @@ export default function VolunteerEvents() {
 
   const [time, setTime] = useState([]); // event time data
   const [selectedDate, setSelectedDate] = useState(null); // event date data
+  const [selectedVisibility, setSelectedVisibility] = useState("Public"); // event date data
+  const [selectedGroupId, setSelectedGroupId] = useState(null);
+  const [selectedGroupName, setSelectedGroupName] = useState("");
   const [isSubmitted, setIsSubmitted] = useState(false); // for disabling the button submission
   const [events, setEvents] = useState([]); // Event data
   const [currentPage, setCurrentPage] = useState(1); // Pagination
@@ -111,25 +122,33 @@ export default function VolunteerEvents() {
       return;
     }
 
-    if (!data.schedule_privacy) {
+    if (!selectedVisibility) {
+      // Updated to use selectedVisibility
       console.error("Schedule privacy is required.");
       return;
     }
 
     try {
+      // Prepare the event data
+      const eventData = {
+        name: data.name,
+        schedule_date: selectedDate.format("YYYY-MM-DD"),
+        time: time,
+        schedule_privacy: selectedVisibility, // Use selectedVisibility for schedule_privacy
+        description: data.description,
+        schedule_category: selectedCategoryName,
+        schedule_sub_category: data.schedule_sub_category,
+        creator_id: userData?.user_id, // Assuming userData contains the creator's ID
+        creator_name: `${userData?.user_name} ${userData?.user_last_name}`, // Creator's full name
+        group_id: selectedVisibility === "group" ? selectedGroupId : null, // Group ID if visibility is "group"
+        group_name: selectedVisibility === "group" ? selectedGroupName : null, // Group name if visibility is "group"
+      };
+
       if (editId) {
         // Update existing event
         const { error } = await supabase
           .from("schedule")
-          .update({
-            name: data.name,
-            schedule_date: selectedDate.format("YYYY-MM-DD"),
-            time: time,
-            schedule_privacy: data.schedule_privacy,
-            description: data.description,
-            schedule_category: selectedCategoryName,
-            schedule_sub_category: data.schedule_sub_category,
-          })
+          .update(eventData)
           .eq("id", editId);
 
         if (error) throw error;
@@ -137,19 +156,7 @@ export default function VolunteerEvents() {
         alert("Event updated successfully!");
       } else {
         // Insert new event
-        const { error } = await supabase.from("schedule").insert([
-          {
-            name: data.name,
-            schedule_date: selectedDate.format("YYYY-MM-DD"),
-            time: time,
-            schedule_privacy: data.schedule_privacy,
-            description: data.description,
-            schedule_category: selectedCategoryName,
-            schedule_sub_category: data.schedule_sub_category,
-            creator_id: userData?.user_id,
-            creator_name: `${userData?.user_name} ${userData?.user_last_name}`,
-          },
-        ]);
+        const { error } = await supabase.from("schedule").insert([eventData]);
 
         if (error) {
           console.error("Error inserting data:", error.message);
@@ -321,6 +328,7 @@ export default function VolunteerEvents() {
             viewBox={`0 0 256 256`}
           />
         </div>
+
         <h2>Event Name: {event.name}</h2>
         <p>Date: {moment(event.schedule_date).format("MMMM Do YYYY")}</p>
         <AlertDialogFooter>
@@ -374,10 +382,9 @@ export default function VolunteerEvents() {
                 onSubmit={handleSubmit(onSubmit)}
                 className="flex flex-col gap-2"
               >
+                {/* Event Name */}
                 <div className="space-y-2">
-                  <Label placeholder="sajflasjdlfkf" htmlFor="name">
-                    Event Name
-                  </Label>
+                  <Label htmlFor="name">Event Name</Label>
                   <Input id="name" {...register("name", { required: true })} />
                   {errors.name && (
                     <p className="text-sm text-red-500">
@@ -385,6 +392,8 @@ export default function VolunteerEvents() {
                     </p>
                   )}
                 </div>
+
+                {/* Date Selection */}
                 <div className="space-y-2">
                   <Label htmlFor="schedule">Date</Label>
                   <Dialog>
@@ -394,7 +403,7 @@ export default function VolunteerEvents() {
                         className="w-full justify-start"
                       >
                         {selectedDate
-                          ? selectedDate.format("MMMM Do YYYY") // Format date using Moment.js
+                          ? selectedDate.format("MMMM Do YYYY")
                           : "Please select a date"}
                       </Button>
                     </DialogTrigger>
@@ -426,9 +435,9 @@ export default function VolunteerEvents() {
                           if (selectedCategory) {
                             setSelectedCategoryName(
                               selectedCategory.category_name,
-                            ); // Set the selected category name
-                            setValue("schedule_category", value); // Set the category_id in the form
-                            fetchSubCategories(value); // Passing the selected category ID
+                            );
+                            setValue("schedule_category", value);
+                            fetchSubCategories(value);
                           }
                         }}
                       >
@@ -484,33 +493,22 @@ export default function VolunteerEvents() {
                   </div>
                 </div>
 
+                {/* Schedule Privacy (Visibility) */}
                 <div className="space-y-2">
-                  <Label htmlFor="description">Description</Label>
-                  <Input
-                    id="description"
-                    as="textarea"
-                    rows={3}
-                    {...register("description")}
-                    className="w-full"
-                    placeholder="Event description (optional)"
-                  />
-                </div>
-
-                {/* Schedule Privacy */}
-                <div className="space-y-2">
-                  <Label htmlFor="schedule_privacy">Schedule Privacy</Label>
+                  <Label htmlFor="schedule_privacy">Schedule Visibility</Label>
                   <Select
                     value={watch("schedule_privacy")}
                     onValueChange={(value) => {
                       setValue("schedule_privacy", value);
+                      setSelectedVisibility(value); // Store the selected visibility
                     }}
                   >
                     <SelectTrigger className="w-[180px]">
-                      <SelectValue placeholder="Select privacy" />
+                      <SelectValue placeholder="Select visibility" />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="public">Public</SelectItem>
-                      <SelectItem value="private">Private</SelectItem>
+                      <SelectItem value="group">Group</SelectItem>
                     </SelectContent>
                   </Select>
                   {errors.schedule_privacy && (
@@ -520,6 +518,46 @@ export default function VolunteerEvents() {
                   )}
                 </div>
 
+                {/* Group Selection (only shows if "Group" visibility is selected) */}
+                {selectedVisibility === "group" && (
+                  <div className="ml-4 space-y-2">
+                    <Label htmlFor="user_group">Select Ministry</Label>
+                    <Select
+                      onValueChange={(value) => {
+                        const selectedGroup = userGroups.find(
+                          (group) => group.group_id === value,
+                        );
+                        if (selectedGroup) {
+                          setSelectedGroupId(value); // Set selected group ID
+                          setSelectedGroupName(selectedGroup.group_name); // Set selected group name for display
+                        }
+                      }}
+                    >
+                      <SelectTrigger className="w-[180px] text-start">
+                        <SelectValue placeholder="Select Ministry">
+                          {selectedGroupName || "Select Ministry"}
+                        </SelectValue>
+                      </SelectTrigger>
+                      <SelectContent>
+                        {userGroups.map((group) => (
+                          <SelectItem
+                            key={group.group_id}
+                            value={group.group_id}
+                          >
+                            {group.group_name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    {errors.user_group && (
+                      <p className="text-sm text-red-500">
+                        {errors.user_group.message}
+                      </p>
+                    )}
+                  </div>
+                )}
+
+                {/* Time Selection */}
                 <div className="space-y-2">
                   <Label htmlFor="time">Time</Label>
                   {time.map((oldTime, index) => (
@@ -673,9 +711,9 @@ export default function VolunteerEvents() {
                           if (selectedCategory) {
                             setSelectedCategoryName(
                               selectedCategory.category_name,
-                            ); // Set the selected category name
-                            setValue("schedule_category", value); // Set the category_id in the form
-                            fetchSubCategories(value); // Passing the selected category ID
+                            );
+                            setValue("schedule_category", value);
+                            fetchSubCategories(value);
                           }
                         }}
                       >
@@ -732,31 +770,71 @@ export default function VolunteerEvents() {
                     </div>
                   </div>
                 </div>
-
-                {/* Schedule Privacy */}
-                <div className="space-y-2">
-                  <Label htmlFor="schedule_privacy">Schedule Privacy</Label>
+                {/* Event Visibility */}
+                <div className="ml-4 space-y-2">
+                  <Label htmlFor="schedule_visibility">Event Visibility</Label>
                   <Select
                     onValueChange={(value) => {
-                      setValue("schedule_privacy", value);
+                      setValue("schedule_visibility", value);
+                      setSelectedVisibility(value); // Update visibility state
                     }}
                   >
                     <SelectTrigger className="w-[180px]">
-                      <SelectValue placeholder="Select privacy" />
+                      <SelectValue placeholder="Select visibility" />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="public">Public</SelectItem>
-                      <SelectItem value="private">Private</SelectItem>
+                      <SelectItem value="group">Group</SelectItem>
                     </SelectContent>
                   </Select>
-                  {errors.schedule_privacy && (
+                  {errors.schedule_visibility && (
                     <p className="text-sm text-red-500">
-                      {errors.schedule_privacy.message}
+                      {errors.schedule_visibility.message}
                     </p>
                   )}
                 </div>
+
+                {/* Group Selection (only shows if "Group" visibility is selected) */}
+                {selectedVisibility === "group" && (
+                  <div className="ml-4 space-y-2">
+                    <Label htmlFor="user_group">Select Ministry</Label>
+                    <Select
+                      onValueChange={(value) => {
+                        const selectedGroup = userGroups.find(
+                          (group) => group.group_id === value,
+                        );
+                        if (selectedGroup) {
+                          setSelectedGroupId(value); // Set selected group ID
+                          setSelectedGroupName(selectedGroup.group_name); // Set selected group name for display
+                        }
+                      }}
+                    >
+                      <SelectTrigger className="w-[180px] text-start">
+                        <SelectValue placeholder="Select Ministry">
+                          {selectedGroupName || "Select Ministry"}
+                        </SelectValue>
+                      </SelectTrigger>
+                      <SelectContent>
+                        {userGroups.map((group) => (
+                          <SelectItem
+                            key={group.group_id}
+                            value={group.group_id}
+                          >
+                            {group.group_name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    {errors.user_group && (
+                      <p className="text-sm text-red-500">
+                        {errors.user_group.message}
+                      </p>
+                    )}
+                  </div>
+                )}
               </div>
 
+              {/* Date Selection */}
               <div className="flex gap-x-5">
                 <div className="space-y-2">
                   <Label htmlFor="schedule">Date</Label>
@@ -785,9 +863,10 @@ export default function VolunteerEvents() {
                   )}
                 </div>
 
-                <div className=" ">
+                {/* Time Selection */}
+                <div>
                   <Label htmlFor="time">Time</Label>
-                  <div className="bg-blue-0 no-scrollbar h-28 space-y-2 overflow-y-scroll">
+                  <div className="h-28 space-y-2 overflow-y-scroll">
                     {time.map((t, index) => (
                       <div key={index} className="flex items-center space-x-2">
                         <Input
@@ -820,11 +899,11 @@ export default function VolunteerEvents() {
                 </div>
               </div>
 
+              {/* Event Description */}
               <div className="space-y-2">
                 <Label htmlFor="description">Description</Label>
                 <Textarea
                   id="description"
-                  as="textarea"
                   rows={3}
                   {...register("description")}
                   className="w-full"
@@ -843,6 +922,7 @@ export default function VolunteerEvents() {
             </form>
           </DialogContent>
         </Dialog>
+
         {/* <Button onClick={handleNavigation}>Overview</Button> */}
 
         {/* <CreateMeeting />
