@@ -227,11 +227,21 @@ export default function DialogWalkInRegister({
                       <SelectValue placeholder="Select Event" />
                     </SelectTrigger>
                     <SelectContent>
-                      {eventName.map((event) => (
-                        <SelectItem key={event.id} value={event.id}>
-                          {event.name}
-                        </SelectItem>
-                      ))}
+                      {eventName
+                        .filter((event) => {
+                          // Combine the event date and time into a moment object
+                          const eventDateTime = moment(
+                            `${event.schedule_date} ${event.time}`,
+                            "YYYY-MM-DD HH:mm",
+                          );
+                          // Compare the event's date/time with the current time return only upcoming events
+                          return eventDateTime.isAfter(moment());
+                        })
+                        .map((event) => (
+                          <SelectItem key={event.id} value={event.id}>
+                            {`${event.name} (${moment(event.schedule_date).format("MMMM Do YYYY")})`}
+                          </SelectItem>
+                        ))}
                     </SelectContent>
                   </Select>
                 </FormLabel>

@@ -71,7 +71,7 @@ export default function EditRegistrationv1() {
         data.attendanceCode,
       );
 
-      console.log("data attendance", dataAttendance);
+      // console.log("data attendance", dataAttendance);
 
       if (error) {
         console.error("Error fetching attendance:", error);
@@ -145,7 +145,7 @@ export default function EditRegistrationv1() {
   };
 
   const handleSubmitUpdateInformation = async (data) => {
-    console.log("data from hook form", data);
+    // console.log("data from hook form", data);
     // Data contains all fields registered with useForm
     const {
       selected_event,
@@ -161,7 +161,7 @@ export default function EditRegistrationv1() {
     //   lastName: attendee.lastName,
     // }));
 
-    console.log("attendeess",attendees)
+    // console.log("attendeess",attendees)
     const updates = attendees.map((attendee) => ({
       id: attendee.id,
       attendee_first_name: attendee.firstName,
@@ -189,7 +189,7 @@ export default function EditRegistrationv1() {
       throw new Error(dataError);
     }
 
-    console.log("updated succeessfully");
+    // console.log("updated succeessfully");
 
     // updatedAttendees.map(()=>{})
 
@@ -244,7 +244,6 @@ export default function EditRegistrationv1() {
   // fetch events
   // Fetch all events on component mount
   useEffect(() => {
-    console.log("firing");
     const fetchedEvents = async () => {
       try {
         const events = await fetchAllEvents();
@@ -259,15 +258,6 @@ export default function EditRegistrationv1() {
     };
     fetchedEvents();
   }, []);
-
-  // console.log("selected time", selectedTime);
-
-  // console.log("selected event", selectedEvent);
-  // console.log("attendee list", attendees);
-
-  console.log("event date", eventDate)
-
-  // console.log("I am event list",eventTimeList)
 
   return (
     <Dialog onOpenChange={closeModal}>
@@ -341,9 +331,18 @@ export default function EditRegistrationv1() {
                     </SelectValue>
                   </SelectTrigger>
                   <SelectContent position="popper">
-                    {eventList.map((eventItem) => (
-                      <SelectItem key={eventItem.id} value={eventItem.id}>
-                        {`${eventItem.name} (${moment(eventItem.schedule_date).format("MMMM Do YYYY")})`}
+                    {eventList.filter((event) => {
+                      // Combine the event date and time into a moment object
+                      const eventDateTime = moment(
+                        `${event.schedule_date} ${event.time}`,
+                        "YYYY-MM-DD HH:mm",
+                      );
+                      // Compare the event's date/time with the current time return only upcoming events
+                      return eventDateTime.isAfter(moment());
+                    })
+                    .map((event) => (
+                      <SelectItem key={event.id} value={event.id}>
+                        {`${event.name} (${moment(event.schedule_date).format("MMMM Do YYYY")})`}
                       </SelectItem>
                     ))}
                   </SelectContent>
