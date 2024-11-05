@@ -117,7 +117,7 @@ export default function useClassParticipants(class_id,user_id) {
       // setIsVolunteerDialogOpen(false);
     },
     onError: (error) => {
-      console.error("Mutation error:", error);
+      // console.error("Mutation error:", error);
       toast({
         title: "Something went wrong",
         description: `${error.message}`,

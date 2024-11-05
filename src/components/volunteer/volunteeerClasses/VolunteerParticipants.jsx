@@ -37,9 +37,12 @@ import { fetchFamilyMembers } from "@/api/ClassParticipantsServices";
 import { Checkbox } from "@/components/shadcn/checkbox";
 import { Label } from "@/shadcn/label";
 import { useForm, Controller } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { addFamilyMemberSchema } from "@/lib/zodSchema/classSchema";
+// import { zodResolver } from "@hookform/resolvers/zod";
 
 export default function VolunteerParticipants() {
-  const { control, handleSubmit, reset } = useForm();
+  const { control, handleSubmit, reset, formState:{errors} } = useForm( {resolver:zodResolver(addFamilyMemberSchema)});
   const { userData } = useUserData();
   const { id } = useParams();
   const { copyText } = useCopyText();
@@ -64,15 +67,15 @@ export default function VolunteerParticipants() {
     return <p>Loading...</p>;
   }
   const onSubmit = (data) => {
-    // Get the selected family members' full objects
+    console.log("member data",data);
     const selectedFamilyMembers = familyMembers.filter(
-      (member) => data.familyMembers[member.family_member_id],
+      (member,index) => data.familyMembers[index],
     );
     addFamilyMemberMutation.mutate({
       familyMembers: selectedFamilyMembers,
       classId: id,
       setisAddFamilyDialogueOpen,
-      reset
+      reset,
     });
 
     // console.log("Selected Family Members:", selectedFamilyMembers);
@@ -81,8 +84,8 @@ export default function VolunteerParticipants() {
   // console.log("data getting", data);
   // console.log("user", userData);
 
-  // console.log("selected family members", selectedMembers);
-
+  // console.log("selected family members", familyMembers);
+console.log(errors)
   return (
     <div className="flex w-full flex-col items-center justify-center p-2">
       <div className="mx-4 w-full lg:w-3/5">
@@ -242,59 +245,40 @@ export default function VolunteerParticipants() {
                 </DialogHeader>
                 <p>Select Family Members to add.</p>
                 <form onSubmit={handleSubmit(onSubmit)}>
-                  {familyMembers?.map((member) => (
+                  {familyMembers?.map((member,index) => {
+                    // console.log("members",member,index)
+                    return (
                     <div
                       className="flex items-center space-x-2"
-                      key={member.family_member_id}
+                      key={index}
                     >
                       <Controller
-                        name={`familyMembers[${member.family_member_id}]`}
+                        name={`familyMembers[${index}]`}
                         control={control}
                         defaultValue={false}
                         render={({ field }) => (
                           <Checkbox
                             {...field}
-                            checked={field.value} // Controlled state
+                            checked={field.value}
                             onCheckedChange={(checked) =>
                               field.onChange(checked)
-                            } // Use onCheckedChange for Shadcn
+                            }
                           />
                         )}
                       />
                       <Label
-                        htmlFor={`familyMembers[${member.family_member_id}]`}
+                        htmlFor={`familyMembers[${index}]`}
                         className="text-sm font-medium"
                       >
                         {member.family_first_name} {member.family_last_name}
                       </Label>
-                    </div>
-                  ))}
+                    </div>)
+                  })}
                   <Button className="mt-2 w-full" type="submit">
                     Add Members
                   </Button>
+                  {errors.familyMembers &&<p className=" text-red-500">{errors.familyMembers.message}</p>}
                 </form>
-
-                {/* <DialogFooter>
-                              <Button
-                                onClick={() => setIsChildDialogOpen(false)}
-                              >
-                                Cancel
-                              </Button>
-                              <Button
-                                variant="destructive"
-                                onClick={() =>
-                                  removeParticipantMutation.mutate({
-                                    participant_id: child.id,
-                                    tablename: "children",
-                                  })
-                                }
-                                disabled={removeParticipantMutation.isPending}
-                              >
-                                {removeParticipantMutation.isPending
-                                  ? "Removing"
-                                  : "Remove"}
-                              </Button>
-                            </DialogFooter> */}
               </DialogContent>
             </Dialog>
           </div>
@@ -303,7 +287,7 @@ export default function VolunteerParticipants() {
             <h2 className="text-2xl font-semibold">Children</h2>
             <Separator className="my-3" />
             {data.children.map((child, index) =>
-              userData?.user_role === "volunteer" || child.is_approved ? ( 
+              userData?.user_role === "volunteer" || child.is_approved ? (
                 <div className="" key={index}>
                   <div className="flex justify-between">
                     <div className="flex items-center gap-3 px-2">

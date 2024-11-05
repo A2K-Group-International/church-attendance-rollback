@@ -1,10 +1,6 @@
 import { Separator } from "@/shadcn/separator";
 import kebab from "@/assets/svg/threeDots.svg";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/shadcn/popover";
+import { Popover, PopoverContent, PopoverTrigger } from "@/shadcn/popover";
 import { Label } from "@/shadcn/label";
 import { Input } from "@/shadcn/input";
 import { Textarea } from "@/shadcn/textarea";
@@ -38,10 +34,12 @@ import {
 } from "@/shadcn/dialog";
 import useClassAssignment from "@/hooks/useClassAssignment";
 import useUserData from "@/api/useUserData";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { addquizSchema } from "@/lib/zodSchema/classSchema";
 
 export default function VolunteerAssignment() {
   const [date, setDate] = useState("");
-  const {userData} = useUserData()
+  const { userData } = useUserData();
   const { id } = useParams();
 
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -52,8 +50,8 @@ export default function VolunteerAssignment() {
     control,
     reset,
     setValue,
-    formState: { errors },
-  } = useForm();
+    formState: { errors: addErrors },
+  } = useForm({ resolver: zodResolver(addquizSchema) });
   const {
     register: editRegister,
     handleSubmit: editHandleSubmit,
@@ -61,7 +59,7 @@ export default function VolunteerAssignment() {
     reset: editReset,
     setValue: editSetValue,
     formState: { errors: editErrors },
-  } = useForm();
+  } = useForm({ resolver: zodResolver(addquizSchema) });
 
   const {
     error,
@@ -80,97 +78,121 @@ export default function VolunteerAssignment() {
     return <p>not found</p>;
   }
 
-  
-  if(assignments.length < 1 && userData?.user_role === "user"){
-   
-    return <div className=" flex justify-center"><p>nothing here yet.</p></div>
+  if (assignments.length < 1 && userData?.user_role === "user") {
+    return (
+      <div className="flex justify-center">
+        <p>nothing here yet.</p>
+      </div>
+    );
   }
 
   return (
     <div className="flex w-full flex-col items-center justify-center gap-2 p-2">
-      {userData?.user_role === "volunteer" &&<form
-        onSubmit={handleSubmit((inputs) =>
-          addAssignmentMutation.mutate({
-            inputs,
-            date,
-            class_id: id,
-            reset,
-            setDate,
-          }),
-        )}
-        className="mx-4 w-full rounded-md border p-4 shadow-md lg:w-3/5"
-      >
-        <Label className="text-md font-bold">Title</Label>
-        <Input
-          {...register("title", { required: true })}
-          placeholder={"Create assignment title"}
-        />
-        <Label className="text-md font-bold">Description</Label>
-        <Textarea
-          {...register("description", { required: true })}
-          placeholder={"Create assignment description"}
-          className="mb-1"
-        />
-        <Label className="text-md font-bold">Quiz Link</Label>
-        <Input
-          {...register("quiz_link", { required: true })}
-          placeholder={"Place link here"}
-          className="mb-2"
-        />
-        <div className="flex flex-wrap justify-between gap-2">
-          <Controller
-            name="participant"
-            control={control}
-            rules={{ required: true }}
-            render={({ field }) => (
-              <Select
-                onValueChange={field.onChange}
-                onBlur={field.onBlur}
-                value={field.value}
-              >
-                <SelectTrigger className="w-[180px]">
-                  <SelectValue placeholder="Assignment For:" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectGroup>
-                    <SelectLabel>Participants</SelectLabel>
-                    <SelectItem value="child">Children</SelectItem>
-                    <SelectItem value="parent">Parents</SelectItem>
-                    <SelectItem value="volunteer">Volunteers</SelectItem>
-                  </SelectGroup>
-                </SelectContent>
-              </Select>
-            )}
+      {userData?.user_role === "volunteer" && (
+        <form
+          onSubmit={handleSubmit((inputs) =>
+            addAssignmentMutation.mutate({
+              inputs,
+              date,
+              class_id: id,
+              reset,
+              setDate,
+            }),
+          )}
+          className="mx-4 w-full rounded-md border p-4 shadow-md lg:w-3/5"
+        >
+          <Label className="text-md font-bold">Title</Label>
+          <Input
+            {...register("title")}
+            placeholder={"Create assignment title"}
           />
-
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button
-                type="button"
-                variant={"outline"}
-                className={cn(
-                  "w-[280px] justify-start text-left font-normal",
-                  !date && "text-muted-foreground",
+          {addErrors.title && (
+            <p className="text-red-500">{addErrors.title.message}</p>
+          )}
+          <Label className="text-md font-bold">Description</Label>
+          <Textarea
+            {...register("description")}
+            placeholder={"Create assignment description"}
+            className="mb-1"
+          />
+          {addErrors.description && (
+            <p className="text-red-500">{addErrors.description.message}</p>
+          )}
+          <Label className="text-md font-bold">Quiz Link</Label>
+          <Input
+            {...register("quiz_link")}
+            placeholder={"Place link here"}
+            className="mb-2"
+          />
+          {addErrors.quiz_link && (
+            <p className="text-red-500">{addErrors.quiz_link.message}</p>
+          )}
+          <div className="flex flex-wrap justify-between gap-2">
+            <div className="flex flex-col">
+              <Controller
+                name="participant"
+                control={control}
+                // rules={}
+                render={({ field }) => (
+                  <Select
+                    onValueChange={field.onChange}
+                    onBlur={field.onBlur}
+                    value={field.value}
+                  >
+                    <SelectTrigger className="w-[180px]">
+                      <SelectValue placeholder="Assignment For:" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectGroup>
+                        <SelectLabel>Participants</SelectLabel>
+                        <SelectItem value="child">Children</SelectItem>
+                        <SelectItem value="parent">Parents</SelectItem>
+                        <SelectItem value="volunteer">Volunteers</SelectItem>
+                      </SelectGroup>
+                    </SelectContent>
+                  </Select>
                 )}
-              >
-                <CalendarIcon />
-                {date ? format(date, "PPP") : <span>Pick due date</span>}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-0">
-              <Calendar
-                mode="single"
-                selected={date}
-                onSelect={(newDate) => {
-                  setDate(newDate);
-                }}
-                initialFocus
               />
-            </PopoverContent>
-          </Popover>
-          <Button disabled={addAssignmentMutation.isPending} type="submit">{addAssignmentMutation.isPending ? "Adding Quiz":"Add Quiz"}</Button>
-        </div>
-      </form>}
+              {addErrors.participant && (
+                <p className="text-red-500">{addErrors.participant.message}</p>
+              )}
+            </div>
+
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  type="button"
+                  variant={"outline"}
+                  className={cn(
+                    "w-[280px] justify-start text-left font-normal",
+                    !date && "text-muted-foreground",
+                  )}
+                >
+                  <CalendarIcon />
+                  {date ? format(date, "PPP") : <span>Pick due date</span>}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0">
+                <Calendar
+                  mode="single"
+                  selected={date}
+                  onSelect={(newDate) => {
+                    setDate(newDate);
+                  }}
+                  initialFocus
+                />
+              </PopoverContent>
+            </Popover>
+            {addErrors.due_date && (
+              <p className="text-red-500">{addErrors.due_date.message}</p>
+            )}
+
+            <Button disabled={addAssignmentMutation.isPending} type="submit">
+              {addAssignmentMutation.isPending ? "Adding Quiz" : "Add Quiz"}
+            </Button>
+          </div>
+        </form>
+      )}
       {assignments?.map((assignment, index) => (
         <div
           key={index}
@@ -184,7 +206,9 @@ export default function VolunteerAssignment() {
             <div className="flex flex-col items-end">
               <Popover>
                 <PopoverTrigger>
-                {userData?.user_role === "volunteer" &&<img src={kebab} className="h-6 w-6" alt="kebab" />}
+                  {userData?.user_role === "volunteer" && (
+                    <img src={kebab} className="h-6 w-6" alt="kebab" />
+                  )}
                 </PopoverTrigger>
                 <PopoverContent align="end" className="w-28 p-0">
                   <Dialog
@@ -201,9 +225,11 @@ export default function VolunteerAssignment() {
                     }}
                   >
                     <DialogTrigger>
-                    {userData?.user_role === "volunteer" &&<div className="p-3 text-center hover:cursor-pointer">
-                        Edit
-                      </div>}
+                      {userData?.user_role === "volunteer" && (
+                        <div className="p-3 text-center hover:cursor-pointer">
+                          Edit
+                        </div>
+                      )}
                     </DialogTrigger>
                     <DialogContent className="rounded-md">
                       <DialogHeader>
@@ -226,9 +252,7 @@ export default function VolunteerAssignment() {
                         )}
                       >
                         <Label>Title</Label>
-                        <Input
-                          {...editRegister("edittitle", { required: true })}
-                        />
+                        <Input {...editRegister("edittitle")} />
                         <Label>Description</Label>
                         <Textarea
                           {...editRegister("editdescription", {
@@ -236,9 +260,7 @@ export default function VolunteerAssignment() {
                           })}
                         />
                         <Label>Quiz Link</Label>
-                        <Input
-                          {...editRegister("editquizlink", { required: true })}
-                        />
+                        <Input {...editRegister("editquizlink")} />
                         <div className="mt-3 flex gap-2">
                           <Controller
                             name="editparticipant"
@@ -315,7 +337,9 @@ export default function VolunteerAssignment() {
                           form="editform"
                           disabled={updateAssignmentMutation.isPending}
                         >
-                          {updateAssignmentMutation.isPending ? "Editting..." : "Edit"}
+                          {updateAssignmentMutation.isPending
+                            ? "Editting..."
+                            : "Edit"}
                         </Button>
                       </DialogFooter>
                     </DialogContent>
@@ -343,21 +367,19 @@ export default function VolunteerAssignment() {
                         Are you sure you want to delete highlight?
                       </DialogDescription>
                       <DialogFooter className="mx-2 flex gap-2 sm:justify-between">
-                        <Button
-                          onClick={() => setIsDialogOpen(false)}
-                         
-                        >
+                        <Button onClick={() => setIsDialogOpen(false)}>
                           Cancel
                         </Button>
                         <Button
-                         variant="destructive"
+                          variant="destructive"
                           onClick={() =>
                             deleteAssignmentMutation.mutate(assignment.id)
                           }
-
                           disabled={deleteAssignmentMutation.isPending}
                         >
-                          {deleteAssignmentMutation.isPending ? "Deleting..." : "Confirm"}
+                          {deleteAssignmentMutation.isPending
+                            ? "Deleting..."
+                            : "Confirm"}
                         </Button>
                       </DialogFooter>
                     </DialogContent>

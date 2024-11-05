@@ -296,6 +296,8 @@ export default function EditWalkInRegister() {
   const options = { year: "numeric", month: "long", day: "numeric" };
   const formattedDate = date.toLocaleDateString("en-GB", options);
 
+  console.log("i am at this page")
+
   return (
     <Dialog open={isDialogOpen} onOpenChange={handleDialogOpen}>
       <DialogTrigger asChild>
