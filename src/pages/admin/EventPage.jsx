@@ -68,7 +68,15 @@ import { useNavigate } from "react-router-dom";
 import QRCodeIcon from "../../assets/svg/qrCode.svg";
 import { useUser } from "../../context/UserContext";
 
-const headers = ["QR Code", "Event Name", "Date", "Time", "Description"];
+import EventAttendance from "@/components/volunteer/schedule/EventAttendance";
+const headers = [
+  "QR Code",
+  "Attendace",
+  +"Event Name",
+  "Date",
+  "Time",
+  "Description",
+];
 
 export default function VolunteerEvents() {
   const { userData, userGroups } = useUser(); // Destructure userData directly
@@ -325,6 +333,7 @@ export default function VolunteerEvents() {
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>,
+    <EventAttendance key={event.id} event_uuid={event.event_uuid} />,
     event.name,
     moment(event.schedule_date).format("MMMM Do YYYY"), // Format date using Moment.js
     event.time && event.time.length > 0
