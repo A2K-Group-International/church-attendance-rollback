@@ -1,4 +1,5 @@
 import supabase from "@/api/supabase";
+import { addClassSchema } from "@/lib/zodSchema/classSchema";
 
 export const getClasses = async (user_id) => {
   const { data: ownedClasses, error: ownedError } = await supabase
@@ -24,37 +25,50 @@ export const getClasses = async (user_id) => {
       status: "joined",
     })),
   ];
-  console.log(" Classes:", combinedClasses);
+  // console.log(" Classes:", combinedClasses);
 
   return combinedClasses;
 };
 
 export const addClass = async ({ input, user_id }) => {
-  console.log("id and input", input, user_id);
+  // console.log("id and input", input, user_id);
+  
   if (!user_id) {
     throw new Error("Authentication required");
   }
 
+  const validationResult = addClassSchema.safeParse(input)
+
+
+  if(!validationResult.success){
+    const errorMessage = validationResult.error.flatten().fieldErrors
+    throw new Error(errorMessage)
+  }
+
+  const validatedData = validationResult.data
+
+
+
   const { data: existingClass, error: existError } = await supabase
     .from("volunteer_classes")
     .select("class_name")
-    .eq("class_name", input.classname)
+    .eq("class_name", validatedData.classname)
     .eq("user_id", user_id)
     .maybeSingle();
 
   if (existError)
     throw new Error(existError.message || "Unknown error occurred");
+
   if (existingClass) {
     throw new Error("Class already exists!");
   }
 
   const { error, data } = await supabase
     .from("volunteer_classes")
-    .insert([{ class_name: input.classname, user_id }])
+    .insert([{ class_name: validatedData.classname, user_id }])
     .select("id")
     .single();
 
-  console.log("Supabase response:", error);
   if (error) throw new Error(error.message || "Unknown error occurred");
 };
 
@@ -77,7 +91,7 @@ export const joinClassAction = async ({
   user_name,
   user_id,
   user_role,
-  familyMembers
+  familyMembers,
 }) => {
   console.log("inputs", input, user_name, user_id, user_role);
   let error;
@@ -172,88 +186,56 @@ export const joinClassAction = async ({
       data = parentResponse.data;
       break;
 
-    // case "child":
-    //   // Check if the user already exists
-    //   const childCheck = await supabase
-    //     .from("participant_children")
-    //     .select("*")
-    //     .eq("name", user_name)
-    //     .eq("class_id", classId)
-    //     .single();
-
-    //   if (childCheck.data) {
-    //     throw new Error("User already exists as a child in this class.");
-    //   }
-
-    //   // Insert new child
-    //   const childResponse = await supabase
-    //     .from("participant_children")
-    //     .insert([{ name: user_name,user_id:user_id, class_id: classId, is_approved: false }])
-    //     .single();
-
-    //   error = childResponse.error;
-    //   data = childResponse.data;
-    //   break;
-
     default:
       throw new Error("Invalid user role.");
   }
-
-  // const { error: approvalError } = await supabase
-  // .from("join_requests")
-  // .insert([
-  //   {
-  //     entity_type: "parent",
-  //     volunteer_id: data.id,
-  //     class_id: classId,
-  //     is_admin_approved: false,
-  //   },
-  // ]);
-
-  // if (approvalError) {
-  //   throw new Error(approvalError.message || "Error adding approval entry");
-  // }
-
-  // const { error: insertJoinError } = await supabase
-  //   .from("volunteer_joined_classes")
-  //   .insert([{ user_id: user_id, class_id: classId }]);
-  // if (insertJoinError)
-  //   throw new Error(insertJoinError.message || "Unknown error occurred");
-
-  // const { error: addError } = await supabase
-  //   .from("volunteer_classes")
-  //   .update({ class_total_students: classData.class_total_students + 1 })
-  //   .eq("id", classId);
-
-  // if (addError) {
-  //   throw new Error(addError.message || "Error updating total count");
-  // }
-  // After inserting the main user (volunteer or parent)
-// After inserting the main user (volunteer or parent)
-
-
   if (error) throw new Error(error.message || "Unknown error occurred");
 };
 
 export const updateClass = async ({ input, class_id }) => {
-  // console.log("these are the data", input, class_id);
+  console.log("these are the data", input, class_id);
+
+
+  const validationResult = addClassSchema.safeParse(input)
+
+  if(!validationResult.success){
+    const errorMessage = validatedData.error.flatten().fieldErrors
+    throw new Error(errorMessage)
+  }
+
+  const validatedData = validationResult.data
+
+  const { data: existingClass, error: existError } = await supabase
+    .from("volunteer_classes")
+    .select("class_name")
+    .eq("class_name", validatedData.classname)
+    .maybeSingle();
+
+  if (existError)
+    throw new Error(existError.message || "Unknown error occurred");
+  
+  if (existingClass) {
+    throw new Error("Class Name already exists!");
+  }
+
   const { error } = await supabase
     .from("volunteer_classes")
-    .update({ class_name: input.classname })
+    .update({ class_name: validatedData.classname })
     .eq("id", class_id);
 
   console.log("Supabase response:", error);
   if (error) throw new Error(error.message || "Unknown error occurred");
 };
 
-export const insertFamilyMembers = async ({familyMembers, classId}) => {
-
-  console.log("data getting",familyMembers,classId)
-  if (!familyMembers || familyMembers.length === 0) return;
+export const insertFamilyMembers = async ({ familyMembers, classId }) => {
+  console.log("data getting", familyMembers, classId);
+  if (!familyMembers || familyMembers.length === 0) {
+    throw new Error("Family Members have been added!");
+  }
 
   const familyInsertPromises = familyMembers.map(async (member) => {
     // Check if the family member already exists
-  const familyCheck = await supabase
+    const familyCheck = await supabase
       .from("participant_volunteers")
       .select("*")
       .eq("family_id", member.family_member_id)
@@ -262,26 +244,30 @@ export const insertFamilyMembers = async ({familyMembers, classId}) => {
       .single();
 
     if (familyCheck.data) {
-      throw new Error(`Family member ${member.family_first_name} ${member.family_last_name} already exists in this class.`);
+      throw new Error(
+        `Family member ${member.family_first_name} ${member.family_last_name} already exists in this class.`,
+      );
     }
 
-  // Insert new family member
-    return supabase
-      .from("participant_volunteers")
-      .insert([{
-        user_type: member.family_type ==="Child"? "child":"parent", 
+    // Insert new family member
+    return supabase.from("participant_volunteers").insert([
+      {
+        user_type: member.family_type === "Child" ? "child" : "parent",
         name: `${member.family_first_name} ${member.family_last_name}`,
         family_id: member.family_member_id,
         class_id: classId,
         is_approved: false,
-      }]);
+      },
+    ]);
   });
 
   const familyResponses = await Promise.all(familyInsertPromises);
-  const familyErrors = familyResponses.filter(response => response.error);
+  const familyErrors = familyResponses.filter((response) => response.error);
 
   if (familyErrors.length > 0) {
-    const errorMessages = familyErrors.map(err => err.error.message).join(", ");
+    const errorMessages = familyErrors
+      .map((err) => err.error.message)
+      .join(", ");
     throw new Error(`Error inserting family members: ${errorMessages}`);
   }
 };

@@ -19,7 +19,7 @@ import {
   SelectValue,
 } from "../../shadcn/select";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
 import { z } from "zod";
 import { userAttendance, fetchAllEvents } from "@/api/userService";
 import moment from "moment";
@@ -40,6 +40,7 @@ export default function EditRegistrationv1() {
   const [eventDate, setEventDate] = useState(""); // Store selected event date
   const [eventTimeList, setEventTimeList] = useState([]); // Store event times
   const [selectedTime, setSelectedTime] = useState("");
+  const [id, setId] = useState("");
 
   const {
     register,
@@ -51,11 +52,26 @@ export default function EditRegistrationv1() {
     resolver: zodResolver(attendanceCodeSchema),
   });
 
+  const {
+    register: editregister,
+    handleSubmit: edithandlesubmit,
+    setValue: editsetvalue,
+    reset: editreset,
+    control: editcontrol,
+    formState: { errors: editerrors },
+  } = useForm({
+    defaultValues: {
+      selected_time: selectedTime,
+    },
+  });
+
   const attendanceSubmit = async (data) => {
     try {
       const { data: dataAttendance, error } = await userAttendance(
         data.attendanceCode,
       );
+
+      // console.log("data attendance", dataAttendance);
 
       if (error) {
         console.error("Error fetching attendance:", error);
@@ -79,19 +95,49 @@ export default function EditRegistrationv1() {
 
       // Populate the edit form with the retrieved data
       setIsEditing(true);
-      setValue(
+      editsetvalue(
         "main_applicant_first_name",
         dataAttendance[0].main_applicant_first_name,
       );
-      setValue(
+      editsetvalue(
         "main_applicant_last_name",
         dataAttendance[0].main_applicant_last_name,
       );
-      setValue("telephone", dataAttendance[0].telephone);
+      editsetvalue("telephone", dataAttendance[0].telephone);
+      editsetvalue("selected_event", dataAttendance[0].selected_event);
+      editsetvalue("selected_time", `${dataAttendance[0].selected_time}+00`);
+      setId(dataAttendance.id);
+
+      // eventList.map(
+      //   (event) =>{
+      //     console.log(" sadfhodashuidashfuashifdsagiufgdisa name",event.name)
+      //     // event.name === selectedEvent
+      //   }
+      //     // moment(event.schedule_date).isSame(moment(dataAttendance[0].seleted_event_date), 'day')
+      // );
+
+      const initialTimeList = eventList
+        .filter((event) => {
+          return (
+            event.name === dataAttendance[0].selected_event &&
+            moment(event.schedule_date).isSame(
+              moment(dataAttendance[0].selected_event_date),
+              "day",
+            )
+          );
+        })
+        .map((event) => {
+          return event.time;
+        })
+        .flat();
+
+      // console.log("timelist ko", initialTimeList);
+
+      setEventTimeList(initialTimeList);
 
       setSelectedEvent(dataAttendance[0].selected_event);
-      setEventDate(dataAttendance[0].seleted_event_date);
-      setSelectedTime(dataAttendance[0].selected_time);
+      setEventDate(dataAttendance[0].selected_event_date);
+      setSelectedTime(`${dataAttendance[0].selected_time}+00`);
     } catch (error) {
       console.error("Error:", error);
       alert("An error occurred while submitting the attendance.");
@@ -99,38 +145,76 @@ export default function EditRegistrationv1() {
   };
 
   const handleSubmitUpdateInformation = async (data) => {
+    // console.log("data from hook form", data);
     // Data contains all fields registered with useForm
     const {
       selected_event,
+      selected_time,
       main_applicant_first_name,
       main_applicant_last_name,
       telephone,
     } = data;
 
     // Optionally add attendees if they need to be updated
-    const updatedAttendees = attendees.map((attendee) => ({
-      firstName: attendee.attendee_first_name,
-      lastName: attendee.attendee_last_name,
+    // const updatedAttendees = attendees.map((attendee) => ({
+    //   firstName: attendee.firstName,
+    //   lastName: attendee.lastName,
+    // }));
+
+    // console.log("attendeess",attendees)
+    const updates = attendees.map((attendee) => ({
+      id: attendee.id,
+      attendee_first_name: attendee.firstName,
+      attendee_last_name: attendee.lastName,
+      main_applicant_first_name,
+      main_applicant_last_name,
+      telephone,
+      selected_event,
+      selected_time,
     }));
+    
+    // Update each attendee based on their ID
+    const { error: dataError } = await Promise.all(
+      updates.map(async (update) => {
+        return supabase
+          .from("new_attendance")
+          .update(update)
+          .eq("id", update.id);
+      })
+    );
+    
+    
 
-    try {
-      const { error } = await supabase.from("new_attendance").update({
-        selected_event,
-        main_applicant_first_name,
-        main_applicant_last_name,
-        telephone,
-        attendees: updatedAttendees, // Include attendees if needed
-      });
-      // .eq('id', eventId); // Replace `eventId` with the ID of the record you are editing
-
-      if (error) throw error;
-
-      console.log("Update successful");
-    } catch (error) {
-      console.error("Error updating registration data:", error.message);
+    if (dataError) {
+      throw new Error(dataError);
     }
 
-    closeModal(); // Close modal after submission
+    // console.log("updated succeessfully");
+
+    // updatedAttendees.map(()=>{})
+
+    // try {
+    //   const { error } = await supabase
+    //     .from("new_attendance")
+    //     .update({
+    //       selected_event,
+    //       selected_time,
+    //       main_applicant_first_name,
+    //       main_applicant_last_name,
+    //       telephone,
+    //       attendees: updatedAttendees, // Include attendees if needed
+    //     })
+    //     .eq("id", id);
+    //   // .eq('id', eventId);
+
+    //   if (error) throw error;
+
+    //   console.log("Update successful");
+    // } catch (error) {
+    //   console.error("Error updating registration data:", error.message);
+    // }
+
+    // closeModal();
   };
 
   const handleAddAttendee = () => {
@@ -149,9 +233,13 @@ export default function EditRegistrationv1() {
   };
 
   const closeModal = () => {
-    reset();
+    editreset();
     setIsEditing(false);
   };
+
+  useEffect(() => {
+    editsetvalue("selected_time", selectedTime);
+  }, [selectedTime, editsetvalue]);
 
   // fetch events
   // Fetch all events on component mount
@@ -216,7 +304,7 @@ export default function EditRegistrationv1() {
         {/* Edit Registration Form */}
         {isEditing && (
           <form
-            onSubmit={handleSubmit(handleSubmitUpdateInformation)}
+            onSubmit={edithandlesubmit(handleSubmitUpdateInformation)}
             className="no-scrollbar max-h-[30rem] overflow-scroll"
           >
             <div className="grid w-full items-center gap-4 p-2">
@@ -224,7 +312,7 @@ export default function EditRegistrationv1() {
                 <Label htmlFor="event">Upcoming Events</Label>
                 <Select
                   value={selectedEvent}
-                  {...register("selected_event")}
+                  {...editregister("selected_event")}
                   onValueChange={(value) => {
                     const selectedEventDetails = eventList.find(
                       (item) => item.id === value,
@@ -233,7 +321,7 @@ export default function EditRegistrationv1() {
                       setSelectedEvent(selectedEventDetails.name);
                       setEventDate(selectedEventDetails.schedule_date);
                       setEventTimeList(selectedEventDetails.time);
-                      setValue("selected_event", value);
+                      editsetvalue("selected_event", value);
                     }
                   }}
                 >
@@ -243,9 +331,18 @@ export default function EditRegistrationv1() {
                     </SelectValue>
                   </SelectTrigger>
                   <SelectContent position="popper">
-                    {eventList.map((eventItem) => (
-                      <SelectItem key={eventItem.id} value={eventItem.id}>
-                        {`${eventItem.name} (${moment(eventItem.schedule_date).format("MMMM Do YYYY")})`}
+                    {eventList.filter((event) => {
+                      // Combine the event date and time into a moment object
+                      const eventDateTime = moment(
+                        `${event.schedule_date} ${event.time}`,
+                        "YYYY-MM-DD HH:mm",
+                      );
+                      // Compare the event's date/time with the current time return only upcoming events
+                      return eventDateTime.isAfter(moment());
+                    })
+                    .map((event) => (
+                      <SelectItem key={event.id} value={event.id}>
+                        {`${event.name} (${moment(event.schedule_date).format("MMMM Do YYYY")})`}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -257,38 +354,45 @@ export default function EditRegistrationv1() {
                   </span>
                 )}
               </div>
-
               <div className="flex flex-col space-y-1.5">
-                <Label htmlFor="time">Select Time</Label>
-                <Select onValueChange={setSelectedTime}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select Time" />
-                  </SelectTrigger>
-                  <SelectContent position="popper">
-                    {eventTimeList.map((time, index) => (
-                      <SelectItem key={index} value={time}>
-                        {time}
-                      </SelectItem>
-                    ))}
-                    {console.log(selectedTime)}
-                  </SelectContent>
-                </Select>
+                <Controller
+                  name="selected_time"
+                  control={editcontrol}
+                  render={({ field }) => (
+                    <Select
+                      onValueChange={field.onChange}
+                      onBlur={field.onBlur}
+                      value={field.value}
+                    >
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Select Time" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {eventTimeList.map((time, index) => (
+                          <SelectItem key={index} value={time}>
+                            {moment.utc(time, "HH:mm:ss").format("hh:mm A")}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
+                />
               </div>
 
               <Label>Parent/Carer Information</Label>
               <div className="flex flex-col gap-2 md:flex-row">
                 <Input
-                  {...register("main_applicant_first_name")}
+                  {...editregister("main_applicant_first_name")}
                   placeholder="First name"
                   className="w-full md:w-1/3"
                 />
                 <Input
-                  {...register("main_applicant_last_name")}
+                  {...editregister("main_applicant_last_name")}
                   placeholder="Last name"
                   className="w-full md:w-1/3"
                 />
                 <Input
-                  {...register("telephone")}
+                  {...editregister("telephone")}
                   placeholder="Telephone"
                   className="w-full md:w-1/3"
                 />
@@ -299,6 +403,7 @@ export default function EditRegistrationv1() {
                 <div key={index} className="flex flex-col gap-2 md:flex-row">
                   <Input
                     value={attendee.firstName}
+                    // {...editregister(`attendee_first_name${index}`,{required:true})}
                     onChange={(e) =>
                       handleAttendeeInputChange(
                         index,
@@ -310,6 +415,7 @@ export default function EditRegistrationv1() {
                   />
                   <Input
                     value={attendee.lastName}
+                    // {...editregister(`attendee_last_name${index}`,{required:true})}
                     onChange={(e) =>
                       handleAttendeeInputChange(
                         index,

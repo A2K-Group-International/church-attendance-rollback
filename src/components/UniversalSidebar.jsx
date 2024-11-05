@@ -59,7 +59,7 @@ export default function UniversalSidebar({ children }) {
       // },
       // { link: "/volunteer-upload", label: "Upload", icon: CalendarIcon },
       // { link: "/volunteer-profile", label: "Profile", icon: CalendarIcon },
-      { link: "/volunteer-classes", label: "Groups", icon: BlackBoardIcon },
+      // { link: "/volunteer-classes", label: "Groups", icon: BlackBoardIcon },
       // { link: "/volunteer-requests", label: "Requests", icon: RequestIcon },
     ],
     user: [
@@ -70,7 +70,7 @@ export default function UniversalSidebar({ children }) {
       },
       { link: "/events-page", label: "Events", icon: CalendarIcon },
       { link: "/family", label: "Family", icon: FamilyIcon },
-      { link: "/volunteer-classes", label: "Groups", icon: BlackBoardIcon },
+      // { link: "/volunteer-classes", label: "Groups", icon: BlackBoardIcon },
       // { link: "/parishioner-request", label: "Request", icon: RequestIcon },
     ],
   };

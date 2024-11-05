@@ -57,7 +57,9 @@ export async function fetchAllEvents() {
       .order("id", { ascending: false });
 
     if (error) throw error;
+ 
 
+      // console.log("fetched events",data)
     return data;
   } catch (error) {
     console.error("Error fetching events:", error.message);

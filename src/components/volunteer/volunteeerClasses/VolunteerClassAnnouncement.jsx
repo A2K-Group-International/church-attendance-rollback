@@ -27,17 +27,32 @@ import {
 } from "@/shadcn/dialog";
 import Comments from "@/components/Comments";
 import useClassAnnouncements from "@/hooks/useClassAnnouncements";
+import { zodResolver } from "@hookform/resolvers/zod";
+import {
+  classAnnouncementSchema,
+  editClassAnnouncementSchema,
+} from "@/lib/zodSchema/classSchema";
+import { z } from "zod";
 
 export default function VolunteerClassAnnouncement() {
   const { userData } = useUserData();
   const [files, setFiles] = useState([]);
-  const { register, handleSubmit, reset, setValue } = useForm();
+  const {
+    register,
+    handleSubmit,
+    reset,
+    setValue,
+    formState: { errors:adderrors },
+  } = useForm({
+    resolver: zodResolver(classAnnouncementSchema),
+  });
   const {
     register: registerEdit,
     handleSubmit: handleEditSubmit,
     setValue: setEditValue,
     reset: resetEdit,
-  } = useForm();
+    formState: { errors:editerrors },
+  } = useForm({resolver: zodResolver(editClassAnnouncementSchema)});
 
   const { id } = useParams();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -131,100 +146,117 @@ export default function VolunteerClassAnnouncement() {
     return <p>Loading...</p>;
   }
 
-  if(data.length < 1 && userData?.user_role === "user"){
-   
-    return <div className=" flex justify-center"><p>nothing here yet.</p></div>
+  if (data.length < 1 && userData?.user_role === "user") {
+    return (
+      <div className="flex justify-center">
+        <p>nothing here yet.</p>
+      </div>
+    );
   }
+
+  // console.log("nagana me");
+  // console.log(editerrors)
 
   return (
     <div className="flex w-full flex-col items-center justify-center gap-2 p-2">
-      {userData?.user_role === "volunteer" && <form
-        onSubmit={handleSubmit((inputs) =>
-          createAnnouncementMutation.mutate({
-            inputs,
-            files,
-            class_id: id,
-            user_name: userData?.user_name,
-            user_id: userData?.user_id,
-            reset,
-            setFiles,
-          }),
-        )}
-        className="w-full rounded-md border p-4 shadow-md lg:w-3/5"
-      >
-        <Input
-          className="mb-2"
-          placeholder="Title of Highlight"
-          {...register("title", { required: true })}
-        />
-        <Textarea
-          className="mb-2"
-          placeholder="Create a highlight for your class."
-          {...register("content", { required: true })}
-        />
-        <div className="mb-2 flex flex-col gap-2">
-          {files.map((file, index) => (
-            <div
-              className="flex items-center gap-2 rounded-md border p-2 hover:bg-slate-200"
-              key={index}
-            >
+      {userData?.user_role === "volunteer" && (
+        <form
+          onSubmit={handleSubmit((inputs) => {
+            console.log("inputs", inputs);
+            createAnnouncementMutation.mutate({
+              inputs,
+              files,
+              class_id: id,
+              user_name: userData?.user_name,
+              user_id: userData?.user_id,
+              reset,
+              setFiles,
+            });
+          })}
+          className="w-full rounded-md border p-4 shadow-md lg:w-3/5"
+        >
+          <Label className=" font-bold text-md" htmlFor="title">Title</Label>
+          <Input
+            className="mb-2"
+            placeholder="Title of Highlight"
+            {...register("title")}
+          />
+          {adderrors.title && (
+            <p className="text-red-500">{adderrors.title.message}</p>
+          )}
+           <Label className=" font-bold text-md" htmlFor="content">Content</Label>
+          <Textarea
+            className="mb-2"
+            placeholder="Create a highlight for your class."
+            {...register("content")}
+          />
+          {adderrors.content && (
+            <p className="text-red-500">{adderrors.content.message}</p>
+          )}
+          <div className="mb-2 flex flex-col gap-2">
+            {files.map((file, index) => (
               <div
-                onClick={() => handleFileClick(file.preview)}
-                className="flex flex-1 cursor-pointer gap-2"
+                className="flex items-center gap-2 rounded-md border p-2 hover:bg-slate-200"
+                key={index}
               >
-                {file.file.type.startsWith("image/") && (
+                <div
+                  onClick={() => handleFileClick(file.preview)}
+                  className="flex flex-1 cursor-pointer gap-2"
+                >
+                  {file.file.type.startsWith("image/") && (
+                    <img
+                      src={file.preview}
+                      alt={file.file.name}
+                      className="h-12 w-12 rounded-md"
+                    />
+                  )}
+                  <div className="flex h-10 items-center p-2">
+                    <p>{file.file.name}</p>
+                    {/* <p>{file.file.type}</p> */}
+                  </div>
+                </div>
+                <div>
                   <img
-                    src={file.preview}
-                    alt={file.file.name}
-                    className="h-12 w-12 rounded-md"
+                    className="mr-3 cursor-pointer"
+                    src={remove}
+                    alt="remove file"
+                    onClick={() => {
+                      setFiles((prevFiles) =>
+                        prevFiles.filter((_, i) => i !== index),
+                      );
+                    }}
                   />
-                )}
-                <div className="flex h-10 items-center p-2">
-                  <p>{file.file.name}</p>
-                  {/* <p>{file.file.type}</p> */}
                 </div>
               </div>
-              <div>
-                <img
-                  className="mr-3 cursor-pointer"
-                  src={remove}
-                  alt="remove file"
-                  onClick={() => {
-                    setFiles((prevFiles) =>
-                      prevFiles.filter((_, i) => i !== index),
-                    );
-                  }}
-                />
-              </div>
+            ))}
+          </div>
+          <div className="flex justify-between">
+            <div className="flex h-8 w-8 items-center justify-center rounded-md bg-slate-300">
+              <Label
+                htmlFor="file-upload"
+                className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-xl bg-slate-300"
+              >
+                <img src={upload} alt="Upload" />
+              </Label>
+              <Input
+                id="file-upload"
+                type="file"
+                className="hidden"
+                onChange={handleFileUpload}
+                multiple
+              />
             </div>
-          ))}
-        </div>
-        <div className="flex justify-between">
-          <div className="flex h-8 w-8 items-center justify-center rounded-md bg-slate-300">
-            <Label
-              htmlFor="file-upload"
-              className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-xl bg-slate-300"
-            >
-              <img src={upload} alt="Upload" />
-            </Label>
-            <Input
-              id="file-upload"
-              type="file"
-              className="hidden"
-              onChange={handleFileUpload}
-              multiple
-            />
+            <div>
+              <Button
+                disabled={createAnnouncementMutation.isPending}
+                type="submit"
+              >
+                {createAnnouncementMutation.isPending ? "Posting" : "Post"}
+              </Button>
+            </div>
           </div>
-          <div>
-            <Button
-              disabled={createAnnouncementMutation.isPending}
-              type="submit"
-            >
-              {createAnnouncementMutation.isPending ? "Posting" : "Post"}
-            </Button>
-          </div>
-        </div>
-      </form>}
+        </form>
+      )}
       {isLoading ? (
         <p>Loading...</p>
       ) : (
@@ -262,11 +294,13 @@ export default function VolunteerClassAnnouncement() {
                       }}
                     >
                       <DialogTrigger>
-                      {userData?.user_role === "volunteer" &&<img
-                          src={deleteIcon}
-                          alt="delete"
-                          className="h-6 w-6"
-                        />}
+                        {userData?.user_role === "volunteer" && (
+                          <img
+                            src={deleteIcon}
+                            alt="delete"
+                            className="h-6 w-6"
+                          />
+                        )}
                       </DialogTrigger>
                       <DialogContent className="rounded-md">
                         <DialogHeader>
@@ -286,9 +320,8 @@ export default function VolunteerClassAnnouncement() {
                             Cancel
                           </Button>
                           <Button
-                          variant="destructive"
+                            variant="destructive"
                             onClick={() => {
-
                               // console.log("Files to delete:", values.files);
                               deleteAnnouncementMutation.mutate({
                                 files: currentFiles,
@@ -319,7 +352,9 @@ export default function VolunteerClassAnnouncement() {
                       }}
                     >
                       <DialogTrigger>
-                      {userData?.user_role === "volunteer" &&<img src={editIcon} alt="edit" className="h-6 w-6" />}
+                        {userData?.user_role === "volunteer" && (
+                          <img src={editIcon} alt="edit" className="h-6 w-6" />
+                        )}
                       </DialogTrigger>
                       <DialogContent className="rounded-md">
                         <DialogHeader>
@@ -330,27 +365,38 @@ export default function VolunteerClassAnnouncement() {
                         </DialogHeader>
                         <form
                           id="editform"
-                          onSubmit={handleEditSubmit((input) =>
+                          onSubmit={handleEditSubmit((input) =>{
+                            console.log("inputs",input)
                             updateAnnouncementMutation.mutate({
                               input,
                               announcement_id: currentId,
                               resetEdit,
                               setIsEditDialogOpen,
-                            }),
-                          )}
+                            });
+                          })}
                         >
-                          <Label htmlFor="title">Title</Label>
+                          <Label htmlFor="edittitle">Title</Label>
                           <Input
-                            {...registerEdit("edittitle", { required: true })}
+                            {...registerEdit("edittitle")} 
                             placeholder="Title of Highlight"
                             className="mt-1"
                           />
-                          <Label htmlFor="content">Highlight</Label>
+                          {editerrors.edittitle && (
+                            <p className="text-red-500">
+                              {editerrors.edittitle.message}
+                            </p>
+                          )}
+                          <Label htmlFor="editcontent">Highlight</Label>
                           <Textarea
-                            {...registerEdit("editcontent", { required: true })}
+                            {...registerEdit("editcontent")}
                             placeholder="Put your highlight here"
                             className="mt-1 resize-none"
                           />
+                          {editerrors.editcontent && (
+                            <p className="text-red-500">
+                              {editerrors.editcontent.message}
+                            </p>
+                          )}
                         </form>
                         <DialogFooter className="mx-2 flex gap-2 sm:justify-between">
                           <Button
@@ -365,7 +411,7 @@ export default function VolunteerClassAnnouncement() {
                             type="submit"
                           >
                             {updateAnnouncementMutation.isPending
-                              ? "Editting..."
+                              ? "Editing..."
                               : "Edit"}
                           </Button>
                         </DialogFooter>

@@ -17,34 +17,50 @@ import { Label } from "@/shadcn/label";
 import { Input } from "@/shadcn/input";
 import useUserData from "@/api/useUserData";
 import useClasses from "@/hooks/useClasses";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { addClassSchema, joinClassSchema } from "@/lib/zodSchema/classSchema";
 
 export default function VolunteerClasses() {
   const { userData } = useUserData();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isJoinDialogOpen, setIsJoinDialogOpen] = useState(false);
-  const { register, handleSubmit, reset, setValue } = useForm();
+
+  const {
+    register,
+    handleSubmit,
+    reset,
+    setValue,
+    formState: { errors },
+  } = useForm({
+    resolver: zodResolver(addClassSchema),
+  });
+
   const {
     register: registerJoinClass,
     handleSubmit: handleJoinClass,
     reset: resetJoinClass,
     setValue: setJoinValue,
-  } = useForm();
+    formState: { errors: joinErrors },
+  } = useForm({
+    resolver: zodResolver(joinClassSchema),
+  });
 
   const {
     data,
     isLoading,
-    error,
     deleteClassMutation,
     joinClassMutation,
     addClassMutation,
     updateClassMutation,
   } = useClasses(userData?.user_id);
 
+
   return (
     <div className="h-screen overflow-y-scroll p-8">
       <div className="mb-4 flex justify-between">
         <Title>Your Groups</Title>
         <div className="flex gap-2">
+          {/* Join Group Dialog */}
           <Dialog
             open={isJoinDialogOpen}
             onOpenChange={(open) => {
@@ -66,15 +82,16 @@ export default function VolunteerClasses() {
               <div>
                 <form
                   id="joinForm"
-                  onSubmit={handleJoinClass((input) =>
+                  onSubmit={handleJoinClass((input) => {
+                    console.log("Form Input:", input); 
                     joinClassMutation.mutate({
                       input,
                       user_name: `${userData?.user_name} ${userData?.user_last_name}`,
                       user_id: userData?.user_id,
                       user_role: userData?.user_role,
                       setIsJoinDialogOpen,
-                    }),
-                  )}
+                    });
+                  })}
                 >
                   <Label htmlFor="classCode">Group Code</Label>
                   <Input
@@ -83,8 +100,14 @@ export default function VolunteerClasses() {
                     })}
                     placeholder="Place your group code here"
                     className="mt-1"
-                    id="classcode"
+                    id="classCode"
                   />
+                  {joinErrors.classCode && (
+                    <p className="text-red-500">
+                      {joinErrors.classCode.message}
+                    </p>
+                  )}
+                  
                 </form>
               </div>
               <DialogFooter className="mx-2 flex gap-2 sm:justify-between">
@@ -104,6 +127,7 @@ export default function VolunteerClasses() {
               </DialogFooter>
             </DialogContent>
           </Dialog>
+
           <Dialog
             open={isDialogOpen}
             onOpenChange={(open) => {
@@ -123,23 +147,24 @@ export default function VolunteerClasses() {
               <div>
                 <form
                   id="addClassForm"
-                  onSubmit={handleSubmit((input) =>
+                  onSubmit={handleSubmit((input) => {
+                    console.log("Form Input:", input); 
                     addClassMutation.mutate({
                       input,
                       user_id: userData?.user_id,
                       setIsDialogOpen,
-                    }),
-                  )}
+                    });
+                  })}
                 >
                   <Label htmlFor="classname">Group Name</Label>
                   <Input
-                    {...register("classname", {
-                      required: "Class name is required",
-                    })}
+                    {...register("classname")}
                     placeholder="Bible Study"
                     className="mt-1"
-                    // id="classname"
                   />
+                  {errors.classname && (
+                    <p className="text-red-500">{errors.classname.message}</p>
+                  )}
                 </form>
               </div>
               <DialogFooter className="mx-2 flex gap-2 sm:justify-between">

@@ -19,6 +19,9 @@ import { Button } from "@/shadcn/button";
 import { useForm } from "react-hook-form";
 import clsx from "clsx";
 import useCopyText from "@/hooks/useCopyText";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { addClassSchema } from "@/lib/zodSchema/classSchema";
+
 
 export default function ClassesTable({
   classes,
@@ -26,11 +29,15 @@ export default function ClassesTable({
   deleteClassMutation,
 }) {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [deleteDialogOpen,setdeleteDialogOpen] = useState(false)
+  const [deleteDialogOpen, setdeleteDialogOpen] = useState(false);
 
-  const { register, handleSubmit, setValue: editSetValue } = useForm();
+  const {
+    register,
+    handleSubmit,
+    setValue: editSetValue,
+    formState: { errors },
+  } = useForm({ resolver: zodResolver(addClassSchema) });
   const { copyText } = useCopyText();
-
 
   return (
     <div className="flex flex-col gap-3">
@@ -41,7 +48,7 @@ export default function ClassesTable({
         >
           <Link
             to={`/volunteer-classes/${classdata.id}`}
-            className=" flex-1 hover:cursor-pointer"
+            className="flex-1 hover:cursor-pointer"
           >
             {classdata.class_name}
           </Link>
@@ -124,6 +131,9 @@ export default function ClassesTable({
                           className="mt-1"
                           id="classname"
                         />
+                                 {errors.classname && (
+                    <p className="text-red-500">{errors.classname.message}</p>
+                  )}
                       </form>
                     </div>
                     <DialogFooter className="mx-2 flex gap-2 sm:justify-between">
@@ -148,7 +158,6 @@ export default function ClassesTable({
                 <Dialog
                   open={deleteDialogOpen}
                   onOpenChange={(isOpen) => {
-
                     setdeleteDialogOpen(isOpen);
                   }}
                 >
@@ -181,7 +190,10 @@ export default function ClassesTable({
                         variant={"destructive"}
                         onClick={() => {
                           // console.log("Files to delete:", values.files);
-                          deleteClassMutation.mutate({class_id:classdata.id,setdeleteDialogOpen});
+                          deleteClassMutation.mutate({
+                            class_id: classdata.id,
+                            setdeleteDialogOpen,
+                          });
                         }}
                         disabled={deleteClassMutation.isPending}
                       >

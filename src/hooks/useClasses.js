@@ -31,6 +31,7 @@ export default function useClasses(user_id) {
     onError: (error) => {
       console.error("Mutation error:", error);
       toast({
+        variant:"destructive",
         title: "Something went wrong",
         description: `${error.message}`,
       });

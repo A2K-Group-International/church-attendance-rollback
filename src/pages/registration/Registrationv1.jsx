@@ -34,12 +34,14 @@ const formSchema = z.object({
 });
 
 export default function Registrationv1({ btnName }) {
+  const currentTime = moment();
   const [eventList, setEventList] = useState([]); // Store event data
   const [eventTimeList, setEventTimeList] = useState([]); // Store event times
   const [selectedEvent, setSelectedEvent] = useState(""); // Store selected event
   const [eventDate, setEventDate] = useState(""); // Store selected event date
   const [selectedEventTime, setSelectedEventTime] = useState(""); // Store selected event time
   const [children, setChildren] = useState([]); // Store children details
+  const [upcomingEventsSelected, setUpcomingEventsSelected] = useState(false);
 
   // React Hook Form initialization with Zod validation
   const {
@@ -57,7 +59,7 @@ export default function Registrationv1({ btnName }) {
       Math.floor(Math.random() * (999999 - 100000 + 1)) + 100000;
     return randomNumber;
   };
-  console.log(children);
+  console.log(eventDate);
 
   const onSubmit = async (data) => {
     const randomCode = handleGenerateRandomCode();
@@ -141,7 +143,7 @@ export default function Registrationv1({ btnName }) {
   }, []);
 
   return (
-    <Dialog>
+    <Dialog onOpenChange={()=>{setUpcomingEventsSelected(false)}}>
       <DialogTrigger asChild>
         <Button>{btnName}</Button>
       </DialogTrigger>
@@ -171,6 +173,7 @@ export default function Registrationv1({ btnName }) {
                     setEventDate(selectedEventDetails.schedule_date);
                     setEventTimeList(selectedEventDetails.time);
                     setValue("selected_event", value);
+                    setUpcomingEventsSelected(true);
                   }
                 }}
               >
@@ -180,11 +183,21 @@ export default function Registrationv1({ btnName }) {
                   </SelectValue>
                 </SelectTrigger>
                 <SelectContent position="popper">
-                  {eventList.map((eventItem) => (
-                    <SelectItem key={eventItem.id} value={eventItem.id}>
-                      {`${eventItem.name} (${moment(eventItem.schedule_date).format("MMMM Do YYYY")})`}
-                    </SelectItem>
-                  ))}
+                  {eventList
+                    .filter((event) => {
+                      // Combine the event date and time into a moment object
+                      const eventDateTime = moment(
+                        `${event.schedule_date} ${event.time}`,
+                        "YYYY-MM-DD HH:mm",
+                      );
+                      // Compare the event's date/time with the current time return only upcoming events
+                      return eventDateTime.isAfter(moment());
+                    })
+                    .map((event) => (
+                      <SelectItem key={event.id} value={event.id}>
+                        {`${event.name} (${moment(event.schedule_date).format("MMMM Do YYYY")})`}
+                      </SelectItem>
+                    ))}
                 </SelectContent>
               </Select>
               {selectedEvent && (
@@ -199,6 +212,7 @@ export default function Registrationv1({ btnName }) {
             <div className="flex flex-col space-y-1.5">
               <Label htmlFor="selected_time">Select Time</Label>
               <Select
+                disabled={!upcomingEventsSelected}
                 {...register("selected_time")}
                 onValueChange={(value) => setSelectedEventTime(value)}
               >
