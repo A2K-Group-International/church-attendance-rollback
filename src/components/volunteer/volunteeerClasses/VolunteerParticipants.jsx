@@ -77,14 +77,9 @@ export default function VolunteerParticipants() {
       setisAddFamilyDialogueOpen,
       reset,
     });
-
-    // console.log("Selected Family Members:", selectedFamilyMembers);
   };
 
-  // console.log("data getting", data);
-  // console.log("user", userData);
-
-  // console.log("selected family members", familyMembers);
+  console.log("data", data);
 console.log(errors)
   return (
     <div className="flex w-full flex-col items-center justify-center p-2">
@@ -140,7 +135,7 @@ console.log(errors)
                           <SelectContent>
                             <SelectGroup>
                               {/* <SelectLabel>Change Role for user</SelectLabel> */}
-                              <SelectItem value="child">Child</SelectItem>
+                              {/* <SelectItem value="child">Child</SelectItem> */}
                               <SelectItem value="volunteer">
                                 Volunteer
                               </SelectItem>
@@ -302,7 +297,7 @@ console.log(errors)
                     <div>
                       {userData?.user_role === "volunteer" && (
                         <div className="flex gap-2">
-                          <Select
+                          {/* <Select
                             onValueChange={(newRole) =>
                               changeRoleMutation.mutate({
                                 participant_id: child.id,
@@ -322,7 +317,7 @@ console.log(errors)
                                 <SelectItem value="parent">Parent</SelectItem>
                               </SelectGroup>
                             </SelectContent>
-                          </Select>
+                          </Select> */}
                           {!child.is_approved && (
                             <Button
                               onClick={() =>
@@ -410,7 +405,7 @@ console.log(errors)
                         onClick={() => copyText(parent.contact)}
                         className="hover:cursor-pointer hover:text-orange-400"
                       >
-                        {parent.phone_number}
+                        {parent.contact}
                       </p>
                       <img src={contact} alt="contact" className="h-6 w-6" />
                     </div>
@@ -430,7 +425,7 @@ console.log(errors)
                             </SelectTrigger>
                             <SelectContent>
                               <SelectGroup>
-                                <SelectItem value="child">Child</SelectItem>
+                                {/* <SelectItem value="child">Child</SelectItem> */}
                                 <SelectItem value="volunteer">
                                   Volunteer
                                 </SelectItem>

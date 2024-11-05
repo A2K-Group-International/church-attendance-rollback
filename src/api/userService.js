@@ -1,3 +1,4 @@
+import moment from "moment-timezone";
 import supabase from "./supabase";
 
 // get user role
@@ -58,9 +59,17 @@ export async function fetchAllEvents() {
 
     if (error) throw error;
  
-
+    const upcoming_events = data.filter((event) => {
+      // Combine the event date and time into a moment object
+      const eventDateTime = moment(
+        `${event.schedule_date} ${event.time}`,
+        "YYYY-MM-DD HH:mm",
+      );
+      // Compare the event's date/time with the current time return only upcoming events
+      return eventDateTime.isAfter(moment());
+    })
       // console.log("fetched events",data)
-    return data;
+    return upcoming_events;
   } catch (error) {
     console.error("Error fetching events:", error.message);
     throw new Error("Failed to load events.");
