@@ -87,6 +87,7 @@ export default function VolunteerClasses() {
                     joinClassMutation.mutate({
                       input,
                       user_name: `${userData?.user_name} ${userData?.user_last_name}`,
+                      contact: userData?.user_contact,
                       user_id: userData?.user_id,
                       user_role: userData?.user_role,
                       setIsJoinDialogOpen,
@@ -128,7 +129,7 @@ export default function VolunteerClasses() {
             </DialogContent>
           </Dialog>
 
-          <Dialog
+          {userData.user_role === "volunteer" && <Dialog
             open={isDialogOpen}
             onOpenChange={(open) => {
               setIsDialogOpen(open);
@@ -183,7 +184,7 @@ export default function VolunteerClasses() {
                 </Button>
               </DialogFooter>
             </DialogContent>
-          </Dialog>
+          </Dialog>}
         </div>
       </div>
 

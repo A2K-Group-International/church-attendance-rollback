@@ -20,7 +20,7 @@ export default function useCopyText() {
     if (isCopied) {
       toast({
         title: "Success!",
-        description: "Code has been copied",
+        description: "Number has been copied",
       });
     }
   }, [isCopied]);

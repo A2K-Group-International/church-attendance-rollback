@@ -91,9 +91,10 @@ export const joinClassAction = async ({
   user_name,
   user_id,
   user_role,
+  contact,
   familyMembers,
 }) => {
-  console.log("inputs", input, user_name, user_id, user_role);
+  console.log("inputs", input, user_name,contact, user_id, user_role);
   let error;
   let data;
   if ((!input, !user_name, !user_id)) {
@@ -145,6 +146,7 @@ export const joinClassAction = async ({
             user_type: "volunteer",
             name: user_name,
             user_id: user_id,
+            contact: contact,
             class_id: classId,
             is_approved: false,
           },
@@ -176,6 +178,7 @@ export const joinClassAction = async ({
             user_type: "parent",
             name: user_name,
             user_id: user_id,
+            contact: contact,
             class_id: classId,
             is_approved: false,
           },
