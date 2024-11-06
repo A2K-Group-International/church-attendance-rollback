@@ -3,7 +3,7 @@ import AdminSidebar from "../../admin/AdminSidebar";
 import { Button } from "../../../shadcn/button";
 
 const buttonLinks = [
-  { link: "/event", label: "Event" },
+  // { link: "/event", label: "Event" },
   // { link: "/meeting", label: "Meeting" },
   // { link: "#", label: "Poll" },
 ];

@@ -24,6 +24,7 @@ import { z } from "zod";
 import { userAttendance, fetchAllEvents } from "@/api/userService";
 import moment from "moment";
 import supabase from "@/api/supabase";
+import { useToast } from "@/shadcn/use-toast";
 
 const attendanceCodeSchema = z.object({
   attendanceCode: z
@@ -41,6 +42,8 @@ export default function EditRegistrationv1() {
   const [eventTimeList, setEventTimeList] = useState([]); // Store event times
   const [selectedTime, setSelectedTime] = useState("");
   const [id, setId] = useState("");
+
+  const {toast} = useToast()
 
   const {
     register,
@@ -147,6 +150,8 @@ export default function EditRegistrationv1() {
   const handleSubmitUpdateInformation = async (data) => {
     // console.log("data from hook form", data);
     // Data contains all fields registered with useForm
+
+    // console.log("data",data)
     const {
       selected_event,
       selected_time,
@@ -182,6 +187,8 @@ export default function EditRegistrationv1() {
           .eq("id", update.id);
       })
     );
+
+  
     
     
 
@@ -213,8 +220,11 @@ export default function EditRegistrationv1() {
     // } catch (error) {
     //   console.error("Error updating registration data:", error.message);
     // }
-
-    // closeModal();
+    toast({
+      title:"Success!",
+      description:" Registration Updated Successfully"
+    })
+    closeModal();
   };
 
   const handleAddAttendee = () => {
@@ -248,6 +258,7 @@ export default function EditRegistrationv1() {
       try {
         const events = await fetchAllEvents();
         if (events.length > 0) {
+          // console.log(events)
           setEventList(events);
         } else {
           console.error("No schedule found");
@@ -258,6 +269,8 @@ export default function EditRegistrationv1() {
     };
     fetchedEvents();
   }, []);
+
+  // console.log(attendees)
 
   return (
     <Dialog onOpenChange={closeModal}>
@@ -310,12 +323,14 @@ export default function EditRegistrationv1() {
             <div className="grid w-full items-center gap-4 p-2">
               <div className="flex flex-col space-y-1.5">
                 <Label htmlFor="event">Upcoming Events</Label>
+                
                 <Select
                   value={selectedEvent}
                   {...editregister("selected_event")}
                   onValueChange={(value) => {
+                    // console.log(value)
                     const selectedEventDetails = eventList.find(
-                      (item) => item.id === value,
+                      (item) => item.name === value,
                     );
                     if (selectedEventDetails) {
                       setSelectedEvent(selectedEventDetails.name);
@@ -333,7 +348,7 @@ export default function EditRegistrationv1() {
                   <SelectContent position="popper">
                     {eventList
                     .map((event) => (
-                      <SelectItem key={event.id} value={event.id}>
+                      <SelectItem key={event.id} value={event.name}>
                         {`${event.name} (${moment(event.schedule_date).format("MMMM Do YYYY")})`}
                       </SelectItem>
                     ))}
@@ -374,23 +389,24 @@ export default function EditRegistrationv1() {
               <Label>Parent/Carer Information</Label>
               <div className="flex flex-col gap-2 md:flex-row">
                 <Input
-                  {...editregister("main_applicant_first_name")}
+                  {...editregister("main_applicant_first_name",{required:true})}
                   placeholder="First name"
                   className="w-full md:w-1/3"
                 />
                 <Input
-                  {...editregister("main_applicant_last_name")}
+                  {...editregister("main_applicant_last_name",{required:true})}
                   placeholder="Last name"
                   className="w-full md:w-1/3"
                 />
                 <Input
-                  {...editregister("telephone")}
+                  {...editregister("telephone",{required:true})}
                   placeholder="Telephone"
                   className="w-full md:w-1/3"
                 />
               </div>
 
               <Label>Attendee Information</Label>
+              
               {attendees.map((attendee, index) => (
                 <div key={index} className="flex flex-col gap-2 md:flex-row">
                   <Input

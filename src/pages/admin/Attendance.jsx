@@ -611,7 +611,7 @@ export default function Attendance() {
         </Button>
       </div>
       <div className="sm:mb-2 sm:ml-8 sm:w-44">
-        <Registrationv1 btnName="Add" />
+        <Registrationv1 btnName="Add Attendance Record" />
         {/* <NewAttendanceRegister BtnName="Add" /> */}
         {/* <DialogWalkInRegister
             btnName="Add"

@@ -54,7 +54,6 @@ export default function VolunteerClasses() {
     updateClassMutation,
   } = useClasses(userData?.user_id);
 
-
   return (
     <div className="h-screen overflow-y-scroll p-8">
       <div className="mb-4 flex justify-between">
@@ -83,7 +82,7 @@ export default function VolunteerClasses() {
                 <form
                   id="joinForm"
                   onSubmit={handleJoinClass((input) => {
-                    console.log("Form Input:", input); 
+                    console.log("Form Input:", input);
                     joinClassMutation.mutate({
                       input,
                       user_name: `${userData?.user_name} ${userData?.user_last_name}`,
@@ -98,8 +97,8 @@ export default function VolunteerClasses() {
                   <Input
                     {...registerJoinClass("classCode", {
                       required: "Class code is required",
-                    })}
-                    placeholder="Place your group code here"
+                    })} 
+                    placeholder="Enter Group Code"
                     className="mt-1"
                     id="classCode"
                   />
@@ -108,7 +107,6 @@ export default function VolunteerClasses() {
                       {joinErrors.classCode.message}
                     </p>
                   )}
-                  
                 </form>
               </div>
               <DialogFooter className="mx-2 flex gap-2 sm:justify-between">
@@ -129,62 +127,64 @@ export default function VolunteerClasses() {
             </DialogContent>
           </Dialog>
 
-          {userData.user_role === "volunteer" && <Dialog
-            open={isDialogOpen}
-            onOpenChange={(open) => {
-              setIsDialogOpen(open);
-              setValue("classname", "");
-              if (!open) reset();
-            }}
-          >
-            <DialogTrigger>
-              <Button onClick={() => setIsDialogOpen(true)}>New Group</Button>
-            </DialogTrigger>
-            <DialogContent className="rounded-md">
-              <DialogHeader>
-                <DialogTitle className="text-2xl">Create Group</DialogTitle>
-                <Separator />
-              </DialogHeader>
-              <div>
-                <form
-                  id="addClassForm"
-                  onSubmit={handleSubmit((input) => {
-                    console.log("Form Input:", input); 
-                    addClassMutation.mutate({
-                      input,
-                      user_id: userData?.user_id,
-                      setIsDialogOpen,
-                    });
-                  })}
-                >
-                  <Label htmlFor="classname">Group Name</Label>
-                  <Input
-                    {...register("classname")}
-                    placeholder="Bible Study"
-                    className="mt-1"
-                  />
-                  {errors.classname && (
-                    <p className="text-red-500">{errors.classname.message}</p>
-                  )}
-                </form>
-              </div>
-              <DialogFooter className="mx-2 flex gap-2 sm:justify-between">
-                <Button
-                  onClick={() => setIsDialogOpen(false)}
-                  variant="destructive"
-                >
-                  Cancel
-                </Button>
-                <Button
-                  type="submit"
-                  form="addClassForm"
-                  disabled={addClassMutation.isPending}
-                >
-                  {addClassMutation.isPending ? "Adding..." : "Add"}
-                </Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>}
+          {userData?.user_role === "volunteer" && (
+            <Dialog
+              open={isDialogOpen}
+              onOpenChange={(open) => {
+                setIsDialogOpen(open);
+                setValue("classname", "");
+                if (!open) reset();
+              }}
+            >
+              <DialogTrigger>
+                <Button onClick={() => setIsDialogOpen(true)}>New Group</Button>
+              </DialogTrigger>
+              <DialogContent className="rounded-md">
+                <DialogHeader>
+                  <DialogTitle className="text-2xl">Create Group</DialogTitle>
+                  <Separator />
+                </DialogHeader>
+                <div>
+                  <form
+                    id="addClassForm"
+                    onSubmit={handleSubmit((input) => {
+                      console.log("Form Input:", input);
+                      addClassMutation.mutate({
+                        input,
+                        user_id: userData?.user_id,
+                        setIsDialogOpen,
+                      });
+                    })}
+                  >
+                    <Label htmlFor="classname">Group Name</Label>
+                    <Input
+                      {...register("classname")}
+                      placeholder="Enter Group Name"
+                      className="mt-1"
+                    />
+                    {errors.classname && (
+                      <p className="text-red-500">{errors.classname.message}</p>
+                    )}
+                  </form>
+                </div>
+                <DialogFooter className="mx-2 flex gap-2 sm:justify-between">
+                  <Button
+                    onClick={() => setIsDialogOpen(false)}
+                    variant="destructive"
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    type="submit"
+                    form="addClassForm"
+                    disabled={addClassMutation.isPending}
+                  >
+                    {addClassMutation.isPending ? "Creating Group..." : "Create Group"}
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+          )}
         </div>
       </div>
 

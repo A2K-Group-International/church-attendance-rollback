@@ -71,8 +71,8 @@ import { useUser } from "../../context/UserContext";
 import EventAttendance from "@/components/volunteer/schedule/EventAttendance";
 const headers = [
   "QR Code",
-  "Attendace",
-  +"Event Name",
+  "Attendance",
+  "Event Name",
   "Date",
   "Time",
   "Description",
