@@ -115,7 +115,7 @@ export default function FamilyPage() {
         onClick={() => handleDeleteMember(item.family_member_id)}
       >
         Delete
-      </Button>
+    </Button>
     </div>,
   ]);
 

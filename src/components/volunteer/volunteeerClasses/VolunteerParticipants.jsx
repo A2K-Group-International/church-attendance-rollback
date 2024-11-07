@@ -42,7 +42,12 @@ import { addFamilyMemberSchema } from "@/lib/zodSchema/classSchema";
 // import { zodResolver } from "@hookform/resolvers/zod";
 
 export default function VolunteerParticipants() {
-  const { control, handleSubmit, reset, formState:{errors} } = useForm( {resolver:zodResolver(addFamilyMemberSchema)});
+  const {
+    control,
+    handleSubmit,
+    reset,
+    formState: { errors },
+  } = useForm({ resolver: zodResolver(addFamilyMemberSchema) });
   const { userData } = useUserData();
   const { id } = useParams();
   const { copyText } = useCopyText();
@@ -67,9 +72,9 @@ export default function VolunteerParticipants() {
     return <p>Loading...</p>;
   }
   const onSubmit = (data) => {
-    console.log("member data",data);
+    console.log("member data", data);
     const selectedFamilyMembers = familyMembers.filter(
-      (member,index) => data.familyMembers[index],
+      (member, index) => data.familyMembers[index],
     );
     addFamilyMemberMutation.mutate({
       familyMembers: selectedFamilyMembers,
@@ -80,7 +85,7 @@ export default function VolunteerParticipants() {
   };
 
   console.log("data", data);
-console.log(errors)
+  console.log(errors);
   return (
     <div className="flex w-full flex-col items-center justify-center p-2">
       <div className="mx-4 w-full lg:w-3/5">
@@ -121,7 +126,7 @@ console.log(errors)
                         <div>{volunteer.name}</div>
                       </div>
                       <div className="flex gap-2">
-                        <Select
+                        {userData?.user_role ==="volunteer" &&<Select
                           onValueChange={(newRole) =>
                             changeRoleMutation.mutate({
                               participant_id: volunteer.id,
@@ -143,7 +148,7 @@ console.log(errors)
                               <SelectItem value="parent">Parent</SelectItem>
                             </SelectGroup>
                           </SelectContent>
-                        </Select>
+                        </Select>}
                         {!volunteer.is_approved && (
                           <Button
                             onClick={() =>
@@ -224,7 +229,12 @@ console.log(errors)
         <div>
           <div className="flex items-center justify-between">
             <h1 className="text-3xl font-semibold">Participants</h1>
-            <p>{data?.parents.length + data?.children.length} Participants</p>
+            <p>
+              {/* Filter parents and children to only count those who are approved */}
+              {data?.parents.filter((parent) => parent.is_approved).length +
+                data?.children.filter((child) => child.is_approved).length}{" "}
+              Participants
+            </p>
 
             <Dialog
               open={isAddFamilyDialogueOpen}
@@ -240,39 +250,41 @@ console.log(errors)
                 </DialogHeader>
                 <p>Select Family Members to add.</p>
                 <form onSubmit={handleSubmit(onSubmit)}>
-                  {familyMembers?.map((member,index) => {
+                  {familyMembers?.map((member, index) => {
                     // console.log("members",member,index)
                     return (
-                    <div
-                      className="flex items-center space-x-2"
-                      key={index}
-                    >
-                      <Controller
-                        name={`familyMembers[${index}]`}
-                        control={control}
-                        defaultValue={false}
-                        render={({ field }) => (
-                          <Checkbox
-                            {...field}
-                            checked={field.value}
-                            onCheckedChange={(checked) =>
-                              field.onChange(checked)
-                            }
-                          />
-                        )}
-                      />
-                      <Label
-                        htmlFor={`familyMembers[${index}]`}
-                        className="text-sm font-medium"
-                      >
-                        {member.family_first_name} {member.family_last_name}
-                      </Label>
-                    </div>)
+                      <div className="flex items-center space-x-2" key={index}>
+                        <Controller
+                          name={`familyMembers[${index}]`}
+                          control={control}
+                          defaultValue={false}
+                          render={({ field }) => (
+                            <Checkbox
+                              {...field}
+                              checked={field.value}
+                              onCheckedChange={(checked) =>
+                                field.onChange(checked)
+                              }
+                            />
+                          )}
+                        />
+                        <Label
+                          htmlFor={`familyMembers[${index}]`}
+                          className="text-sm font-medium"
+                        >
+                          {member.family_first_name} {member.family_last_name}
+                        </Label>
+                      </div>
+                    );
                   })}
                   <Button className="mt-2 w-full" type="submit">
                     Add Members
                   </Button>
-                  {errors.familyMembers &&<p className=" text-red-500">{errors.familyMembers.message}</p>}
+                  {errors.familyMembers && (
+                    <p className="text-red-500">
+                      {errors.familyMembers.message}
+                    </p>
+                  )}
                 </form>
               </DialogContent>
             </Dialog>
