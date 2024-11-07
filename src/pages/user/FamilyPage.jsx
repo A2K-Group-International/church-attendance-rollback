@@ -108,7 +108,7 @@ export default function FamilyPage() {
     item.family_last_name,
     item.family_contact,
     item.family_type,
-    <>
+    <div className=" flex gap-2">
       <Button onClick={() => handleEditMember(item)}>Edit</Button>
       <Button
         variant="destructive"
@@ -116,7 +116,7 @@ export default function FamilyPage() {
       >
         Delete
       </Button>
-    </>,
+    </div>,
   ]);
 
   const handleAddFamilyMember = async (e) => {
@@ -226,7 +226,7 @@ export default function FamilyPage() {
           onOpenChange={setAddMemberDialogOpen}
         >
           <DialogTrigger asChild>
-            <Button variant="primary" className="w-full">
+            <Button>
               Add Family Member
             </Button>
           </DialogTrigger>

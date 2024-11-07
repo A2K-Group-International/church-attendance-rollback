@@ -34,7 +34,7 @@ const formSchema = z.object({
 });
 
 export default function Registrationv1({ btnName }) {
-  const currentTime = moment();
+
   const [eventList, setEventList] = useState([]); // Store event data
   const [eventTimeList, setEventTimeList] = useState([]); // Store event times
   const [selectedEvent, setSelectedEvent] = useState(""); // Store selected event
@@ -59,7 +59,7 @@ export default function Registrationv1({ btnName }) {
       Math.floor(Math.random() * (999999 - 100000 + 1)) + 100000;
     return randomNumber;
   };
-  console.log(eventDate);
+  // console.log(eventDate);
 
   const onSubmit = async (data) => {
     const randomCode = handleGenerateRandomCode();
@@ -149,7 +149,7 @@ export default function Registrationv1({ btnName }) {
       </DialogTrigger>
       <DialogContent className="sm:max-w-2xl">
         <DialogHeader>
-          <DialogTitle>Registration Required Information</DialogTitle>
+          <DialogTitle>Add Attendance Record</DialogTitle>
           <DialogDescription>
             Please Fill up the required Information
           </DialogDescription>
