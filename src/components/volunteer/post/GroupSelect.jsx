@@ -43,7 +43,7 @@ const GroupSelect = ({ selectedGroupId, setSelectedGroupId }) => {
       ) : (
         <>
           <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-            Select Group:
+            Select Ministry:
           </label>
           <Select value={selectedGroupId} onValueChange={setSelectedGroupId}>
             <SelectTrigger className="w-full rounded border p-2">
