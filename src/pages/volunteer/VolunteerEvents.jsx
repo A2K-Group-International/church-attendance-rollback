@@ -63,6 +63,7 @@ import { Icon } from "@iconify/react";
 import { fetchCategory, fetchSubCategory } from "../../api/userService";
 
 import { Textarea } from "../../shadcn/textarea";
+import EventFilter from "@/components/admin/Event/EventFilter";
 
 import { useNavigate } from "react-router-dom";
 import QRCodeIcon from "../../assets/svg/qrCode.svg";
@@ -87,6 +88,8 @@ export default function VolunteerEvents() {
 
   const [time, setTime] = useState([]); // event time data
   const [selectedDate, setSelectedDate] = useState(null); // event date data
+  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+  const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth());
   const [selectedVisibility, setSelectedVisibility] = useState("Public"); // event date data
   const [selectedGroupId, setSelectedGroupId] = useState(null);
   const [selectedGroupName, setSelectedGroupName] = useState("");
@@ -206,40 +209,64 @@ export default function VolunteerEvents() {
     setSelectedDate(moment(date));
     setValue("schedule", date);
   };
+  const handleYearChange = (year) => {
+    setSelectedYear(year);
+    fetchEvents(year, selectedMonth); // Fetch events with updated year
+  };
 
-  const fetchEvents = useCallback(async () => {
-    setLoading(true);
-    setError(null);
+  // Handler for month change
+  const handleMonthChange = (month) => {
+    setSelectedMonth(month);
+    fetchEvents(selectedYear, month); // Fetch events with updated month
+  };
 
-    try {
-      const {
-        data: fetchedData,
-        error,
-        count,
-      } = await supabase
-        .from("schedule")
-        .select("*", { count: "exact" })
-        .eq("creator_id", userData.user_id) // Add this line to filter by creator_id
-        .range(
-          (currentPage - 1) * itemsPerPage,
-          currentPage * itemsPerPage - 1,
-        );
+  const fetchEvents = useCallback(
+    async (year, month) => {
+      setLoading(true);
+      setError(null);
 
-      if (error) throw error;
+      try {
+        // Format the month to ensure two digits (e.g., 01 for January, 10 for October)
+        const formattedMonth = month + 1; // Adjust to 1-12 for month
+        const monthStr =
+          formattedMonth < 10 ? `0${formattedMonth}` : `${formattedMonth}`;
+        const yearStr = year;
 
-      setTotalPages(Math.ceil(count / itemsPerPage));
-      setEvents(fetchedData);
-    } catch (err) {
-      setError("Error fetching events. Please try again.");
-      console.error("Error fetching events:", err);
-    } finally {
-      setLoading(false);
-    }
-  }, [currentPage, itemsPerPage, userData.user_id]);
+        const query = supabase
+          .from("schedule")
+          .select("*", { count: "exact" })
+          .eq("creator_id", userData.user_id) // Filter by creator_id
+          .range(
+            (currentPage - 1) * itemsPerPage,
+            currentPage * itemsPerPage - 1,
+          );
+
+        // Apply the date filter if year and month are provided
+        if (year && month !== null) {
+          query.filter("schedule_date", "like", `${yearStr}-${monthStr}%`);
+        }
+
+        const { data: fetchedData, error, count } = await query;
+
+        if (error) throw error;
+
+        setTotalPages(Math.ceil(count / itemsPerPage));
+        setEvents(fetchedData);
+      } catch (err) {
+        setError("Error fetching events. Please try again.");
+        console.error("Error fetching events:", err);
+      } finally {
+        setLoading(false);
+      }
+    },
+    [currentPage, itemsPerPage, userData.user_id],
+  );
 
   useEffect(() => {
-    fetchEvents();
-  }, [currentPage, fetchEvents]);
+    if (selectedYear && selectedMonth !== null) {
+      fetchEvents(selectedYear, selectedMonth); // Fetch events for the selected year and month
+    }
+  }, [selectedYear, selectedMonth, fetchEvents]);
 
   // Format the time
   const formatTime = (timeString) => {
@@ -1076,6 +1103,12 @@ export default function VolunteerEvents() {
         {/* <CreateMeeting />
             <CreatePoll /> */}
       </div>
+      <EventFilter
+        selectedYear={selectedYear}
+        selectedMonth={selectedMonth}
+        onYearChange={handleYearChange}
+        onMonthChange={handleMonthChange}
+      />
       {loading ? (
         <Spinner />
       ) : error ? (
