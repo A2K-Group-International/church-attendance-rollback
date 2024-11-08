@@ -18,19 +18,16 @@ export default function UniversalSidebar({ children }) {
   const { userData, loggedIn } = useUser();
   const navigate = useNavigate();
 
-  // State to display links based on user role (for testing)
   const [currentUserRole, setCurrentUserRole] = useState(
     userData?.user_role || "user",
   );
   const userName =
     `${userData?.user_name || ""} ${userData?.user_last_name || ""}`.trim();
 
-  // If the user is not logged in, render the children without the sidebar
   if (!loggedIn) {
     return <>{children}</>;
   }
 
-  // Define the links for different user roles
   const links = {
     admin: [
       {
@@ -42,8 +39,6 @@ export default function UniversalSidebar({ children }) {
       { link: "/attendance", label: "Attendance", icon: CheckListIcon },
       { link: "/groups", label: "Ministries", icon: PersonIcon },
       { link: "/event", label: "Schedule", icon: CalendarIcon },
-      // { link: "/admin-rotas", label: "Rotas", icon: PersonIcon },
-      // { link: "/admin-calendar", label: "Calendar", icon: CalendarIcon },
       { link: "/volunteers", label: "Requests", icon: RequestIcon },
     ],
     volunteer: [
@@ -57,15 +52,6 @@ export default function UniversalSidebar({ children }) {
         label: "Organised Events",
         icon: CalendarIcon,
       },
-      // {
-      //   link: "/volunteer-duties",
-      //   label: "Rota Management",
-      //   icon: CalendarIcon,
-      // },
-      // { link: "/volunteer-upload", label: "Upload", icon: CalendarIcon },
-      // { link: "/volunteer-profile", label: "Profile", icon: CalendarIcon },
-      // { link: "/volunteer-classes", label: "Groups", icon: BlackBoardIcon },
-      // { link: "/volunteer-requests", label: "Requests", icon: RequestIcon },
     ],
     user: [
       {
@@ -75,8 +61,6 @@ export default function UniversalSidebar({ children }) {
       },
       { link: "/events-page", label: "Events", icon: CalendarIcon },
       { link: "/family", label: "Family", icon: FamilyIcon },
-      // { link: "/volunteer-classes", label: "Groups", icon: BlackBoardIcon },
-      // { link: "/parishioner-request", label: "Request", icon: RequestIcon },
     ],
   };
 
@@ -104,12 +88,9 @@ export default function UniversalSidebar({ children }) {
             </nav>
           </div>
 
-          {/* Placeholder buttons and Profile/Logout buttons */}
           <div className="mt-auto flex flex-col space-y-2">
-            {/* Conditionally render buttons based on userData.user_role */}
             {userData.user_role === "admin" && (
               <>
-                {/* Show return button to Admin only if not currently in Admin view */}
                 {currentUserRole !== "admin" && (
                   <Button
                     variant="outline"
@@ -118,7 +99,6 @@ export default function UniversalSidebar({ children }) {
                     Return to Admin
                   </Button>
                 )}
-                {/* Show switch buttons only if not currently in that role */}
                 {currentUserRole !== "volunteer" && (
                   <Button
                     variant="outline"
@@ -140,7 +120,6 @@ export default function UniversalSidebar({ children }) {
 
             {userData.user_role === "volunteer" && (
               <>
-                {/* Show return button to Volunteer only if not currently in Volunteer view */}
                 {currentUserRole !== "volunteer" && (
                   <Button
                     variant="outline"
@@ -149,7 +128,6 @@ export default function UniversalSidebar({ children }) {
                     Return to Volunteer
                   </Button>
                 )}
-                {/* Show switch button only if not currently in that role */}
                 {currentUserRole !== "user" && (
                   <Button
                     variant="outline"
@@ -207,7 +185,61 @@ export default function UniversalSidebar({ children }) {
                       </ul>
                     </nav>
                   </div>
-                  <div className="flex items-center justify-between">
+
+                  {/* Role Switch Buttons for Mobile */}
+                  <div className="mt-4 flex flex-col space-y-2">
+                    {userData.user_role === "admin" && (
+                      <>
+                        {currentUserRole !== "admin" && (
+                          <Button
+                            variant="outline"
+                            onClick={() => setCurrentUserRole("admin")}
+                          >
+                            Return to Admin
+                          </Button>
+                        )}
+                        {currentUserRole !== "volunteer" && (
+                          <Button
+                            variant="outline"
+                            onClick={() => setCurrentUserRole("volunteer")}
+                          >
+                            Switch to Volunteer
+                          </Button>
+                        )}
+                        {currentUserRole !== "user" && (
+                          <Button
+                            variant="outline"
+                            onClick={() => setCurrentUserRole("user")}
+                          >
+                            Switch to Parishioner
+                          </Button>
+                        )}
+                      </>
+                    )}
+
+                    {userData.user_role === "volunteer" && (
+                      <>
+                        {currentUserRole !== "volunteer" && (
+                          <Button
+                            variant="outline"
+                            onClick={() => setCurrentUserRole("volunteer")}
+                          >
+                            Return to Volunteer
+                          </Button>
+                        )}
+                        {currentUserRole !== "user" && (
+                          <Button
+                            variant="outline"
+                            onClick={() => setCurrentUserRole("user")}
+                          >
+                            Switch to Parishioner
+                          </Button>
+                        )}
+                      </>
+                    )}
+                  </div>
+
+                  <div className="mt-4 flex items-center justify-between">
                     <Button onClick={() => navigate("/volunteer-profile")}>
                       Profile
                     </Button>
