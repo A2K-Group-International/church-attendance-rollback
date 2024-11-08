@@ -23,6 +23,7 @@ import {
 import { Input } from "../../shadcn/input";
 import { Label } from "../../shadcn/label";
 import moment from "moment";
+import { LucideChartNoAxesColumnDecreasing } from "lucide-react";
 
 const formSchema = z.object({
   firstName: z.string().min(1, "First name is required."),
@@ -31,6 +32,7 @@ const formSchema = z.object({
     .string()
     .length(11, "Cellphone number must be exactly 11 digits."),
   selected_event: z.number().int().positive("Event selection is required."),
+  // selected_time: z.number().int().positive("Time selection is required."),
 });
 
 export default function Registrationv1({ btnName }) {
@@ -66,18 +68,19 @@ export default function Registrationv1({ btnName }) {
 
     try {
       // If no additional attendees, create a default attendee array with the main applicant's info
-      const attendees =
-        children.length > 0
-          ? children.map((child) => ({
-              first_name: child.firstName, // attendee_first_name
-              last_name: child.lastName, // attendee_last_name
-            }))
-          : [
-              {
-                first_name: data.firstName, // main_applicant_first_name as attendee_first_name
-                last_name: data.lastName, // main_applicant_last_name as attendee_last_name
-              },
-            ];
+const attendees = children.length > 0
+  ? children
+      .map((child, index) => ({
+        first_name: child.firstName === "" && index == 0 ? data.firstName : child.firstName,
+        last_name: child.lastName === "" && index == 0 ? data.lastName : child.lastName,
+      }))
+      .filter(attendee => attendee.first_name.trim() !== "" && attendee.last_name.trim() !== "") // filter out blank names
+  : [
+      {
+        first_name: data.firstName, // main_applicant_first_name as attendee_first_name
+        last_name: data.lastName, // main_applicant_last_name as attendee_last_name
+      },
+    ].filter(attendee => attendee.first_name.trim() !== "" && attendee.last_name.trim() !== ""); // filter out blank names
 
       const result = await insertFamilyAttendee(
         data.firstName, // main_applicant_first_name
@@ -141,7 +144,7 @@ export default function Registrationv1({ btnName }) {
     };
     fetchedEvents();
   }, []);
-
+console.log(children)
   return (
     <Dialog onOpenChange={()=>{setUpcomingEventsSelected(false)}}>
       <DialogTrigger asChild>
@@ -191,6 +194,11 @@ export default function Registrationv1({ btnName }) {
                     ))}
                 </SelectContent>
               </Select>
+              {errors.selected_event && (
+                <span className="text-red-500">
+                  {errors.selected_event.message}
+                </span>
+              )}
               {selectedEvent && (
                 <span>
                   Event Date:{" "}

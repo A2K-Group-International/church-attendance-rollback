@@ -43,7 +43,7 @@ export default function EditRegistrationv1() {
   const [selectedTime, setSelectedTime] = useState("");
   const [id, setId] = useState("");
 
-  const {toast} = useToast()
+  const { toast } = useToast();
 
   const {
     register,
@@ -74,7 +74,7 @@ export default function EditRegistrationv1() {
         data.attendanceCode,
       );
 
-      // console.log("data attendance", dataAttendance);
+      console.log("data attendance", dataAttendance);
 
       if (error) {
         console.error("Error fetching attendance:", error);
@@ -118,7 +118,7 @@ export default function EditRegistrationv1() {
       //   }
       //     // moment(event.schedule_date).isSame(moment(dataAttendance[0].seleted_event_date), 'day')
       // );
-
+      console.log("event list", eventList);
       const initialTimeList = eventList
         .filter((event) => {
           return (
@@ -134,7 +134,7 @@ export default function EditRegistrationv1() {
         })
         .flat();
 
-      // console.log("timelist ko", initialTimeList);
+      console.log("timelist ko", initialTimeList);
 
       setEventTimeList(initialTimeList);
 
@@ -174,10 +174,11 @@ export default function EditRegistrationv1() {
       main_applicant_first_name,
       main_applicant_last_name,
       telephone,
+      selected_event_date: eventDate,
       selected_event,
       selected_time,
     }));
-    
+
     // Update each attendee based on their ID
     const { error: dataError } = await Promise.all(
       updates.map(async (update) => {
@@ -185,12 +186,8 @@ export default function EditRegistrationv1() {
           .from("new_attendance")
           .update(update)
           .eq("id", update.id);
-      })
+      }),
     );
-
-  
-    
-    
 
     if (dataError) {
       throw new Error(dataError);
@@ -221,9 +218,9 @@ export default function EditRegistrationv1() {
     //   console.error("Error updating registration data:", error.message);
     // }
     toast({
-      title:"Success!",
-      description:" Registration Updated Successfully"
-    })
+      title: "Success!",
+      description: " Registration Updated Successfully",
+    });
     closeModal();
   };
 
@@ -248,6 +245,8 @@ export default function EditRegistrationv1() {
   };
 
   useEffect(() => {
+    // const convertedSelectedTime = moment.utc(selectedTime, "HH:mm:ss").format("hh:mm A")
+    // console.log("converted time", convertedSelectedTime)
     editsetvalue("selected_time", selectedTime);
   }, [selectedTime, editsetvalue]);
 
@@ -270,7 +269,7 @@ export default function EditRegistrationv1() {
     fetchedEvents();
   }, []);
 
-  // console.log(attendees)
+  // console.log("selected time",selectedTime)
 
   return (
     <Dialog onOpenChange={closeModal}>
@@ -323,7 +322,7 @@ export default function EditRegistrationv1() {
             <div className="grid w-full items-center gap-4 p-2">
               <div className="flex flex-col space-y-1.5">
                 <Label htmlFor="event">Upcoming Events</Label>
-                
+
                 <Select
                   value={selectedEvent}
                   {...editregister("selected_event")}
@@ -337,6 +336,7 @@ export default function EditRegistrationv1() {
                       setEventDate(selectedEventDetails.schedule_date);
                       setEventTimeList(selectedEventDetails.time);
                       editsetvalue("selected_event", value);
+                      editsetvalue("selected_time", "");
                     }
                   }}
                 >
@@ -346,8 +346,7 @@ export default function EditRegistrationv1() {
                     </SelectValue>
                   </SelectTrigger>
                   <SelectContent position="popper">
-                    {eventList
-                    .map((event) => (
+                    {eventList.map((event) => (
                       <SelectItem key={event.id} value={event.name}>
                         {`${event.name} (${moment(event.schedule_date).format("MMMM Do YYYY")})`}
                       </SelectItem>
@@ -362,9 +361,11 @@ export default function EditRegistrationv1() {
                 )}
               </div>
               <div className="flex flex-col space-y-1.5">
+                <Label htmlFor="selected_time">Select Time</Label>
                 <Controller
                   name="selected_time"
                   control={editcontrol}
+                  rules={{ required: "Time is required" }}
                   render={({ field }) => (
                     <Select
                       onValueChange={field.onChange}
@@ -384,29 +385,38 @@ export default function EditRegistrationv1() {
                     </Select>
                   )}
                 />
+                {editerrors.selected_time && (
+                  <span className="text-red-500">
+                    {editerrors.selected_time.message}
+                  </span>
+                )}
               </div>
 
-              <Label>Parent/Carer Information</Label>
+              <Label>Main Applicant</Label>
               <div className="flex flex-col gap-2 md:flex-row">
                 <Input
-                  {...editregister("main_applicant_first_name",{required:true})}
+                  {...editregister("main_applicant_first_name", {
+                    required: true,
+                  })}
                   placeholder="First name"
                   className="w-full md:w-1/3"
                 />
                 <Input
-                  {...editregister("main_applicant_last_name",{required:true})}
+                  {...editregister("main_applicant_last_name", {
+                    required: true,
+                  })}
                   placeholder="Last name"
                   className="w-full md:w-1/3"
                 />
                 <Input
-                  {...editregister("telephone",{required:true})}
+                  {...editregister("telephone", { required: true })}
                   placeholder="Telephone"
                   className="w-full md:w-1/3"
                 />
               </div>
 
               <Label>Attendee Information</Label>
-              
+
               {attendees.map((attendee, index) => (
                 <div key={index} className="flex flex-col gap-2 md:flex-row">
                   <Input
