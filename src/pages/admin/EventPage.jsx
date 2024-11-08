@@ -258,8 +258,10 @@ export default function VolunteerEvents() {
   );
 
   useEffect(() => {
-    fetchEvents();
-  }, [currentPage, fetchEvents]);
+    if (selectedYear && selectedMonth !== null) {
+      fetchEvents(selectedYear, selectedMonth); // Pass the selectedYear and selectedMonth
+    }
+  }, [selectedYear, selectedMonth, fetchEvents]);
 
   // Format the time
   const formatTime = (timeString) => {
