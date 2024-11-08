@@ -106,7 +106,7 @@ const AnnouncementForm = ({
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="user_group">Select User Group</Label>
+        <Label htmlFor="user_group">Select Ministry</Label>
         <Select
           value={newAnnouncement.groupId}
           onValueChange={(value) => {
@@ -126,7 +126,7 @@ const AnnouncementForm = ({
           required
         >
           <SelectTrigger>
-            <SelectValue placeholder="Select a group" />
+            <SelectValue placeholder="Select a ministry" />
           </SelectTrigger>
           <SelectContent>
             {userGroups.map((group) => (
@@ -152,7 +152,7 @@ const AnnouncementForm = ({
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="public">Public</SelectItem>
-            <SelectItem value="private">Private/Group</SelectItem>
+            <SelectItem value="private">Private/Ministry</SelectItem>
           </SelectContent>
         </Select>
       </div>
