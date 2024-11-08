@@ -67,7 +67,7 @@ import { Textarea } from "../../shadcn/textarea";
 import { useNavigate } from "react-router-dom";
 import QRCodeIcon from "../../assets/svg/qrCode.svg";
 import { useUser } from "../../context/UserContext";
-
+import EventFilter from "../../components/admin/Event/EventFilter";
 import EventAttendance from "@/components/volunteer/schedule/EventAttendance";
 const headers = [
   "QR Code",
@@ -87,6 +87,9 @@ export default function VolunteerEvents() {
   const [time, setTime] = useState([]); // event time data
   const [selectedDate, setSelectedDate] = useState(null); // event date data
   const [selectedVisibility, setSelectedVisibility] = useState("Public"); // event date data
+  const currentYear = new Date().getFullYear();
+  const [selectedYear, setSelectedYear] = useState(currentYear);
+  const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth());
   const [selectedGroupId, setSelectedGroupId] = useState(null);
   const [selectedGroupName, setSelectedGroupName] = useState("");
   const [isSubmitted, setIsSubmitted] = useState(false); // for disabling the button submission
@@ -127,6 +130,17 @@ export default function VolunteerEvents() {
   };
 
   const timeOptions = generateTimeOptions();
+  // Handler for year change
+  const handleYearChange = (year) => {
+    setSelectedYear(year);
+    fetchEvents(year, selectedMonth); // Fetch events with updated year
+  };
+
+  // Handler for month change
+  const handleMonthChange = (month) => {
+    setSelectedMonth(month);
+    fetchEvents(selectedYear, month); // Fetch events with updated month
+  };
 
   const onSubmit = async (data) => {
     setIsSubmitted(true);
@@ -204,34 +218,44 @@ export default function VolunteerEvents() {
     setValue("schedule", date);
   };
 
-  const fetchEvents = useCallback(async () => {
-    setLoading(true);
-    setError(null);
+  const fetchEvents = useCallback(
+    async (year, month) => {
+      setLoading(true);
+      setError(null);
 
-    try {
-      const {
-        data: fetchedData,
-        error,
-        count,
-      } = await supabase
-        .from("schedule")
-        .select("*", { count: "exact" })
-        .range(
-          (currentPage - 1) * itemsPerPage,
-          currentPage * itemsPerPage - 1,
-        );
+      try {
+        // Format the month to ensure two digits (e.g., 01 for January, 10 for October)
+        const formattedMonth = month + 1; // Adjust to 1-12 for month
+        const monthStr =
+          formattedMonth < 10 ? `0${formattedMonth}` : `${formattedMonth}`;
+        const yearStr = year;
 
-      if (error) throw error;
+        const {
+          data: fetchedData,
+          error,
+          count,
+        } = await supabase
+          .from("schedule")
+          .select("*", { count: "exact" })
+          .filter("schedule_date", "like", `${yearStr}-${monthStr}%`) // Filter by year and month (e.g., "2024-11%")
+          .range(
+            (currentPage - 1) * itemsPerPage,
+            currentPage * itemsPerPage - 1,
+          );
 
-      setTotalPages(Math.ceil(count / itemsPerPage));
-      setEvents(fetchedData);
-    } catch (err) {
-      setError("Error fetching events. Please try again.");
-      console.error("Error fetching events:", err);
-    } finally {
-      setLoading(false);
-    }
-  }, [currentPage, itemsPerPage]);
+        if (error) throw error;
+
+        setTotalPages(Math.ceil(count / itemsPerPage));
+        setEvents(fetchedData);
+      } catch (err) {
+        setError("Error fetching events. Please try again.");
+        console.error("Error fetching events:", err);
+      } finally {
+        setLoading(false);
+      }
+    },
+    [currentPage, itemsPerPage],
+  );
 
   useEffect(() => {
     fetchEvents();
@@ -960,6 +984,12 @@ export default function VolunteerEvents() {
         {/* <CreateMeeting />
             <CreatePoll /> */}
       </div>
+      <EventFilter
+        selectedYear={selectedYear}
+        selectedMonth={selectedMonth}
+        onYearChange={handleYearChange}
+        onMonthChange={handleMonthChange}
+      />
       {loading ? (
         <Spinner />
       ) : error ? (
