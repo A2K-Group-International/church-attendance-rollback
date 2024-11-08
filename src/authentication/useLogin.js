@@ -22,7 +22,17 @@ export function useLogin() {
       queryClient.setQueriesData([user], user);
       setUserData(null); // Clear any previous user data on new login
 
-      // Fetch user details
+      // Re-fetch session after login to ensure it’s up to date
+      const {
+        data: { session },
+        error: sessionError,
+      } = await supabase.auth.getSession();
+      if (sessionError || !session) {
+        console.error("Session error after login");
+        return;
+      }
+
+      // Fetch user details after login
       const { data: userData, error } = await supabase
         .from("user_list")
         .select("*")
