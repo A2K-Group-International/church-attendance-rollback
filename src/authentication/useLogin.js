@@ -75,9 +75,9 @@ export function useLogin() {
 
       // Navigate based on role
       if (userData.user_role === "admin") {
-        navigate("/admin-dashboard", { replace: true });
+        navigate("/volunteer-announcements", { replace: true });
       } else if (userData.user_role === "user") {
-        navigate("/events-page", { replace: true });
+        navigate("/user-announcements", { replace: true });
       } else if (userData.user_role === "volunteer") {
         navigate("/volunteer-announcements", { replace: true });
       }
