@@ -1,5 +1,5 @@
 import React, { createContext, useState, useContext, useEffect } from "react";
-import supabase from "../api/supabase"; // Adjust the import as needed
+import supabase from "../api/supabase";
 import Spinner from "../components/Spinner";
 
 export const UserContext = createContext();
@@ -11,14 +11,16 @@ export const UserProvider = ({ children }) => {
   const [loggedIn, setLoggedIn] = useState(false); // State to track logged-in status
   const [error, setError] = useState(null); // State to track errors
 
-  // Effect to fetch user data only once after login
+  // Effect to fetch user data on initial mount if a user is already logged in
   useEffect(() => {
     const fetchUserData = async () => {
       try {
         const {
           data: { user },
           error,
-        } = await supabase.auth.getUser(); // Get current user from Supabase
+        } = await supabase.auth.getUser();
+
+        if (error) throw new Error(error.message);
 
         if (user) {
           const { data: userDetails, error: userError } = await supabase
@@ -27,44 +29,16 @@ export const UserProvider = ({ children }) => {
             .eq("user_uuid", user.id)
             .single();
 
-          if (userError) {
-            throw new Error(userError.message);
-          }
+          if (userError) throw new Error(userError.message);
 
-          setUserData(userDetails); // Save user data in context
-          setLoggedIn(true); // Set logged-in state to true
-          // Fetch groups based on user role
-          if (userDetails.user_role === "admin") {
-            // If the user is an admin, fetch all groups
-            const { data: allGroupsData, error: allGroupsError } =
-              await supabase.from("group_list").select("*"); // Adjust fields as necessary
-
-            if (allGroupsError) {
-              throw new Error(allGroupsError.message);
-            }
-
-            // Save the group details
-            setUserGroups(allGroupsData); // Admin gets all groups
-          } else {
-            // Fetch groups associated with the user
-            const { data: groupsData, error: groupsError } = await supabase
-              .from("group_user_assignments")
-              .select("group_id, group_list(*)") // Assuming group_list has the group details
-              .eq("user_id", userDetails.user_id); // Replace user_id with the correct field from userDetails
-
-            if (groupsError) {
-              throw new Error(groupsError.message);
-            }
-
-            // Save the group details
-            setUserGroups(groupsData.map((item) => item.group_list)); // Assuming group_list contains the necessary details
-          }
+          setUserData(userDetails);
+          setLoggedIn(true);
         }
       } catch (err) {
-        setError(err.message); // Set error message
-        console.error("Error fetching user data or groups:", err);
+        setError(err.message);
+        console.error("Error fetching user data:", err);
       } finally {
-        setLoading(false); // Stop loading
+        setLoading(false);
       }
     };
 
@@ -77,10 +51,11 @@ export const UserProvider = ({ children }) => {
         userData,
         userGroups,
         setUserData,
+        setUserGroups, // Make setUserGroups available in context
         loading,
         loggedIn,
         setLoggedIn,
-        error, // Provide error state
+        error,
       }}
     >
       {loading ? (
@@ -90,7 +65,6 @@ export const UserProvider = ({ children }) => {
       ) : (
         children
       )}
-      {/* Show loading state or error */}
     </UserContext.Provider>
   );
 };

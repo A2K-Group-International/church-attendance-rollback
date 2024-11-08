@@ -33,6 +33,11 @@ export default function UniversalSidebar({ children }) {
   // Define the links for different user roles
   const links = {
     admin: [
+      {
+        link: "/volunteer-announcements",
+        label: "Announcements",
+        icon: CalendarIcon,
+      },
       { link: "/admin-dashboard", label: "Dashboard", icon: DashboardIcon },
       { link: "/attendance", label: "Attendance", icon: CheckListIcon },
       { link: "/groups", label: "Ministries", icon: PersonIcon },
