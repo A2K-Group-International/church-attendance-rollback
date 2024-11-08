@@ -112,6 +112,21 @@ export default function VolunteerEvents() {
     formState: { errors },
     watch,
   } = useForm(); // react-hook-forms
+  const generateTimeOptions = () => {
+    const times = [];
+    const start = 0; // Start at midnight (00:00)
+    const end = 24 * 60; // End at 23:45 (1440 minutes)
+
+    for (let time = start; time < end; time += 15) {
+      const hours = String(Math.floor(time / 60)).padStart(2, "0");
+      const minutes = String(time % 60).padStart(2, "0");
+      times.push(`${hours}:${minutes}`);
+    }
+
+    return times;
+  };
+
+  const timeOptions = generateTimeOptions();
 
   const onSubmit = async (data) => {
     setIsSubmitted(true);
@@ -557,17 +572,27 @@ export default function VolunteerEvents() {
                 {/* Time Selection */}
                 <div className="space-y-2">
                   <Label htmlFor="time">Time</Label>
-                  {time.map((oldTime, index) => (
+                  {time.map((t, index) => (
                     <div key={index} className="flex items-center space-x-2">
-                      <Input
-                        type="time"
-                        value={oldTime}
-                        step="00:15"
-                        onChange={(e) =>
-                          handleChangeTime(index, e.target.value)
+                      <Select
+                        value={t}
+                        onValueChange={(value) =>
+                          handleChangeTime(index, value)
                         }
                         className="flex-grow"
-                      />
+                      >
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="HH:MM" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {timeOptions.map((option) => (
+                            <SelectItem key={option} value={option}>
+                              {option}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+
                       <Button
                         type="button"
                         variant="outline"
@@ -866,15 +891,25 @@ export default function VolunteerEvents() {
                   <div className="h-28 space-y-2 overflow-y-scroll">
                     {time.map((t, index) => (
                       <div key={index} className="flex items-center space-x-2">
-                        <Input
-                          type="time"
+                        <Select
                           value={t}
-                          step="00:15"
-                          onChange={(e) =>
-                            handleChangeTime(index, e.target.value)
+                          onValueChange={(value) =>
+                            handleChangeTime(index, value)
                           }
                           className="flex-grow"
-                        />
+                        >
+                          <SelectTrigger className="w-full">
+                            <SelectValue placeholder="HH:MM" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {timeOptions.map((option) => (
+                              <SelectItem key={option} value={option}>
+                                {option}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+
                         <Button
                           type="button"
                           variant="outline"

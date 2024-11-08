@@ -59,6 +59,7 @@
     "react-qr-scanner": "^1.0.0-alpha.11",
     "react-router-dom": "^6.26.2",
     "react-select": "^5.8.1",
+    "react-time-picker": "^7.0.0",
     "react-toastify": "^10.0.6",
     "recharts": "^2.12.7",
     "tailwind-merge": "^2.5.2",
