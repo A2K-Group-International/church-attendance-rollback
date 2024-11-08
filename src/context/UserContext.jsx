@@ -20,14 +20,12 @@ export const UserProvider = ({ children }) => {
           error: sessionError,
         } = await supabase.auth.getSession();
 
-        // If no session or error retrieving session, just skip the user data fetch
         if (sessionError || !session) {
-          setLoading(false); // No session, done loading
-          setError(null); // Clear any previous errors
-          return; // Skip the rest of the logic
+          setLoading(false);
+          setError(null);
+          return;
         }
 
-        // If session exists, fetch user data
         const { user } = session;
         const { data: userDetails, error: userError } = await supabase
           .from("user_list")
@@ -50,25 +48,51 @@ export const UserProvider = ({ children }) => {
     fetchUserData();
   }, []); // Empty dependency array means this runs once on mount
 
+  // Effect to fetch user groups based on user role whenever userData is set
+  useEffect(() => {
+    const fetchUserGroups = async () => {
+      if (userData) {
+        let groupsData = [];
+        try {
+          if (userData.user_role === "admin") {
+            const { data: allGroupsData, error: allGroupsError } =
+              await supabase.from("group_list").select("*");
+            if (allGroupsError) throw new Error(allGroupsError.message);
+            groupsData = allGroupsData;
+          } else {
+            const { data: userGroupsData, error: userGroupsError } =
+              await supabase
+                .from("group_user_assignments")
+                .select("group_id, group_list(*)")
+                .eq("user_id", userData.user_id);
+            if (userGroupsError) throw new Error(userGroupsError.message);
+            groupsData = userGroupsData.map((item) => item.group_list);
+          }
+          setUserGroups(groupsData);
+        } catch (error) {
+          console.error("Error fetching user groups:", error.message);
+          setError(error.message);
+        }
+      }
+    };
+
+    fetchUserGroups();
+  }, [userData]); // Fetch user groups whenever userData is updated
+
   return (
     <UserContext.Provider
       value={{
         userData,
         userGroups,
         setUserData,
-        setUserGroups, // Make setUserGroups available in context
+        setUserGroups,
         loading,
         loggedIn,
         setLoggedIn,
         error,
       }}
     >
-      {loading ? (
-        <Spinner />
-      ) : (
-        // If there's no session error, we load the children
-        children
-      )}
+      {loading ? <Spinner /> : children}
     </UserContext.Provider>
   );
 };
