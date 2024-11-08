@@ -781,7 +781,7 @@ export default function VolunteerEvents() {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="public">Public</SelectItem>
-                      <SelectItem value="group">Group</SelectItem>
+                      <SelectItem value="group">Ministry</SelectItem>
                     </SelectContent>
                   </Select>
                   {errors.schedule_visibility && (

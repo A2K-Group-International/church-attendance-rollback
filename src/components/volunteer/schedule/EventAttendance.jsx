@@ -36,7 +36,8 @@ const headers = [
 export default function EventAttendance({ event_uuid }) {
   const [attendanceData, setAttendanceData] = useState([]);
   const [scheduleData, setScheduleData] = useState([]);
-  const [selectedTime, setSelectedTime] = useState(null); // New state for selected time
+  const [selectedTime, setSelectedTime] = useState(null);
+  const [searchTerm, setSearchTerm] = useState("");
 
   const fetchEventTime = async () => {
     try {
@@ -47,7 +48,6 @@ export default function EventAttendance({ event_uuid }) {
 
       if (error) throw new error();
       setScheduleData(data);
-      console.log(data);
     } catch (error) {
       console.log(error);
     }
@@ -104,26 +104,29 @@ export default function EventAttendance({ event_uuid }) {
     }
   };
 
-  // Filter attendance data based on selectedTime
-  //   const filteredAttendanceData = selectedTime
-  //     ? attendanceData.filter((item) => item.time === selectedTime)
-  //     : attendanceData;
-
-  const rows = attendanceData.map((item, index) => [
-    <Switch
-      key={item.id}
-      checked={item.has_attended}
-      onCheckedChange={(checked) => handleSwitchChange(item.id, checked)}
-      aria-label="Toggle attendance status"
-    />,
-    index + 1,
-    `${item.attendee_first_name} ${item.attendee_last_name}`,
-    `${item.main_applicant_first_name} ${item.main_applicant_last_name}`,
-    <a key={item.id} href={`tel: ${item.telephone}`} className="text-blue-500">
-      {item.telephone}
-    </a>,
-    item.has_attended ? "Attended" : "Pending",
-  ]);
+  const filteredRows = attendanceData
+    .filter((item) =>
+      item.attendee_first_name.toLowerCase().includes(searchTerm.toLowerCase()),
+    )
+    .map((item, index) => [
+      <Switch
+        key={item.id}
+        checked={item.has_attended}
+        onCheckedChange={(checked) => handleSwitchChange(item.id, checked)}
+        aria-label="Toggle attendance status"
+      />,
+      index + 1,
+      `${item.attendee_first_name} ${item.attendee_last_name}`,
+      `${item.main_applicant_first_name} ${item.main_applicant_last_name}`,
+      <a
+        key={item.id}
+        href={`tel: ${item.telephone}`}
+        className="text-blue-500"
+      >
+        {item.telephone}
+      </a>,
+      item.has_attended ? "Attended" : "Pending",
+    ]);
 
   return (
     <Dialog>
@@ -132,7 +135,7 @@ export default function EventAttendance({ event_uuid }) {
           <img src={peopleIcon} alt="People Icon" />
         </Button>
       </DialogTrigger>
-      <DialogContent className="no-scrollbar max-h-[40rem] max-w-7xl overflow-scroll">
+      <DialogContent className="no-scrollbar max-h-[40rem] max-w-7xl overflow-hidden">
         <DialogHeader>
           <div className="flex gap-x-10">
             <DialogTitle>Attendance</DialogTitle>
@@ -148,7 +151,6 @@ export default function EventAttendance({ event_uuid }) {
                       const formattedTime = moment(timeValue, "HH:mm").format(
                         "h:mm A",
                       );
-
                       return (
                         <SelectItem
                           key={`${index}-${timeIndex}`}
@@ -166,11 +168,20 @@ export default function EventAttendance({ event_uuid }) {
           <DialogDescription className="sr-only">
             Attendance Records
           </DialogDescription>
-          <div className="text-start">
+          <div className="mt-4">
+            <input
+              type="text"
+              placeholder="Search attendees..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="mb-4 w-full rounded border p-2"
+            />
             <AddAttendee event_uuid={event_uuid} />
           </div>
-          <Table headers={headers} rows={rows} />
         </DialogHeader>
+        <div className="max-h-[30rem] overflow-y-auto">
+          <Table headers={headers} rows={filteredRows} />
+        </div>
       </DialogContent>
     </Dialog>
   );
