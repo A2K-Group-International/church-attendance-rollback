@@ -144,7 +144,7 @@ const attendees = children.length > 0
     };
     fetchedEvents();
   }, []);
-console.log(children)
+
   return (
     <Dialog onOpenChange={()=>{setUpcomingEventsSelected(false)}}>
       <DialogTrigger asChild>

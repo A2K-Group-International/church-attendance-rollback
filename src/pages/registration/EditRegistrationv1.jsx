@@ -74,7 +74,6 @@ export default function EditRegistrationv1() {
         data.attendanceCode,
       );
 
-      console.log("data attendance", dataAttendance);
 
       if (error) {
         console.error("Error fetching attendance:", error);
@@ -118,7 +117,7 @@ export default function EditRegistrationv1() {
       //   }
       //     // moment(event.schedule_date).isSame(moment(dataAttendance[0].seleted_event_date), 'day')
       // );
-      console.log("event list", eventList);
+
       const initialTimeList = eventList
         .filter((event) => {
           return (
@@ -134,7 +133,7 @@ export default function EditRegistrationv1() {
         })
         .flat();
 
-      console.log("timelist ko", initialTimeList);
+   
 
       setEventTimeList(initialTimeList);
 
