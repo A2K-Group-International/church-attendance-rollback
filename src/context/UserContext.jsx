@@ -16,24 +16,29 @@ export const UserProvider = ({ children }) => {
     const fetchUserData = async () => {
       try {
         const {
-          data: { user },
-          error,
-        } = await supabase.auth.getUser();
+          data: { session },
+          error: sessionError,
+        } = await supabase.auth.getSession();
 
-        if (error) throw new Error(error.message);
-
-        if (user) {
-          const { data: userDetails, error: userError } = await supabase
-            .from("user_list")
-            .select("*")
-            .eq("user_uuid", user.id)
-            .single();
-
-          if (userError) throw new Error(userError.message);
-
-          setUserData(userDetails);
-          setLoggedIn(true);
+        // If no session or error retrieving session, just skip the user data fetch
+        if (sessionError || !session) {
+          setLoading(false); // No session, done loading
+          setError(null); // Clear any previous errors
+          return; // Skip the rest of the logic
         }
+
+        // If session exists, fetch user data
+        const { user } = session;
+        const { data: userDetails, error: userError } = await supabase
+          .from("user_list")
+          .select("*")
+          .eq("user_uuid", user.id)
+          .single();
+
+        if (userError) throw new Error(userError.message);
+
+        setUserData(userDetails);
+        setLoggedIn(true);
       } catch (err) {
         setError(err.message);
         console.error("Error fetching user data:", err);
@@ -60,9 +65,8 @@ export const UserProvider = ({ children }) => {
     >
       {loading ? (
         <Spinner />
-      ) : error ? (
-        <p className="text-red-500">{error}</p>
       ) : (
+        // If there's no session error, we load the children
         children
       )}
     </UserContext.Provider>
