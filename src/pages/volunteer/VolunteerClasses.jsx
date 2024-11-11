@@ -19,6 +19,7 @@ import useUserData from "@/api/useUserData";
 import useClasses from "@/hooks/useClasses";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { addClassSchema, joinClassSchema } from "@/lib/zodSchema/classSchema";
+import Spinner from "@/components/Spinner";
 
 export default function VolunteerClasses() {
   const { userData } = useUserData();
@@ -189,7 +190,7 @@ export default function VolunteerClasses() {
       </div>
 
       {isLoading ? (
-        <p>loading...</p>
+        <Spinner/>
       ) : (
         <ClassesTable
           classes={data}

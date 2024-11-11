@@ -159,7 +159,6 @@ export default function Registrationv1({ btnName }) {
     };
     fetchedEvents();
   }, []);
-  console.log(children);
   return (
     <Dialog
       onOpenChange={() => {
