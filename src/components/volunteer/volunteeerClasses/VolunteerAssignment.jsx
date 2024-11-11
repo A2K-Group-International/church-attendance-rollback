@@ -35,7 +35,8 @@ import {
 import useClassAssignment from "@/hooks/useClassAssignment";
 import useUserData from "@/api/useUserData";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { addquizSchema } from "@/lib/zodSchema/classSchema";
+import { addquizSchema, editQuizSchema } from "@/lib/zodSchema/classSchema";
+import Spinner from "@/components/Spinner";
 
 export default function VolunteerAssignment() {
   const [date, setDate] = useState("");
@@ -59,7 +60,7 @@ export default function VolunteerAssignment() {
     reset: editReset,
     setValue: editSetValue,
     formState: { errors: editErrors },
-  } = useForm({ resolver: zodResolver(addquizSchema) });
+  } = useForm({ resolver: zodResolver(editQuizSchema) });
 
   const {
     error,
@@ -70,8 +71,8 @@ export default function VolunteerAssignment() {
     addAssignmentMutation,
   } = useClassAssignment(id);
 
-  if (isLoading) {
-    return <p>Loading...</p>;
+  if (isLoading || !userData) {
+    return <Spinner />;
   }
 
   if (error) {
@@ -85,6 +86,8 @@ export default function VolunteerAssignment() {
       </div>
     );
   }
+
+  console.log(editErrors);
 
   return (
     <div className="flex w-full flex-col items-center justify-center gap-2 p-2">
@@ -220,13 +223,15 @@ export default function VolunteerAssignment() {
                         editSetValue("editquizlink", assignment.quiz_link);
                         editSetValue("editparticipant", assignment.quiz_for);
                         setDate(assignment.due);
+                      } else {
+                        setDate("");
                       }
                       setIsEditDialogOpen(isOpen);
                     }}
                   >
-                    <DialogTrigger>
+                    <DialogTrigger className="w-full">
                       {userData?.user_role === "volunteer" && (
-                        <div className="p-3 text-center hover:cursor-pointer">
+                        <div className="w-full p-3 text-center hover:cursor-pointer">
                           Edit
                         </div>
                       )}
@@ -253,14 +258,25 @@ export default function VolunteerAssignment() {
                       >
                         <Label>Title</Label>
                         <Input {...editRegister("edittitle")} />
+                        {editErrors.edittitle && (
+                          <p className="text-red-500">
+                            {editErrors.edittitle.message}
+                          </p>
+                        )}
                         <Label>Description</Label>
                         <Textarea
                           {...editRegister("editdescription", {
                             required: true,
                           })}
                         />
+                        {editErrors.editdescription && (
+                          <p className="text-red-500">{editErrors.editdescription.message}</p>
+                        )}
                         <Label>Quiz Link</Label>
                         <Input {...editRegister("editquizlink")} />
+                        {editErrors.editquizlink && (
+                          <p>{editErrors.editquizlink.message}</p>
+                        )}
                         <div className="mt-3 flex gap-2">
                           <Controller
                             name="editparticipant"
@@ -292,6 +308,11 @@ export default function VolunteerAssignment() {
                               </Select>
                             )}
                           />
+                          {editErrors.editparticipant && (
+                            <p className="text-red-500">
+                              {addErrors.participants.message}
+                            </p>
+                          )}
 
                           <Popover>
                             <PopoverTrigger asChild>
@@ -351,7 +372,7 @@ export default function VolunteerAssignment() {
                       setIsDialogOpen(isOpen);
                     }}
                   >
-                    <DialogTrigger>
+                    <DialogTrigger className="w-full">
                       <div className="p-3 text-center text-red-500 hover:cursor-pointer">
                         Delete
                       </div>

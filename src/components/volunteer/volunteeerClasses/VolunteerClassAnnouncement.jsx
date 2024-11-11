@@ -33,6 +33,7 @@ import {
   editClassAnnouncementSchema,
 } from "@/lib/zodSchema/classSchema";
 import { z } from "zod";
+import Spinner from "@/components/Spinner";
 
 export default function VolunteerClassAnnouncement() {
   const { userData } = useUserData();
@@ -142,11 +143,11 @@ export default function VolunteerClassAnnouncement() {
     return null;
   };
 
-  if (isLoading) {
-    return <p>Loading...</p>;
-  }
+  if (isLoading || !userData) {
+    return <Spinner/>;
+}
 
-  if (data.length < 1 && userData?.user_role === "user") {
+  if (data?.length < 1 && userData?.user_role === "user") {
     return (
       <div className="flex justify-center">
         <p>nothing here yet.</p>

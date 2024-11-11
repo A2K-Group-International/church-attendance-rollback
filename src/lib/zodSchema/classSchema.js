@@ -45,6 +45,24 @@ export const addquizSchema = z.object({
     .optional(),
 });
 
+export const editQuizSchema = z.object({
+  edittitle: z.string().min(1, { message: "Title is required" }),
+  editdescription: z.string().min(1, { message: "Description is required" }),
+  editquizlink: z
+    .string()
+    .url({ message: "Quiz link must be a valid URL" })
+    .min(1, { message: "Quiz link is required" }),
+  editparticipant: z.enum(["child", "parent", "volunteer"], {
+    message: "Participant must be selected",
+  }),
+  editdue_date: z
+    .string()
+    .refine(
+      (date) => !isNaN(new Date(date).getTime()),
+      { message: "Invalid date format" }
+    )
+    .optional(),
+});
 export const addFamilyMemberSchema = z.object({
     familyMembers: z
       .array(z.boolean())

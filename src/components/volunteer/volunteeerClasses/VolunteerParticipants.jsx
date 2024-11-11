@@ -39,6 +39,7 @@ import { Label } from "@/shadcn/label";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { addFamilyMemberSchema } from "@/lib/zodSchema/classSchema";
+import Spinner from "@/components/Spinner";
 // import { zodResolver } from "@hookform/resolvers/zod";
 
 export default function VolunteerParticipants() {
@@ -68,8 +69,8 @@ export default function VolunteerParticipants() {
     addFamilyMemberMutation,
   } = useClassParticipants(id, userData?.user_id);
 
-  if (isLoading) {
-    return <p>Loading...</p>;
+  if (isLoading || !userData) {
+    return <Spinner/>;
   }
   const onSubmit = (data) => {
     console.log("member data", data);
@@ -84,8 +85,8 @@ export default function VolunteerParticipants() {
     });
   };
 
-  console.log("data", data);
-  console.log(errors);
+  // console.log("data", data);
+  // console.log(errors);
   return (
     <div className="flex w-full flex-col items-center justify-center p-2">
       <div className="mx-4 w-full lg:w-3/5">
