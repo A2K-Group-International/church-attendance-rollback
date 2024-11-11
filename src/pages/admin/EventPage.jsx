@@ -67,7 +67,7 @@ import { Textarea } from "../../shadcn/textarea";
 import { useNavigate } from "react-router-dom";
 import QRCodeIcon from "../../assets/svg/qrCode.svg";
 import { useUser } from "../../context/UserContext";
-
+import EventFilter from "../../components/admin/Event/EventFilter";
 import EventAttendance from "@/components/volunteer/schedule/EventAttendance";
 const headers = [
   "QR Code",
@@ -87,6 +87,9 @@ export default function VolunteerEvents() {
   const [time, setTime] = useState([]); // event time data
   const [selectedDate, setSelectedDate] = useState(null); // event date data
   const [selectedVisibility, setSelectedVisibility] = useState("Public"); // event date data
+  const currentYear = new Date().getFullYear();
+  const [selectedYear, setSelectedYear] = useState(currentYear);
+  const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth());
   const [selectedGroupId, setSelectedGroupId] = useState(null);
   const [selectedGroupName, setSelectedGroupName] = useState("");
   const [isSubmitted, setIsSubmitted] = useState(false); // for disabling the button submission
@@ -112,6 +115,32 @@ export default function VolunteerEvents() {
     formState: { errors },
     watch,
   } = useForm(); // react-hook-forms
+  const generateTimeOptions = () => {
+    const times = [];
+    const start = 0; // Start at midnight (00:00)
+    const end = 24 * 60; // End at 23:45 (1440 minutes)
+
+    for (let time = start; time < end; time += 15) {
+      const hours = String(Math.floor(time / 60)).padStart(2, "0");
+      const minutes = String(time % 60).padStart(2, "0");
+      times.push(`${hours}:${minutes}`);
+    }
+
+    return times;
+  };
+
+  const timeOptions = generateTimeOptions();
+  // Handler for year change
+  const handleYearChange = (year) => {
+    setSelectedYear(year);
+    fetchEvents(year, selectedMonth); // Fetch events with updated year
+  };
+
+  // Handler for month change
+  const handleMonthChange = (month) => {
+    setSelectedMonth(month);
+    fetchEvents(selectedYear, month); // Fetch events with updated month
+  };
 
   const onSubmit = async (data) => {
     setIsSubmitted(true);
@@ -189,38 +218,50 @@ export default function VolunteerEvents() {
     setValue("schedule", date);
   };
 
-  const fetchEvents = useCallback(async () => {
-    setLoading(true);
-    setError(null);
+  const fetchEvents = useCallback(
+    async (year, month) => {
+      setLoading(true);
+      setError(null);
 
-    try {
-      const {
-        data: fetchedData,
-        error,
-        count,
-      } = await supabase
-        .from("schedule")
-        .select("*", { count: "exact" })
-        .range(
-          (currentPage - 1) * itemsPerPage,
-          currentPage * itemsPerPage - 1,
-        );
+      try {
+        // Format the month to ensure two digits (e.g., 01 for January, 10 for October)
+        const formattedMonth = month + 1; // Adjust to 1-12 for month
+        const monthStr =
+          formattedMonth < 10 ? `0${formattedMonth}` : `${formattedMonth}`;
+        const yearStr = year;
 
-      if (error) throw error;
+        const {
+          data: fetchedData,
+          error,
+          count,
+        } = await supabase
+          .from("schedule")
+          .select("*", { count: "exact" })
+          .filter("schedule_date", "like", `${yearStr}-${monthStr}%`) // Filter by year and month (e.g., "2024-11%")
+          .range(
+            (currentPage - 1) * itemsPerPage,
+            currentPage * itemsPerPage - 1,
+          );
 
-      setTotalPages(Math.ceil(count / itemsPerPage));
-      setEvents(fetchedData);
-    } catch (err) {
-      setError("Error fetching events. Please try again.");
-      console.error("Error fetching events:", err);
-    } finally {
-      setLoading(false);
-    }
-  }, [currentPage, itemsPerPage]);
+        if (error) throw error;
+
+        setTotalPages(Math.ceil(count / itemsPerPage));
+        setEvents(fetchedData);
+      } catch (err) {
+        setError("Error fetching events. Please try again.");
+        console.error("Error fetching events:", err);
+      } finally {
+        setLoading(false);
+      }
+    },
+    [currentPage, itemsPerPage],
+  );
 
   useEffect(() => {
-    fetchEvents();
-  }, [currentPage, fetchEvents]);
+    if (selectedYear && selectedMonth !== null) {
+      fetchEvents(selectedYear, selectedMonth); // Pass the selectedYear and selectedMonth
+    }
+  }, [selectedYear, selectedMonth, fetchEvents]);
 
   // Format the time
   const formatTime = (timeString) => {
@@ -557,17 +598,27 @@ export default function VolunteerEvents() {
                 {/* Time Selection */}
                 <div className="space-y-2">
                   <Label htmlFor="time">Time</Label>
-                  {time.map((oldTime, index) => (
+                  {time.map((t, index) => (
                     <div key={index} className="flex items-center space-x-2">
-                      <Input
-                        type="time"
-                        value={oldTime}
-                        step="00:15"
-                        onChange={(e) =>
-                          handleChangeTime(index, e.target.value)
+                      <Select
+                        value={t}
+                        onValueChange={(value) =>
+                          handleChangeTime(index, value)
                         }
                         className="flex-grow"
-                      />
+                      >
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="HH:MM" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {timeOptions.map((option) => (
+                            <SelectItem key={option} value={option}>
+                              {option}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+
                       <Button
                         type="button"
                         variant="outline"
@@ -866,15 +917,25 @@ export default function VolunteerEvents() {
                   <div className="h-28 space-y-2 overflow-y-scroll">
                     {time.map((t, index) => (
                       <div key={index} className="flex items-center space-x-2">
-                        <Input
-                          type="time"
+                        <Select
                           value={t}
-                          step="00:15"
-                          onChange={(e) =>
-                            handleChangeTime(index, e.target.value)
+                          onValueChange={(value) =>
+                            handleChangeTime(index, value)
                           }
                           className="flex-grow"
-                        />
+                        >
+                          <SelectTrigger className="w-full">
+                            <SelectValue placeholder="HH:MM" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {timeOptions.map((option) => (
+                              <SelectItem key={option} value={option}>
+                                {option}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+
                         <Button
                           type="button"
                           variant="outline"
@@ -925,6 +986,12 @@ export default function VolunteerEvents() {
         {/* <CreateMeeting />
             <CreatePoll /> */}
       </div>
+      <EventFilter
+        selectedYear={selectedYear}
+        selectedMonth={selectedMonth}
+        onYearChange={handleYearChange}
+        onMonthChange={handleMonthChange}
+      />
       {loading ? (
         <Spinner />
       ) : error ? (

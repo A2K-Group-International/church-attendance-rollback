@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react"; // Import useEffect
+import React, { useState, useEffect } from "react";
 import { Button } from "../../../shadcn/button";
 import { DialogFooter } from "../../../shadcn/dialog";
 import { Input } from "../../../shadcn/input";
@@ -10,8 +10,9 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "../../../shadcn/select"; // Import ShadCN select
+} from "../../../shadcn/select";
 import { useUser } from "@/context/UserContext";
+import * as Tooltip from "@radix-ui/react-tooltip"; // Import all tooltip components
 
 const AnnouncementForm = ({
   newAnnouncement,
@@ -20,38 +21,65 @@ const AnnouncementForm = ({
   setUploadedImage,
   error,
 }) => {
-  const [imagePreview, setImagePreview] = useState(null); // State for image preview
-  const { userGroups } = useUser(); // Get user groups from context
+  const [imagePreview, setImagePreview] = useState(null);
+  const { userGroups } = useUser();
 
   const handleImageUpload = (e) => {
     const file = e.target.files[0];
     if (file) {
       const validImageTypes = ["image/jpeg", "image/png", "image/gif"];
       if (validImageTypes.includes(file.type)) {
-        setUploadedImage(file); // Set the uploaded image
-        setImagePreview(URL.createObjectURL(file)); // Set the image preview
+        setUploadedImage(file);
+        setImagePreview(URL.createObjectURL(file));
       } else {
         alert("Please upload a valid image file (JPEG, PNG, GIF).");
       }
     }
   };
 
-  // Log newAnnouncement whenever it updates
   useEffect(() => {
     console.log("Updated Announcement:", newAnnouncement);
   }, [newAnnouncement]);
 
   if (!userGroups || userGroups.length === 0) {
-    return <p>Loading groups...</p>; // Display loading message
+    return <p>Loading groups...</p>;
   }
 
+  // Icon component to use for the tooltip trigger
+  const InfoIcon = () => (
+    <div className="flex h-6 w-6 cursor-pointer items-center justify-center rounded-full bg-blue-500 text-white">
+      i
+    </div>
+  );
+
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      {/* Display error message if it exists */}
+    <form
+      onSubmit={handleSubmit}
+      className="space-y-6 rounded-md bg-gray-50 p-4 shadow-lg"
+    >
       {error && <div className="text-red-500">{error}</div>}
 
       <div className="space-y-2">
-        <Label htmlFor="post_header">Announcement Header</Label>
+        <div className="flex items-center gap-2">
+          <Label htmlFor="post_header">Announcement Header</Label>
+          <Tooltip.Provider>
+            <Tooltip.Root>
+              <Tooltip.Trigger asChild>
+                <div className="ml-2">
+                  <InfoIcon />
+                </div>
+              </Tooltip.Trigger>
+              <Tooltip.Content
+                side="right"
+                align="center"
+                className="rounded-md bg-gray-800 p-2 text-white"
+              >
+                Enter a brief title for the announcement.
+                <Tooltip.Arrow className="fill-current text-gray-800" />
+              </Tooltip.Content>
+            </Tooltip.Root>
+          </Tooltip.Provider>
+        </div>
         <Input
           id="post_header"
           type="text"
@@ -69,7 +97,26 @@ const AnnouncementForm = ({
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="post_content">Announcement Content</Label>
+        <div className="flex items-center gap-2">
+          <Label htmlFor="post_content">Announcement Content</Label>
+          <Tooltip.Provider>
+            <Tooltip.Root>
+              <Tooltip.Trigger asChild>
+                <div className="ml-2">
+                  <InfoIcon />
+                </div>
+              </Tooltip.Trigger>
+              <Tooltip.Content
+                side="right"
+                align="center"
+                className="rounded-md bg-gray-800 p-2 text-white"
+              >
+                Provide the full details of your announcement here.
+                <Tooltip.Arrow className="fill-current text-gray-800" />
+              </Tooltip.Content>
+            </Tooltip.Root>
+          </Tooltip.Provider>
+        </div>
         <Textarea
           id="post_content"
           value={newAnnouncement.post_content}
@@ -86,7 +133,26 @@ const AnnouncementForm = ({
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="image_upload">Upload Image</Label>
+        <div className="flex items-center gap-2">
+          <Label htmlFor="image_upload">Upload Image</Label>
+          <Tooltip.Provider>
+            <Tooltip.Root>
+              <Tooltip.Trigger asChild>
+                <div className="ml-2">
+                  <InfoIcon />
+                </div>
+              </Tooltip.Trigger>
+              <Tooltip.Content
+                side="right"
+                align="center"
+                className="rounded-md bg-gray-800 p-2 text-white"
+              >
+                Upload an optional image for the announcement (JPEG, PNG, GIF).
+                <Tooltip.Arrow className="fill-current text-gray-800" />
+              </Tooltip.Content>
+            </Tooltip.Root>
+          </Tooltip.Provider>
+        </div>
         <Input
           type="file"
           id="image_upload"
@@ -106,7 +172,26 @@ const AnnouncementForm = ({
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="user_group">Select Ministry</Label>
+        <div className="flex items-center gap-2">
+          <Label htmlFor="user_group">Select Ministry</Label>
+          <Tooltip.Provider>
+            <Tooltip.Root>
+              <Tooltip.Trigger asChild>
+                <div className="ml-2">
+                  <InfoIcon />
+                </div>
+              </Tooltip.Trigger>
+              <Tooltip.Content
+                side="right"
+                align="center"
+                className="rounded-md bg-gray-800 p-2 text-white"
+              >
+                Choose the ministry this announcement is for.
+                <Tooltip.Arrow className="fill-current text-gray-800" />
+              </Tooltip.Content>
+            </Tooltip.Root>
+          </Tooltip.Provider>
+        </div>
         <Select
           value={newAnnouncement.groupId}
           onValueChange={(value) => {
@@ -119,8 +204,6 @@ const AnnouncementForm = ({
                 groupId: selectedGroup.group_id,
                 groupName: selectedGroup.group_name,
               });
-              console.log("Selected Group ID:", selectedGroup.group_id);
-              console.log("Selected Group Name:", selectedGroup.group_name);
             }
           }}
           required
@@ -139,7 +222,27 @@ const AnnouncementForm = ({
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="announcement_privacy">Announcement Visibility</Label>
+        <div className="flex items-center gap-2">
+          <Label htmlFor="announcement_privacy">Announcement Visibility</Label>
+          <Tooltip.Provider>
+            <Tooltip.Root>
+              <Tooltip.Trigger asChild>
+                <div className="ml-2">
+                  <InfoIcon />
+                </div>
+              </Tooltip.Trigger>
+              <Tooltip.Content
+                side="right"
+                align="center"
+                className="rounded-md bg-gray-800 p-2 text-white"
+              >
+                Set who can view this announcement (public for parishioners or
+                private for private ministry matters).
+                <Tooltip.Arrow className="fill-current text-gray-800" />
+              </Tooltip.Content>
+            </Tooltip.Root>
+          </Tooltip.Provider>
+        </div>
         <Select
           value={newAnnouncement.privacy}
           onValueChange={(value) =>
@@ -148,7 +251,7 @@ const AnnouncementForm = ({
           required
         >
           <SelectTrigger>
-            <SelectValue placeholder="Select Annoumncement Visibility" />
+            <SelectValue placeholder="Select Announcement Visibility" />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="public">Public</SelectItem>

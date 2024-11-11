@@ -7,7 +7,7 @@ import { useUser } from "@/context/UserContext";
 export function useLogin() {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
-  const { setUserData, setUserGroups, setLoggedIn } = useUser(); // Access setUserGroups
+  const { setUserData, setLoggedIn } = useUser(); // Remove setUserGroups
 
   const {
     mutateAsync: login,
@@ -53,35 +53,8 @@ export function useLogin() {
         );
       }
 
-      setUserData(userData);
+      setUserData(userData); // Set user data in context
       setLoggedIn(true);
-
-      // Fetch user groups based on role
-      let groupsData = [];
-      if (userData.user_role === "admin") {
-        const { data: allGroupsData, error: allGroupsError } = await supabase
-          .from("group_list")
-          .select("*");
-
-        if (allGroupsError) {
-          console.error(allGroupsError.message);
-          return;
-        }
-        groupsData = allGroupsData;
-      } else {
-        const { data: userGroupsData, error: userGroupsError } = await supabase
-          .from("group_user_assignments")
-          .select("group_id, group_list(*)")
-          .eq("user_id", userData.user_id);
-
-        if (userGroupsError) {
-          console.error(userGroupsError.message);
-          return;
-        }
-        groupsData = userGroupsData.map((item) => item.group_list);
-      }
-
-      setUserGroups(groupsData); // Set groups in context
 
       // Navigate based on role
       if (userData.user_role === "admin") {

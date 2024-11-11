@@ -19,9 +19,11 @@ import {
 } from "../../shadcn/dialog";
 import supabase from "../../api/supabase";
 import { useUser } from "../../authentication/useUser";
-import moment from 'moment'
+import moment from "moment";
 
 export default function EventAttendDialog({ open, onClose, eventData }) {
+  console.log(eventData);
+
   const user = useUser(); // Retrieve user data from the custom hook
   const queryClient = useQueryClient();
 
@@ -118,26 +120,24 @@ export default function EventAttendDialog({ open, onClose, eventData }) {
     try {
       // Loop through each selected family member and insert data
       for (const member of selectedMembers) {
-        const { data, error } = await supabase
-          .from("new_attendance")
-          .insert({
-            main_applicant_first_name:
-              member.guardian === false ? guardianData.user_name : "N/A",
-            main_applicant_last_name:
-              member.guardian === false ? guardianData.user_last_name : null,
-            telephone:
-              member.guardian === false ? guardianData.user_contact : "N/A",
-            attendee_first_name: member.family_first_name,
-            attendee_last_name: member.family_last_name,
-            has_attended: false, // Default attendance status
-            selected_time: selectedTime,
-            selected_event_date: moment(eventData.schedule).format('YYYY-MM-DD'), // Example: assuming schedule_day is part of eventData
-            attendance_type: null, // Modify if needed
-            // attendance_code: eventData.attendance_code, // Assuming eventData has this field
-            // children_age: member.family_age, // Assuming family member has an age field
-            selected_event: eventData.name, // Event name from eventData
-            // schedule_id: eventData.schedule_id, // Assuming eventData has a schedule ID field
-          });
+        const { data, error } = await supabase.from("new_attendance").insert({
+          main_applicant_first_name:
+            member.guardian === false ? guardianData.user_name : "N/A",
+          main_applicant_last_name:
+            member.guardian === false ? guardianData.user_last_name : null,
+          telephone:
+            member.guardian === false ? guardianData.user_contact : "N/A",
+          attendee_first_name: member.family_first_name,
+          attendee_last_name: member.family_last_name,
+          has_attended: false, // Default attendance status
+          selected_time: selectedTime,
+          selected_event_date: moment(eventData.schedule).format("YYYY-MM-DD"), // Example: assuming schedule_day is part of eventData
+          attendance_type: null, // Modify if needed
+          // attendance_code: eventData.attendance_code, // Assuming eventData has this field
+          // children_age: member.family_age, // Assuming family member has an age field
+          selected_event_id: eventData.event_uuid, // Event name from eventData
+          // schedule_id: eventData.schedule_id, // Assuming eventData has a schedule ID field
+        });
 
         if (error) {
           throw error;

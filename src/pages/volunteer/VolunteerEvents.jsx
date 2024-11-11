@@ -63,11 +63,13 @@ import { Icon } from "@iconify/react";
 import { fetchCategory, fetchSubCategory } from "../../api/userService";
 
 import { Textarea } from "../../shadcn/textarea";
+import EventFilter from "@/components/admin/Event/EventFilter";
 
 import { useNavigate } from "react-router-dom";
 import QRCodeIcon from "../../assets/svg/qrCode.svg";
 import { useUser } from "../../context/UserContext";
 import EventAttendance from "@/components/volunteer/schedule/EventAttendance";
+import * as Tooltip from "@radix-ui/react-tooltip"; // Import all tooltip components
 
 const headers = [
   "QR Code",
@@ -86,6 +88,8 @@ export default function VolunteerEvents() {
 
   const [time, setTime] = useState([]); // event time data
   const [selectedDate, setSelectedDate] = useState(null); // event date data
+  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+  const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth());
   const [selectedVisibility, setSelectedVisibility] = useState("Public"); // event date data
   const [selectedGroupId, setSelectedGroupId] = useState(null);
   const [selectedGroupName, setSelectedGroupName] = useState("");
@@ -102,6 +106,23 @@ export default function VolunteerEvents() {
   const [selectedSubCategory, setSelectedSubCategory] = useState([]);
   const [selectedCategoryName, setSelectedCategoryName] = useState("");
   const [qrCodeValue, setQrCodeValue] = useState(""); // QR Code value
+
+  const generateTimeOptions = () => {
+    const times = [];
+    const start = 0; // Start at midnight (00:00)
+    const end = 24 * 60; // End at 23:45 (1440 minutes)
+
+    for (let time = start; time < end; time += 15) {
+      const hours = String(Math.floor(time / 60)).padStart(2, "0");
+      const minutes = String(time % 60).padStart(2, "0");
+      times.push(`${hours}:${minutes}`);
+    }
+
+    return times;
+  };
+
+  const timeOptions = generateTimeOptions();
+
   const itemsPerPage = 8;
   const [groupData, setGroupData] = useState([]); // List of category
   const {
@@ -188,40 +209,64 @@ export default function VolunteerEvents() {
     setSelectedDate(moment(date));
     setValue("schedule", date);
   };
+  const handleYearChange = (year) => {
+    setSelectedYear(year);
+    fetchEvents(year, selectedMonth); // Fetch events with updated year
+  };
 
-  const fetchEvents = useCallback(async () => {
-    setLoading(true);
-    setError(null);
+  // Handler for month change
+  const handleMonthChange = (month) => {
+    setSelectedMonth(month);
+    fetchEvents(selectedYear, month); // Fetch events with updated month
+  };
 
-    try {
-      const {
-        data: fetchedData,
-        error,
-        count,
-      } = await supabase
-        .from("schedule")
-        .select("*", { count: "exact" })
-        .eq("creator_id", userData.user_id) // Add this line to filter by creator_id
-        .range(
-          (currentPage - 1) * itemsPerPage,
-          currentPage * itemsPerPage - 1,
-        );
+  const fetchEvents = useCallback(
+    async (year, month) => {
+      setLoading(true);
+      setError(null);
 
-      if (error) throw error;
+      try {
+        // Format the month to ensure two digits (e.g., 01 for January, 10 for October)
+        const formattedMonth = month + 1; // Adjust to 1-12 for month
+        const monthStr =
+          formattedMonth < 10 ? `0${formattedMonth}` : `${formattedMonth}`;
+        const yearStr = year;
 
-      setTotalPages(Math.ceil(count / itemsPerPage));
-      setEvents(fetchedData);
-    } catch (err) {
-      setError("Error fetching events. Please try again.");
-      console.error("Error fetching events:", err);
-    } finally {
-      setLoading(false);
-    }
-  }, [currentPage, itemsPerPage, userData.user_id]);
+        const query = supabase
+          .from("schedule")
+          .select("*", { count: "exact" })
+          .eq("creator_id", userData.user_id) // Filter by creator_id
+          .range(
+            (currentPage - 1) * itemsPerPage,
+            currentPage * itemsPerPage - 1,
+          );
+
+        // Apply the date filter if year and month are provided
+        if (year && month !== null) {
+          query.filter("schedule_date", "like", `${yearStr}-${monthStr}%`);
+        }
+
+        const { data: fetchedData, error, count } = await query;
+
+        if (error) throw error;
+
+        setTotalPages(Math.ceil(count / itemsPerPage));
+        setEvents(fetchedData);
+      } catch (err) {
+        setError("Error fetching events. Please try again.");
+        console.error("Error fetching events:", err);
+      } finally {
+        setLoading(false);
+      }
+    },
+    [currentPage, itemsPerPage, userData.user_id],
+  );
 
   useEffect(() => {
-    fetchEvents();
-  }, [currentPage, fetchEvents]);
+    if (selectedYear && selectedMonth !== null) {
+      fetchEvents(selectedYear, selectedMonth); // Fetch events for the selected year and month
+    }
+  }, [selectedYear, selectedMonth, fetchEvents]);
 
   // Format the time
   const formatTime = (timeString) => {
@@ -559,17 +604,27 @@ export default function VolunteerEvents() {
                 {/* Time Selection */}
                 <div className="space-y-2">
                   <Label htmlFor="time">Time</Label>
-                  {time.map((oldTime, index) => (
+                  {time.map((t, index) => (
                     <div key={index} className="flex items-center space-x-2">
-                      <Input
-                        type="time"
-                        value={oldTime}
-                        step="00:15"
-                        onChange={(e) =>
-                          handleChangeTime(index, e.target.value)
+                      <Select
+                        value={t}
+                        onValueChange={(value) =>
+                          handleChangeTime(index, value)
                         }
                         className="flex-grow"
-                      />
+                      >
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="HH:MM" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {timeOptions.map((option) => (
+                            <SelectItem key={option} value={option}>
+                              {option}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+
                       <Button
                         type="button"
                         variant="outline"
@@ -662,6 +717,11 @@ export default function VolunteerEvents() {
 
     fetchData();
   }, [selectedCategory]);
+  const InfoIcon = () => (
+    <div className="flex h-6 w-6 cursor-pointer items-center justify-center rounded-full bg-blue-500 text-white">
+      i
+    </div>
+  );
 
   return (
     <ScheduleLinks>
@@ -670,7 +730,7 @@ export default function VolunteerEvents() {
           open={isDialogOpen}
           onOpenChange={(open) => {
             if (open) {
-              resetForm(); // Call your form reset function here
+              resetForm();
             }
             setIsDialogOpen(open);
           }}
@@ -684,8 +744,23 @@ export default function VolunteerEvents() {
               <DialogDescription>Schedule an upcoming event.</DialogDescription>
             </DialogHeader>
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+              {/* Event Name */}
               <div className="space-y-2">
-                <Label htmlFor="name">Event Name</Label>
+                <Label htmlFor="name" className="flex items-center gap-1">
+                  Event Name
+                  <Tooltip.Provider>
+                    <Tooltip.Root>
+                      <Tooltip.Trigger asChild>
+                        <InfoIcon />
+                      </Tooltip.Trigger>
+                      <Tooltip.Content side="top">
+                        <p className="rounded bg-gray-200 p-2 text-xs">
+                          Enter a unique name for the event.
+                        </p>
+                      </Tooltip.Content>
+                    </Tooltip.Root>
+                  </Tooltip.Provider>
+                </Label>
                 <Input
                   placeholder="Add event name here"
                   id="name"
@@ -699,7 +774,24 @@ export default function VolunteerEvents() {
               {/* Event Category */}
               <div className="flex">
                 <div className="space-y-2">
-                  <Label htmlFor="Event Category">Event Category</Label>
+                  <Label
+                    htmlFor="Event Category"
+                    className="flex items-center gap-1"
+                  >
+                    Event Category
+                    <Tooltip.Provider>
+                      <Tooltip.Root>
+                        <Tooltip.Trigger asChild>
+                          <InfoIcon />
+                        </Tooltip.Trigger>
+                        <Tooltip.Content side="top">
+                          <p className="rounded bg-gray-200 p-2 text-xs">
+                            Choose a category for this event.
+                          </p>
+                        </Tooltip.Content>
+                      </Tooltip.Root>
+                    </Tooltip.Provider>
+                  </Label>
                   <div className="flex gap-x-2">
                     <div>
                       <Select
@@ -769,13 +861,31 @@ export default function VolunteerEvents() {
                     </div>
                   </div>
                 </div>
+
                 {/* Event Visibility */}
                 <div className="ml-4 space-y-2">
-                  <Label htmlFor="schedule_visibility">Event Visibility</Label>
+                  <Label
+                    htmlFor="schedule_visibility"
+                    className="flex items-center gap-1"
+                  >
+                    Event Visibility
+                    <Tooltip.Provider>
+                      <Tooltip.Root>
+                        <Tooltip.Trigger asChild>
+                          <InfoIcon />
+                        </Tooltip.Trigger>
+                        <Tooltip.Content side="top">
+                          <p className="rounded bg-gray-200 p-2 text-xs">
+                            Choose who can view this event.
+                          </p>
+                        </Tooltip.Content>
+                      </Tooltip.Root>
+                    </Tooltip.Provider>
+                  </Label>
                   <Select
                     onValueChange={(value) => {
                       setValue("schedule_visibility", value);
-                      setSelectedVisibility(value); // Update visibility state
+                      setSelectedVisibility(value);
                     }}
                   >
                     <SelectTrigger className="w-[180px]">
@@ -796,15 +906,32 @@ export default function VolunteerEvents() {
                 {/* Group Selection (only shows if "Group" visibility is selected) */}
                 {selectedVisibility === "group" && (
                   <div className="ml-4 space-y-2">
-                    <Label htmlFor="user_group">Select Ministry</Label>
+                    <Label
+                      htmlFor="user_group"
+                      className="flex items-center gap-1"
+                    >
+                      Select Ministry
+                      <Tooltip.Provider>
+                        <Tooltip.Root>
+                          <Tooltip.Trigger asChild>
+                            <InfoIcon />
+                          </Tooltip.Trigger>
+                          <Tooltip.Content side="top">
+                            <p className="rounded bg-gray-200 p-2 text-xs">
+                              Select a ministry if visibility is restricted.
+                            </p>
+                          </Tooltip.Content>
+                        </Tooltip.Root>
+                      </Tooltip.Provider>
+                    </Label>
                     <Select
                       onValueChange={(value) => {
                         const selectedGroup = userGroups.find(
                           (group) => group.group_id === value,
                         );
                         if (selectedGroup) {
-                          setSelectedGroupId(value); // Set selected group ID
-                          setSelectedGroupName(selectedGroup.group_name); // Set selected group name for display
+                          setSelectedGroupId(value);
+                          setSelectedGroupName(selectedGroup.group_name);
                         }
                       }}
                     >
@@ -834,73 +961,122 @@ export default function VolunteerEvents() {
               </div>
 
               {/* Date Selection */}
-              <div className="flex gap-x-5">
-                <div className="space-y-2">
-                  <Label htmlFor="schedule">Date</Label>
-                  <Dialog>
-                    <DialogTrigger asChild>
-                      <Button
-                        variant="outline"
-                        className="w-full justify-start"
-                      >
-                        {selectedDate
-                          ? selectedDate.format("MMMM Do YYYY")
-                          : "Please select a date"}
-                      </Button>
-                    </DialogTrigger>
-                    <DialogContent className="w-auto p-5">
-                      <Calendar
-                        mode="single"
-                        selected={selectedDate ? selectedDate.toDate() : null}
-                        onSelect={handleDateSelect}
-                        initialFocus
-                      />
-                    </DialogContent>
-                  </Dialog>
-                  {isSubmitted && !selectedDate && (
-                    <p className="text-sm text-red-500">Date is required</p>
-                  )}
-                </div>
-
-                {/* Time Selection */}
-                <div>
-                  <Label htmlFor="time">Time</Label>
-                  <div className="h-28 space-y-2 overflow-y-scroll">
-                    {time.map((t, index) => (
-                      <div key={index} className="flex items-center space-x-2">
-                        <Input
-                          type="time"
-                          value={t}
-                          step="00:15"
-                          onChange={(e) =>
-                            handleChangeTime(index, e.target.value)
-                          }
-                          className="flex-grow"
-                        />
-                        <Button
-                          type="button"
-                          variant="outline"
-                          onClick={() => handleRemoveTimeInput(index)}
-                          className="shrink-0"
-                        >
-                          Remove
-                        </Button>
-                      </div>
-                    ))}
-                    <Button
-                      type="button"
-                      onClick={handleAddTimeInput}
-                      className="w-full"
-                    >
-                      Add Time
+              <div className="space-y-2">
+                <Label htmlFor="schedule" className="flex items-center gap-1">
+                  Date
+                  <Tooltip.Provider>
+                    <Tooltip.Root>
+                      <Tooltip.Trigger asChild>
+                        <InfoIcon />
+                      </Tooltip.Trigger>
+                      <Tooltip.Content side="top">
+                        <p className="rounded bg-gray-200 p-2 text-xs">
+                          Select the date for this event.
+                        </p>
+                      </Tooltip.Content>
+                    </Tooltip.Root>
+                  </Tooltip.Provider>
+                </Label>
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <Button variant="outline" className="w-full justify-start">
+                      {selectedDate
+                        ? selectedDate.format("MMMM Do YYYY")
+                        : "Please select a date"}
                     </Button>
-                  </div>
+                  </DialogTrigger>
+                  <DialogContent className="w-auto p-5">
+                    <Calendar
+                      mode="single"
+                      selected={selectedDate ? selectedDate.toDate() : null}
+                      onSelect={handleDateSelect}
+                      initialFocus
+                    />
+                  </DialogContent>
+                </Dialog>
+                {isSubmitted && !selectedDate && (
+                  <p className="text-sm text-red-500">Date is required</p>
+                )}
+              </div>
+
+              {/* Time Selection */}
+              <div>
+                <Label htmlFor="time" className="flex items-center gap-1">
+                  Time
+                  <Tooltip.Provider>
+                    <Tooltip.Root>
+                      <Tooltip.Trigger asChild>
+                        <InfoIcon />
+                      </Tooltip.Trigger>
+                      <Tooltip.Content side="top">
+                        <p className="rounded bg-gray-200 p-2 text-xs">
+                          Set the start and end times for this event.
+                        </p>
+                      </Tooltip.Content>
+                    </Tooltip.Root>
+                  </Tooltip.Provider>
+                </Label>
+                <div className="h-28 space-y-2 overflow-y-scroll">
+                  {time.map((t, index) => (
+                    <div key={index} className="flex items-center space-x-2">
+                      <Select
+                        value={t}
+                        onValueChange={(value) =>
+                          handleChangeTime(index, value)
+                        }
+                        className="flex-grow"
+                      >
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="HH:MM" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {timeOptions.map((option) => (
+                            <SelectItem key={option} value={option}>
+                              {option}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => handleRemoveTimeInput(index)}
+                        className="shrink-0"
+                      >
+                        Remove
+                      </Button>
+                    </div>
+                  ))}
+                  <Button type="button" onClick={handleAddTimeInput}>
+                    Add Time
+                  </Button>
+                  {isSubmitted && time.length === 0 && (
+                    <p className="text-sm text-red-500">Time is required</p>
+                  )}
                 </div>
               </div>
 
               {/* Event Description */}
               <div className="space-y-2">
-                <Label htmlFor="description">Description</Label>
+                <Label
+                  htmlFor="description"
+                  className="flex items-center gap-1"
+                >
+                  Description
+                  <Tooltip.Provider>
+                    <Tooltip.Root>
+                      <Tooltip.Trigger asChild>
+                        <InfoIcon />
+                      </Tooltip.Trigger>
+                      <Tooltip.Content side="top">
+                        <p className="rounded bg-gray-200 p-2 text-xs">
+                          Add additional information about the event.
+                        </p>
+                      </Tooltip.Content>
+                    </Tooltip.Root>
+                  </Tooltip.Provider>
+                </Label>
                 <Textarea
                   id="description"
                   rows={3}
@@ -927,6 +1103,12 @@ export default function VolunteerEvents() {
         {/* <CreateMeeting />
             <CreatePoll /> */}
       </div>
+      <EventFilter
+        selectedYear={selectedYear}
+        selectedMonth={selectedMonth}
+        onYearChange={handleYearChange}
+        onMonthChange={handleMonthChange}
+      />
       {loading ? (
         <Spinner />
       ) : error ? (
