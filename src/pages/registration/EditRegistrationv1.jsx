@@ -19,7 +19,7 @@ import {
   SelectValue,
 } from "../../shadcn/select";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Controller, useForm } from "react-hook-form";
+import { Controller, useFieldArray, useForm } from "react-hook-form";
 import { z } from "zod";
 import { userAttendance, fetchAllEvents } from "@/api/userService";
 import moment from "moment";
@@ -32,6 +32,33 @@ const attendanceCodeSchema = z.object({
     .length(6, "Attendance code must be exactly 6 digits.")
     .regex(/^\d{6}$/, "Attendance code must be a number."),
 });
+const attendeeSchema = z.object({
+  attendeeid: z.any().optional(),
+firstName: z
+    .string()
+    .min(1, "First Name is required")
+    .max(100, "First Name must be less than 100 characters"),
+  lastName: z
+    .string()
+    .min(1, "Last Name is required")
+    .max(100, "Last Name must be less than 100 characters"),
+});
+
+const mainApplicantSchema = z.object({
+  main_applicant_first_name: z
+    .string()
+    .min(1, "First Name is required")
+    .max(100, "First Name must be less than 100 characters"),
+  main_applicant_last_name: z
+    .string()
+    .min(1, "Last Name is required")
+    .max(100, "Last Name must be less than 100 characters"),
+  telephone: z
+    .string()
+    .min(1, "Telephone is required")
+    .regex(/^[0-9]{11}$/, "Telephone must be an 11-digit number"),
+  attendees: z.array(attendeeSchema),
+});
 
 export default function EditRegistrationv1() {
   const [isEditing, setIsEditing] = useState(false);
@@ -41,7 +68,8 @@ export default function EditRegistrationv1() {
   const [eventDate, setEventDate] = useState(""); // Store selected event date
   const [eventTimeList, setEventTimeList] = useState([]); // Store event times
   const [selectedTime, setSelectedTime] = useState("");
-  const [id, setId] = useState("");
+  const [selectedEventId, setSelectedEventId] = useState("");
+  const [attendanceCode, setAttendanceCode] = useState("");
 
   const { toast } = useToast();
 
@@ -65,7 +93,24 @@ export default function EditRegistrationv1() {
   } = useForm({
     defaultValues: {
       selected_time: selectedTime,
+      selectedEvent: selectedEvent,
+      attendees: attendees.map((attendee) => ({
+        firstName: attendee.firstName,
+        lastName: attendee.lastName,
+        attendeeid: attendee.attendeeid,
+      })),
     },
+    resolver: zodResolver(mainApplicantSchema),
+  });
+  console.log(editerrors)
+
+  const {
+    fields: attendeeFields,
+    append,
+    remove,
+  } = useFieldArray({
+    control: editcontrol,
+    name: "attendees",
   });
 
   const attendanceSubmit = async (data) => {
@@ -74,6 +119,7 @@ export default function EditRegistrationv1() {
         data.attendanceCode,
       );
       console.log("data", dataAttendance);
+      setAttendanceCode(dataAttendance[0].attendance_code);
 
       if (error) {
         console.error("Error fetching attendance:", error);
@@ -94,7 +140,7 @@ export default function EditRegistrationv1() {
               item.attendee_last_name !== item.main_applicant_last_name,
           )
           .map((item) => ({
-            id: item.id,
+            attendeeid: item.id,
             firstName: item.attendee_first_name,
             lastName: item.attendee_last_name,
           }));
@@ -102,6 +148,7 @@ export default function EditRegistrationv1() {
         console.log("Filtered new attendees:", newAttendees);
 
         setAttendees(newAttendees); // Update state with new attendees
+        editsetvalue("attendees", newAttendees);
       }
 
       // Populate the edit form with the retrieved data
@@ -117,7 +164,7 @@ export default function EditRegistrationv1() {
       editsetvalue("telephone", dataAttendance[0].telephone);
       editsetvalue("selected_event", dataAttendance[0].selected_event);
       editsetvalue("selected_time", `${dataAttendance[0].selected_time}+00`);
-      setId(dataAttendance.id);
+      setSelectedEventId(dataAttendance[0].selected_event_id);
 
       // eventList.map(
       //   (event) =>{
@@ -172,28 +219,39 @@ export default function EditRegistrationv1() {
   };
 
   const handleSubmitUpdateInformation = async (data) => {
-    // console.log("data from hook form", data);
+    console.log("data attendees", data.attendees);
 
     const {
-      selected_event,
-      selected_time,
+      // selected_event: selectedEvent,
+      // selected_time: selectedTime,
       main_applicant_first_name,
       main_applicant_last_name,
       telephone,
+      attendees,
     } = data;
 
     // Prepare updates for attendees
-    const updates = attendees.map((attendee) => ({
-      id: attendee.id,
-      attendee_first_name: attendee.firstName,
-      attendee_last_name: attendee.lastName,
-      main_applicant_first_name,
-      main_applicant_last_name,
-      telephone,
-      selected_event_date: eventDate,
-      selected_event,
-      selected_time,
-    }));
+    const updates = attendees.map((attendee) => {
+      // If there's no attendeeid, omit it from the data
+      const attendeeData = {
+        attendee_first_name: attendee.firstName,
+        attendee_last_name: attendee.lastName,
+        main_applicant_first_name,
+        main_applicant_last_name,
+        selected_event_id: selectedEventId,
+        telephone,
+        selected_event_date: eventDate,
+        selected_event: selectedEvent,
+        selected_time: selectedTime,
+      };
+  
+      // Only include 'id' if it exists
+      if (attendee.attendeeid !== "") {
+        attendeeData.id = attendee.attendeeid;
+      }
+  
+      return attendeeData;
+    });
 
     // Separate attendees with IDs (existing ones) from those without (new ones)
     const existingAttendees = updates.filter((update) => update.id);
@@ -224,8 +282,8 @@ export default function EditRegistrationv1() {
 
     const attendeesToInsert = newAttendees.map((attendee) => ({
       ...attendee,
-      attendance_code: fetchedExistingAttendees[0].attendance_code,
-      attendance_type: fetchedExistingAttendees[0].attendance_type,
+      attendance_code: attendanceCode,
+      attendance_type: fetchedExistingAttendees[0]?.attendance_type ?? "family",
     }));
 
     console.log("Attendees to add:", attendeesToInsert);
@@ -241,14 +299,18 @@ export default function EditRegistrationv1() {
         }),
       );
 
-      console.log("Updated attendees:", updateResults);
+      // console.log("Updated attendees:", updateResults);
 
       // Insert new attendees
-      const insertResults = await Promise.all(
+      const {error:insertError} = await Promise.all(
         attendeesToInsert.map(async (attendee) => {
           return supabase.from("new_attendance").insert(attendee);
         }),
       );
+
+      if(insertError){
+        throw new Error(insertError)
+      }
 
       toast({
         title: "Success!",
@@ -261,12 +323,14 @@ export default function EditRegistrationv1() {
   };
 
   const handleAddAttendee = () => {
-    setAttendees([...attendees, { firstName: "", lastName: "" }]);
+    append({ attendeeid: "", firstName: "", lastName: "" });
+    // setAttendees([...attendees, { firstName: "", lastName: "" }]);
   };
 
   const handleRemoveAttendee = (index, attendeeId) => {
-    const updatedAttendees = attendees.filter((_, i) => i !== index);
-    setAttendees(updatedAttendees);
+    // const updatedAttendees = attendees.filter((_, i) => i !== index);
+    // setAttendees(updatedAttendees);
+    remove(index);
     handleDeleteAttendee(attendeeId);
   };
 
@@ -306,7 +370,8 @@ export default function EditRegistrationv1() {
     fetchedEvents();
   }, []);
 
-  // console.log("selected time",selectedTime)
+  // console.log("attendee fields", attendeeFields);
+  // console.log("attendees", attendees);
 
   return (
     <Dialog onOpenChange={closeModal}>
@@ -353,7 +418,7 @@ export default function EditRegistrationv1() {
         {/* Edit Registration Form */}
         {isEditing && (
           <form
-            onSubmit={edithandlesubmit(handleSubmitUpdateInformation)}
+            onSubmit={edithandlesubmit((handleSubmitUpdateInformation))}
             className="no-scrollbar max-h-[30rem] overflow-scroll"
           >
             <div className="grid w-full items-center gap-4 p-2">
@@ -431,65 +496,102 @@ export default function EditRegistrationv1() {
 
               <Label>Main Applicant</Label>
               <div className="flex flex-col gap-2 md:flex-row">
-                <Input
-                  {...editregister("main_applicant_first_name", {
-                    required: true,
-                  })}
-                  placeholder="First name"
-                  className="w-full md:w-1/3"
-                />
-                <Input
-                  {...editregister("main_applicant_last_name", {
-                    required: true,
-                  })}
-                  placeholder="Last name"
-                  className="w-full md:w-1/3"
-                />
-                <Input
-                  {...editregister("telephone", { required: true })}
-                  placeholder="Telephone"
-                  className="w-full md:w-1/3"
-                />
+                <div className="flex flex-col md:w-1/3">
+                  <Input
+                    {...editregister("main_applicant_first_name")}
+                    placeholder="First name"
+                    className="w-full"
+                  />
+                  {editerrors.main_applicant_first_name && (
+                    <p className="text-red-500">
+                      {editerrors.main_applicant_first_name.message}
+                    </p>
+                  )}
+                </div>
+                <div className="flex flex-col md:w-1/3">
+                  <Input
+                    {...editregister("main_applicant_last_name")}
+                    placeholder="Last name"
+                    className="w-full"
+                  />
+                  {editerrors.main_applicant_last_name && (
+                    <p className="text-red-500">
+                      {editerrors.main_applicant_last_name.message}
+                    </p>
+                  )}
+                </div>
+
+                <div className="flex flex-col md:w-1/3">
+                  <Input
+                    {...editregister("telephone")}
+                    placeholder="Telephone"
+                    className="w-full"
+                  />
+                  {editerrors.telephone && (
+                    <p className="text-red-500">
+                      {editerrors.telephone.message}
+                    </p>
+                  )}
+                </div>
               </div>
 
               <Label>Attendee Information</Label>
 
-              {attendees.map((attendee, index) => (
-                <div key={index} className="flex flex-col gap-2 md:flex-row">
-                  <Input
-                    value={attendee.firstName}
-                    // {...editregister(`attendee_first_name${index}`,{required:true})}
-                    onChange={(e) =>
-                      handleAttendeeInputChange(
-                        index,
-                        "firstName",
-                        e.target.value,
-                      )
-                    }
-                    placeholder="First name"
+              {attendeeFields.map((attendee, index) => (
+                <div
+                  key={attendee.id}
+                  className="flex flex-col gap-2 md:flex-row"
+                >
+                  <div className="flex flex-col">
+                    <Controller
+                      name={`attendees.${index}.firstName`}
+                      control={editcontrol}
+                      render={({ field }) => (
+                        <Input {...field} placeholder="First name" />
+                      )}
+                    />
+                    {editerrors.attendees?.[index]?.firstName && (
+                      <span className="text-red-500">
+                        {editerrors.attendees[index].firstName.message}
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="flex flex-col">
+                    <Controller
+                      name={`attendees.${index}.lastName`}
+                      control={editcontrol}
+                      render={({ field }) => (
+                        <Input {...field} placeholder="Last name" />
+                      )}
+                    />
+                    {editerrors.attendees?.[index]?.lastName && (
+                      <span className="text-red-500">
+                        {editerrors.attendees[index].lastName.message}
+                      </span>
+                    )}
+                  </div>
+
+                  <Controller
+                    name={`attendees.${index}.attendeeid`}
+                    control={editcontrol}
+                    render={({ field }) => <Input type="hidden" {...field} />}
                   />
-                  <Input
-                    value={attendee.lastName}
-                    // {...editregister(`attendee_last_name${index}`,{required:true})}
-                    onChange={(e) =>
-                      handleAttendeeInputChange(
-                        index,
-                        "lastName",
-                        e.target.value,
-                      )
-                    }
-                    placeholder="Last name"
-                  />
-                  {attendees.length > 1 && (
+
+                  {/* Remove Button */}
+                  {attendeeFields.length > 0 && (
                     <Button
                       type="button"
-                      onClick={() => handleRemoveAttendee(index, attendee.id)}
+                      onClick={() =>
+                        handleRemoveAttendee(index, attendee.attendeeid)
+                      }
                     >
                       Remove
                     </Button>
                   )}
                 </div>
               ))}
+
               <div>
                 <Button
                   type="button"
