@@ -73,8 +73,7 @@ export default function EditRegistrationv1() {
       const { data: dataAttendance, error } = await userAttendance(
         data.attendanceCode,
       );
-
-      console.log("data attendance", dataAttendance);
+      console.log("data", dataAttendance);
 
       if (error) {
         console.error("Error fetching attendance:", error);
@@ -88,11 +87,20 @@ export default function EditRegistrationv1() {
       }
 
       if (dataAttendance.length > 0) {
-        const newAttendees = dataAttendance.map((item) => ({
-          id: item.id,
-          firstName: item.attendee_first_name,
-          lastName: item.attendee_last_name,
-        }));
+        const newAttendees = dataAttendance
+          .filter(
+            (item) =>
+              item.attendee_first_name !== item.main_applicant_first_name ||
+              item.attendee_last_name !== item.main_applicant_last_name,
+          )
+          .map((item) => ({
+            id: item.id,
+            firstName: item.attendee_first_name,
+            lastName: item.attendee_last_name,
+          }));
+
+        console.log("Filtered new attendees:", newAttendees);
+
         setAttendees(newAttendees); // Update state with new attendees
       }
 
@@ -118,7 +126,7 @@ export default function EditRegistrationv1() {
       //   }
       //     // moment(event.schedule_date).isSame(moment(dataAttendance[0].seleted_event_date), 'day')
       // );
-      console.log("event list", eventList);
+
       const initialTimeList = eventList
         .filter((event) => {
           return (
@@ -134,8 +142,6 @@ export default function EditRegistrationv1() {
         })
         .flat();
 
-      console.log("timelist ko", initialTimeList);
-
       setEventTimeList(initialTimeList);
 
       setSelectedEvent(dataAttendance[0].selected_event);
@@ -146,12 +152,28 @@ export default function EditRegistrationv1() {
       alert("An error occurred while submitting the attendance.");
     }
   };
+  const handleDeleteAttendee = async (id) => {
+    console.log("deleting something", id);
+    if (id) {
+      try {
+        const { data, error } = await supabase
+          .from("new_attendance")
+          .delete()
+          .eq("id", id);
+
+        if (error) {
+          console.error("Error deleting attendee:", error.message);
+          return;
+        }
+      } catch (err) {
+        console.error("Unexpected error:", err);
+      }
+    }
+  };
 
   const handleSubmitUpdateInformation = async (data) => {
     // console.log("data from hook form", data);
-    // Data contains all fields registered with useForm
 
-    // console.log("data",data)
     const {
       selected_event,
       selected_time,
@@ -160,13 +182,7 @@ export default function EditRegistrationv1() {
       telephone,
     } = data;
 
-    // Optionally add attendees if they need to be updated
-    // const updatedAttendees = attendees.map((attendee) => ({
-    //   firstName: attendee.firstName,
-    //   lastName: attendee.lastName,
-    // }));
-
-    // console.log("attendeess",attendees)
+    // Prepare updates for attendees
     const updates = attendees.map((attendee) => ({
       id: attendee.id,
       attendee_first_name: attendee.firstName,
@@ -179,58 +195,79 @@ export default function EditRegistrationv1() {
       selected_time,
     }));
 
-    // Update each attendee based on their ID
-    const { error: dataError } = await Promise.all(
-      updates.map(async (update) => {
-        return supabase
-          .from("new_attendance")
-          .update(update)
-          .eq("id", update.id);
-      }),
-    );
+    // Separate attendees with IDs (existing ones) from those without (new ones)
+    const existingAttendees = updates.filter((update) => update.id);
+    const newAttendees = updates.filter((update) => !update.id);
 
-    if (dataError) {
-      throw new Error(dataError);
+    // Fetch existing attendees from the database to check which need updating
+    const { data: fetchedExistingAttendees, error: fetchError } = await supabase
+      .from("new_attendance")
+      .select("*")
+      .in(
+        "id",
+        existingAttendees.map((update) => update.id),
+      );
+
+    if (fetchError) {
+      console.error("Error fetching existing attendees:", fetchError);
+      return;
     }
 
-    // console.log("updated succeessfully");
+    // Get the list of IDs from the fetched records
+    const existingIds = fetchedExistingAttendees.map((attendee) => attendee.id);
+    const attendeesToUpdate = existingAttendees.filter((update) =>
+      existingIds.includes(update.id),
+    );
 
-    // updatedAttendees.map(()=>{})
+    // console.log("fetched attendees", fetchedExistingAttendees);
+    // console.log("Attendees to update:", attendeesToUpdate);
 
-    // try {
-    //   const { error } = await supabase
-    //     .from("new_attendance")
-    //     .update({
-    //       selected_event,
-    //       selected_time,
-    //       main_applicant_first_name,
-    //       main_applicant_last_name,
-    //       telephone,
-    //       attendees: updatedAttendees, // Include attendees if needed
-    //     })
-    //     .eq("id", id);
-    //   // .eq('id', eventId);
+    const attendeesToInsert = newAttendees.map((attendee) => ({
+      ...attendee,
+      attendance_code: fetchedExistingAttendees[0].attendance_code,
+      attendance_type: fetchedExistingAttendees[0].attendance_type,
+    }));
 
-    //   if (error) throw error;
+    console.log("Attendees to add:", attendeesToInsert);
 
-    //   console.log("Update successful");
-    // } catch (error) {
-    //   console.error("Error updating registration data:", error.message);
-    // }
-    toast({
-      title: "Success!",
-      description: " Registration Updated Successfully",
-    });
-    closeModal();
+    try {
+      // Update existing attendees
+      const updateResults = await Promise.all(
+        attendeesToUpdate.map(async (update) => {
+          return supabase
+            .from("new_attendance")
+            .update(update)
+            .eq("id", update.id);
+        }),
+      );
+
+      console.log("Updated attendees:", updateResults);
+
+      // Insert new attendees
+      const insertResults = await Promise.all(
+        attendeesToInsert.map(async (attendee) => {
+          return supabase.from("new_attendance").insert(attendee);
+        }),
+      );
+
+      toast({
+        title: "Success!",
+        description: " Registration Updated Successfully",
+      });
+      closeModal();
+    } catch (error) {
+      console.error("Error updating/adding attendees:", error);
+    }
   };
 
   const handleAddAttendee = () => {
     setAttendees([...attendees, { firstName: "", lastName: "" }]);
   };
 
-  const handleRemoveAttendee = (index) => {
+  const handleRemoveAttendee = (index, attendeeId) => {
     const updatedAttendees = attendees.filter((_, i) => i !== index);
     setAttendees(updatedAttendees);
+    handleDeleteAttendee(attendeeId);
   };
 
   const handleAttendeeInputChange = (index, field, value) => {
@@ -446,7 +483,7 @@ export default function EditRegistrationv1() {
                   {attendees.length > 1 && (
                     <Button
                       type="button"
-                      onClick={() => handleRemoveAttendee(index)}
+                      onClick={() => handleRemoveAttendee(index, attendee.id)}
                     >
                       Remove
                     </Button>

@@ -31,6 +31,7 @@ import {
   classContentSchema,
   editContentSchema,
 } from "@/lib/zodSchema/classSchema";
+import Spinner from "@/components/Spinner";
 
 
 export default function VolunteerClassContents() {
@@ -355,8 +356,9 @@ export default function VolunteerClassContents() {
     return null;
   };
 
-  if (isLoading) {
-    return <p>Loading...</p>;
+ 
+  if (isLoading || !userData) {
+    return <Spinner/>;
   }
 
   if (data.length < 1 && userData?.user_role === "user") {
@@ -367,7 +369,7 @@ export default function VolunteerClassContents() {
     );
   }
 
-  console.log(editerrors)
+  // console.log(editerrors)
 
 
   return (
