@@ -30,7 +30,7 @@ const schema = z.object({
 });
 
 export default function AddAttendee({ event_uuid }) {
-  const [attendees, setAttendees] = useState([{ firstName: "", lastName: "" }]); // Store attendee details
+  const [attendees, setAttendees] = useState([]); // Store attendee details
   const [eventList, setEventList] = useState([]);
   const [selectedTime, setSelectedTime] = useState("");
   const [error, setError] = useState(""); // State to hold error messages
@@ -204,14 +204,13 @@ export default function AddAttendee({ event_uuid }) {
                   }
                   placeholder="Last name"
                 />
-                {attendees.length > 1 && (
-                  <Button
-                    type="button"
-                    onClick={() => handleRemoveAttendee(index)}
-                  >
-                    Remove
-                  </Button>
-                )}
+
+                <Button
+                  type="button"
+                  onClick={() => handleRemoveAttendee(index)}
+                >
+                  Remove
+                </Button>
               </div>
             ))}
             <div>

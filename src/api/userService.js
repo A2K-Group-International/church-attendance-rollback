@@ -58,7 +58,7 @@ export async function fetchAllEvents() {
       .order("id", { ascending: false });
 
     if (error) throw error;
- 
+
     const upcoming_events = data.filter((event) => {
       // Combine the event date and time into a moment object
       const eventDateTime = moment(
@@ -67,8 +67,8 @@ export async function fetchAllEvents() {
       );
       // Compare the event's date/time with the current time return only upcoming events
       return eventDateTime.isAfter(moment());
-    })
-      // console.log("fetched events",data)
+    });
+    // console.log("fetched events",data)
     return upcoming_events;
   } catch (error) {
     console.error("Error fetching events:", error.message);
@@ -430,6 +430,7 @@ export async function insertFamilyAttendee(
   selected_time,
   attendee,
   attendance_code,
+  selected_event_id,
 ) {
   try {
     const { error: dataError } = await supabase.from("new_attendance").insert(
@@ -445,6 +446,7 @@ export async function insertFamilyAttendee(
         selected_time: selected_time,
         attendance_type: "family",
         attendance_code: attendance_code,
+        selected_event_id: selected_event_id,
       })),
     );
 
@@ -463,14 +465,14 @@ export async function userAttendance(attendanceCode) {
     const { data, error } = await supabase
       .from("new_attendance")
       .select("*")
-      .eq("attendance_code", attendanceCode) 
+      .eq("attendance_code", attendanceCode)
       .order("id", { ascending: false });
 
     if (error) throw error;
 
-    return { data, error: null }; 
+    return { data, error: null };
   } catch (error) {
     console.error("Error fetching attendance:", error.message);
-    return { data: [], error: "Failed to load attendance." }; 
+    return { data: [], error: "Failed to load attendance." };
   }
 }
