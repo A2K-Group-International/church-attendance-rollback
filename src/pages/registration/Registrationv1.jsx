@@ -36,7 +36,6 @@ const formSchema = z.object({
 });
 
 export default function Registrationv1({ btnName }) {
-
   const [eventList, setEventList] = useState([]); // Store event data
   const [eventTimeList, setEventTimeList] = useState([]); // Store event times
   const [selectedEvent, setSelectedEvent] = useState(""); // Store selected event
@@ -44,6 +43,7 @@ export default function Registrationv1({ btnName }) {
   const [selectedEventTime, setSelectedEventTime] = useState(""); // Store selected event time
   const [children, setChildren] = useState([]); // Store children details
   const [upcomingEventsSelected, setUpcomingEventsSelected] = useState(false);
+  const [selectedEventUUID, setSelectedEventUUID] = useState(""); // Event UUID
 
   // React Hook Form initialization with Zod validation
   const {
@@ -62,25 +62,39 @@ export default function Registrationv1({ btnName }) {
     return randomNumber;
   };
   // console.log(eventDate);
-
   const onSubmit = async (data) => {
     const randomCode = handleGenerateRandomCode();
 
     try {
       // If no additional attendees, create a default attendee array with the main applicant's info
-const attendees = children.length > 0
-  ? children
-      .map((child, index) => ({
-        first_name: child.firstName === "" && index == 0 ? data.firstName : child.firstName,
-        last_name: child.lastName === "" && index == 0 ? data.lastName : child.lastName,
-      }))
-      .filter(attendee => attendee.first_name.trim() !== "" && attendee.last_name.trim() !== "") // filter out blank names
-  : [
-      {
-        first_name: data.firstName, // main_applicant_first_name as attendee_first_name
-        last_name: data.lastName, // main_applicant_last_name as attendee_last_name
-      },
-    ].filter(attendee => attendee.first_name.trim() !== "" && attendee.last_name.trim() !== ""); // filter out blank names
+      const attendees =
+        children.length > 0
+          ? children
+              .map((child, index) => ({
+                first_name:
+                  child.firstName === "" && index == 0
+                    ? data.firstName
+                    : child.firstName,
+                last_name:
+                  child.lastName === "" && index == 0
+                    ? data.lastName
+                    : child.lastName,
+              }))
+              .filter(
+                (attendee) =>
+                  attendee.first_name.trim() !== "" &&
+                  attendee.last_name.trim() !== "",
+              ) // filter out blank names
+          : [
+              {
+                first_name: data.firstName, // main_applicant_first_name as attendee_first_name
+                last_name: data.lastName, // main_applicant_last_name as attendee_last_name
+              },
+            ].filter(
+              (attendee) =>
+                attendee.first_name.trim() !== "" &&
+                attendee.last_name.trim() !== "",
+            ); // filter out blank names
 
       const result = await insertFamilyAttendee(
         data.firstName, // main_applicant_first_name
@@ -91,6 +105,7 @@ const attendees = children.length > 0
         selectedEventTime, // selected_time
         attendees,
         randomCode,
+        selectedEventUUID, // Event UUID
       );
 
       if (result?.error) {
@@ -144,9 +159,12 @@ const attendees = children.length > 0
     };
     fetchedEvents();
   }, []);
-
   return (
-    <Dialog onOpenChange={()=>{setUpcomingEventsSelected(false)}}>
+    <Dialog
+      onOpenChange={() => {
+        setUpcomingEventsSelected(false);
+      }}
+    >
       <DialogTrigger asChild>
         <Button>{btnName}</Button>
       </DialogTrigger>
@@ -175,6 +193,7 @@ const attendees = children.length > 0
                     setSelectedEvent(selectedEventDetails.name);
                     setEventDate(selectedEventDetails.schedule_date);
                     setEventTimeList(selectedEventDetails.time);
+                    setSelectedEventUUID(selectedEventDetails.event_uuid);
                     setValue("selected_event", value);
                     setUpcomingEventsSelected(true);
                   }
@@ -186,12 +205,11 @@ const attendees = children.length > 0
                   </SelectValue>
                 </SelectTrigger>
                 <SelectContent position="popper">
-                  {eventList
-                    .map((event) => (
-                      <SelectItem key={event.id} value={event.id}>
-                        {`${event.name} (${moment(event.schedule_date).format("MMMM Do YYYY")})`}
-                      </SelectItem>
-                    ))}
+                  {eventList.map((event) => (
+                    <SelectItem key={event.id} value={event.id}>
+                      {`${event.name} (${moment(event.schedule_date).format("MMMM Do YYYY")})`}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
               {errors.selected_event && (

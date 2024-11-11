@@ -195,7 +195,7 @@ export default function EventAttendance({ event_uuid }) {
       </DialogTrigger>
       <DialogContent className="no-scrollbar max-h-[40rem] max-w-7xl overflow-hidden">
         <DialogHeader>
-          <div className="flex gap-x-10">
+          <div className="flex flex-col gap-x-10 gap-y-2 text-start md:flex-row">
             <DialogTitle>{eventName ? eventName : "Attendance"}</DialogTitle>
             <Select onValueChange={setSelectedTime}>
               <SelectTrigger className="w-[180px]">
@@ -225,7 +225,7 @@ export default function EventAttendance({ event_uuid }) {
           <DialogDescription className="sr-only">
             Attendance Records
           </DialogDescription>
-          <div className="mt-4">
+          <div className="mt-4 text-start">
             <input
               type="text"
               placeholder="Search attendees..."
@@ -236,7 +236,7 @@ export default function EventAttendance({ event_uuid }) {
             <AddAttendee event_uuid={event_uuid} />
           </div>
         </DialogHeader>
-        <div className="max-h-[30rem] overflow-y-auto">
+        <div className="max-h-[25rem] overflow-y-auto no-scrollbar">
           <Table headers={headers} rows={filteredRows} />
         </div>
       </DialogContent>
