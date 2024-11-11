@@ -275,7 +275,7 @@ export default function VolunteerAssignment() {
                         <Label>Quiz Link</Label>
                         <Input {...editRegister("editquizlink")} />
                         {editErrors.editquizlink && (
-                          <p>{editErrors.editquizlink.message}</p>
+                          <p className="text-red-500">{editErrors.editquizlink.message}</p>
                         )}
                         <div className="mt-3 flex gap-2">
                           <Controller

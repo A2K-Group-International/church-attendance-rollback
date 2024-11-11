@@ -59,7 +59,7 @@ export const editQuizSchema = z.object({
     .string()
     .refine(
       (date) => !isNaN(new Date(date).getTime()),
-      { message: "Invalid date format" }
+    { message: "Invalid date format" }
     )
     .optional(),
 });
