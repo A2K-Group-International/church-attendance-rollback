@@ -22,7 +22,10 @@ export default function Home() {
             <div className="grid grid-cols-2 gap-2 p-2 sm:grid-cols-4">
               <Login />
               <RegisterUser />
-              <Registrationv1 btnName="Walk-In Register" />
+              <Registrationv1
+                btnName="Walk-In Register"
+                title="Walk-In Register"
+              />
               <EditRegistrationv1 />
               {/* <NewAttendanceRegister BtnName="Walk-In Register"/> */}
               {/* <EditWalkInRegister /> */}

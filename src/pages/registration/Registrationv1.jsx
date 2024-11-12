@@ -35,7 +35,7 @@ const formSchema = z.object({
   // selected_time: z.number().int().positive("Time selection is required."),
 });
 
-export default function Registrationv1({ btnName }) {
+export default function Registrationv1({ btnName, title }) {
   const [eventList, setEventList] = useState([]); // Store event data
   const [eventTimeList, setEventTimeList] = useState([]); // Store event times
   const [selectedEvent, setSelectedEvent] = useState(""); // Store selected event
@@ -170,7 +170,7 @@ export default function Registrationv1({ btnName }) {
       </DialogTrigger>
       <DialogContent className="sm:max-w-2xl h-full md:h-[31rem]">
         <DialogHeader>
-          <DialogTitle>Add Attendance Record</DialogTitle>
+          <DialogTitle>{title}</DialogTitle>
           <DialogDescription>
             Please Fill up the required Information
           </DialogDescription>
