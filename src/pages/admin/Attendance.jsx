@@ -539,7 +539,7 @@ export default function Attendance() {
           </p>
         </div>
       </div>
-      <div className="mb-6 flex flex-col flex-wrap items-start gap-y-2 space-y-4 sm:flex-row sm:items-center sm:space-x-4 sm:space-y-0">
+      <div className="mb-6 flex flex-wrap items-start justify-start gap-y-2 space-y-4 sm:flex-row sm:items-center sm:space-x-4 sm:space-y-0">
         <div className="flex items-center space-x-2 sm:w-auto">
           <CalendarIcon className="mr-2 h-4 w-4" />
           <Popover>
@@ -561,7 +561,7 @@ export default function Attendance() {
             </PopoverContent>
           </Popover>
         </div>
-        <div className="flex w-full items-center space-x-2 sm:w-auto">
+        <div className="flex items-center space-x-2 sm:w-auto">
           <Filter className="h-4 w-4 text-muted-foreground" />
           <select
             value={selectedEvent || "all"}
@@ -576,7 +576,7 @@ export default function Attendance() {
             ))}
           </select>
         </div>
-        <div className="flex w-full items-center space-x-2 sm:w-auto">
+        <div className="flex items-center space-x-2 sm:w-auto">
           <Clock className="h-4 w-4 text-muted-foreground" />
           <select
             value={selectedTime}
@@ -594,7 +594,7 @@ export default function Attendance() {
           </select>
         </div>
 
-        <div className="flex w-full items-center space-x-2 sm:w-auto">
+        <div className="flex  items-center space-x-2 sm:w-auto">
           <Filter className="h-4 w-4 text-muted-foreground" />
           <select
             value={statusFilter}
@@ -606,7 +606,7 @@ export default function Attendance() {
             <option value="pending">Pending</option>
           </select>
         </div>
-        <Button onClick={handleExportExcel} variant="outline" className="w-20">
+        <Button onClick={handleExportExcel} variant="outline" className="w-20 ml-2">
           <img src={downloadIcon} alt="Download Icon" />
         </Button>
       </div>
@@ -621,7 +621,7 @@ export default function Attendance() {
           /> */}
       </div>
 
-      <div className="rounded-lg h-[20rem] md:h-fit overflow-y-scroll bg-card shadow no-scrollbar">
+      <div className="rounded-lg h-[15rem] md:h-fit mb-2 overflow-y-scroll bg-card shadow no-scrollbar">
         {loading ? (
           <div className="p-8 text-center">
             <div className="mx-auto h-8 w-8 animate-spin rounded-full border-b-2 border-primary"></div>
