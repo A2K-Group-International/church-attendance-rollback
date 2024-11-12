@@ -296,7 +296,7 @@ export default function VolunteersPage() {
       </div>
 
       {/* Volunteers Table */}
-      <div className="mt-4 h-[20rem] overflow-y-scroll no-scrollbar md:h-fit rounded-lg bg-card shadow">
+      <div className="mt-4 h-[20rem] overflow-y-scroll mb-2 no-scrollbar md:h-fit rounded-lg bg-card shadow">
         {loading ? (
           <div className="p-8 text-center">
             <div className="mx-auto h-8 w-8 animate-spin rounded-full border-b-2 border-primary"></div>
