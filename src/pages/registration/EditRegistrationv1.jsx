@@ -35,7 +35,7 @@ const attendanceCodeSchema = z.object({
 });
 const attendeeSchema = z.object({
   attendeeid: z.any().optional(),
-  firstName: z
+firstName: z
     .string()
     .min(1, "First Name is required")
     .max(100, "First Name must be less than 100 characters"),
@@ -104,6 +104,7 @@ export default function EditRegistrationv1() {
     resolver: zodResolver(mainApplicantSchema),
   });
 
+
   const {
     fields: attendeeFields,
     append,
@@ -144,6 +145,7 @@ export default function EditRegistrationv1() {
             firstName: item.attendee_first_name,
             lastName: item.attendee_last_name,
           }));
+
 
         setAttendees(newAttendees); // Update state with new attendees
         editsetvalue("attendees", newAttendees);
@@ -198,6 +200,7 @@ export default function EditRegistrationv1() {
     }
   };
   const handleDeleteAttendee = async (id) => {
+
     if (id) {
       try {
         const { data, error } = await supabase
@@ -216,6 +219,8 @@ export default function EditRegistrationv1() {
   };
 
   const handleSubmitUpdateInformation = async (data) => {
+
+
     const {
       // selected_event: selectedEvent,
       // selected_time: selectedTime,
@@ -239,12 +244,12 @@ export default function EditRegistrationv1() {
         selected_event: selectedEvent,
         selected_time: selectedTime,
       };
-
+  
       // Only include 'id' if it exists
       if (attendee.attendeeid !== "") {
         attendeeData.id = attendee.attendeeid;
       }
-
+  
       return attendeeData;
     });
 
@@ -281,6 +286,7 @@ export default function EditRegistrationv1() {
       attendance_type: fetchedExistingAttendees[0]?.attendance_type ?? "family",
     }));
 
+
     try {
       // Update existing attendees
       const updateResults = await Promise.all(
@@ -295,14 +301,14 @@ export default function EditRegistrationv1() {
       // console.log("Updated attendees:", updateResults);
 
       // Insert new attendees
-      const { error: insertError } = await Promise.all(
+      const {error:insertError} = await Promise.all(
         attendeesToInsert.map(async (attendee) => {
           return supabase.from("new_attendance").insert(attendee);
         }),
       );
 
-      if (insertError) {
-        throw new Error(insertError);
+      if(insertError){
+        throw new Error(insertError)
       }
 
       toast({
@@ -371,13 +377,7 @@ export default function EditRegistrationv1() {
       <DialogTrigger asChild>
         <Button variant="outline">Edit Registration</Button>
       </DialogTrigger>
-      <DialogContent
-        className={clsx({
-          "h-full overflow-scroll sm:max-w-md": isEditing, // If editing, add h-full
-          "overflow-scroll sm:max-w-md ": !isEditing, // If not editing, don't add h-full
-        })}
-      >
-        {" "}
+      <DialogContent className={clsx('sm:max-w-md md:w-fit overflow-scroll no-scrollbar', { 'h-full md:h-[30rem]': isEditing })}>
         <DialogHeader>
           <DialogTitle>
             {isEditing ? "Edit Registration" : "Enter Code"}
@@ -388,6 +388,7 @@ export default function EditRegistrationv1() {
               : "Enter the code to make changes to your registration."}
           </DialogDescription>
         </DialogHeader>
+
         {/* Code Input Form */}
         {!isEditing && (
           <form onSubmit={handleSubmit(attendanceSubmit)}>
@@ -412,11 +413,12 @@ export default function EditRegistrationv1() {
             </div>
           </form>
         )}
+
         {/* Edit Registration Form */}
         {isEditing && (
           <form
-            onSubmit={edithandlesubmit(handleSubmitUpdateInformation)}
-            className="no-scrollbar h-full md:max-h-[30rem]"
+            onSubmit={edithandlesubmit((handleSubmitUpdateInformation))}
+            className="no-scrollbar h-full md:max-h-[30rem] "
           >
             <div className="grid w-full items-center gap-4 p-2">
               <div className="flex flex-col space-y-1.5">
