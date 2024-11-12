@@ -192,8 +192,9 @@ export default function UsersPage() {
       )}
 
       {/* Filters Section */}
-      <div className="mb-4 mt-4 flex space-x-4">
+      <div className="mb-4 mt-4 flex justify-between gap-2 flex-wrap md:w-full w-sm">
         {/* Confirmation Filter Dropdown */}
+        <div className="flex gap-2">
         <div className="relative inline-block text-left">
           <div>
             <Button
@@ -325,13 +326,14 @@ export default function UsersPage() {
             </div>
           )}
         </div>
-        <div className="flex w-full justify-end">
+        </div>
+        <div className="flex justify-end">
           <Button>Create Account</Button>
         </div>
       </div>
 
       {/* Users Table */}
-      <div className="mt-4 rounded-lg bg-card shadow">
+      <div className="rounded-lg h-[15rem] md:h-fit mb-2 overflow-y-scroll bg-card shadow no-scrollbar">
         {loading ? (
           <div className="p-8 text-center">
             <div className="mx-auto h-8 w-8 animate-spin rounded-full border-b-2 border-primary"></div>
@@ -342,9 +344,17 @@ export default function UsersPage() {
             <p className="text-destructive">{error}</p>
           </div>
         ) : data.length > 0 ? (
-          <>
+
             <Table headers={headers} rows={rows} />
-            <Pagination>
+         
+ 
+        ) : (
+          <div className="p-8 text-center">
+            <p className="text-muted-foreground">No users found.</p>
+          </div>
+        )}
+      </div>
+      {data.length > 0 && (<Pagination>
               <PaginationContent>
                 <PaginationItem>
                   <PaginationPrevious
@@ -382,14 +392,7 @@ export default function UsersPage() {
                   />
                 </PaginationItem>
               </PaginationContent>
-            </Pagination>
-          </>
-        ) : (
-          <div className="p-8 text-center">
-            <p className="text-muted-foreground">No users found.</p>
-          </div>
-        )}
-      </div>
+            </Pagination>)}
       {/* Approve Account Dialog */}
       {isApproveDialogOpen && (
         <div

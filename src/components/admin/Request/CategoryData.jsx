@@ -19,11 +19,12 @@ export default function CategoryData({ categories }) {
       <BtnDeleteCategory key={index} id={item.category_id} />,
     ]);
   return (
-    <Table
-      headers={headers}
-      rows={rows}
-      className="no-scrollbar mt-2 !block max-h-96 min-h-96 !max-w-full rounded-xl border border-gray-100"
-    />
+    null
+    // <Table
+    //   headers={headers}
+    //   rows={rows}
+    //   className="no-scrollbar mt-2 !block max-h-96 min-h-96 !max-w-full rounded-xl border border-gray-100"
+    // />
   );
 }
 
