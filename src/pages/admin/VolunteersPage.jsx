@@ -296,7 +296,7 @@ export default function VolunteersPage() {
       </div>
 
       {/* Volunteers Table */}
-      <div className="mt-4 rounded-lg bg-card shadow">
+      <div className="mt-4 h-[20rem] overflow-y-scroll no-scrollbar md:h-fit rounded-lg bg-card shadow">
         {loading ? (
           <div className="p-8 text-center">
             <div className="mx-auto h-8 w-8 animate-spin rounded-full border-b-2 border-primary"></div>
@@ -307,52 +307,54 @@ export default function VolunteersPage() {
             <p className="text-destructive">{error}</p>
           </div>
         ) : data.length > 0 ? (
-          <>
+          <div className="">
             <Table headers={headers} rows={rows} />
-            <Pagination>
-              <PaginationContent>
-                <PaginationItem>
-                  <PaginationPrevious
-                    href="#"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      if (currentPage > 1) setCurrentPage((prev) => prev - 1);
-                    }}
-                  />
-                </PaginationItem>
-                {Array.from({ length: totalPages }, (_, index) => (
-                  <PaginationItem key={index}>
-                    <PaginationLink
-                      href="#"
-                      isActive={currentPage === index + 1}
-                      onClick={(e) => {
-                        e.preventDefault();
-                        setCurrentPage(index + 1);
-                      }}
-                    >
-                      {index + 1}
-                    </PaginationLink>
-                  </PaginationItem>
-                ))}
-                <PaginationItem>
-                  <PaginationNext
-                    href="#"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      if (currentPage < totalPages)
-                        setCurrentPage((prev) => prev + 1);
-                    }}
-                  />
-                </PaginationItem>
-              </PaginationContent>
-            </Pagination>
-          </>
+          </div>
         ) : (
           <div className="p-8 text-center">
             <p className="text-muted-foreground">No volunteers found.</p>
           </div>
         )}
       </div>
+      {data.length > 0 && (
+        <Pagination>
+          <PaginationContent>
+            <PaginationItem>
+              <PaginationPrevious
+                href="#"
+                onClick={(e) => {
+                  e.preventDefault();
+                  if (currentPage > 1) setCurrentPage((prev) => prev - 1);
+                }}
+              />
+            </PaginationItem>
+            {Array.from({ length: totalPages }, (_, index) => (
+              <PaginationItem key={index}>
+                <PaginationLink
+                  href="#"
+                  isActive={currentPage === index + 1}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    setCurrentPage(index + 1);
+                  }}
+                >
+                  {index + 1}
+                </PaginationLink>
+              </PaginationItem>
+            ))}
+            <PaginationItem>
+              <PaginationNext
+                href="#"
+                onClick={(e) => {
+                  e.preventDefault();
+                  if (currentPage < totalPages)
+                    setCurrentPage((prev) => prev + 1);
+                }}
+              />
+            </PaginationItem>
+          </PaginationContent>
+        </Pagination>
+      )}
 
       {/* Confirmation Dialog */}
       {isDialogOpen && selectedVolunteer && (

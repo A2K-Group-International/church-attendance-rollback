@@ -530,7 +530,7 @@ export default function Attendance() {
     //   titlePage="Attendance"
     //   descriptionPage="Manage and track attendance records."
     // >
-    <main className="mx-auto max-w-7xl p-4 lg:p-8">
+    <main className="mx-auto max-w-7xl p-4 overflow-y-scroll h-screen">
       <div className="mb-2 md:flex md:justify-between">
         <div className="mb-8">
           <h1 className="mb-2 text-3xl font-bold">Attendance</h1>
@@ -620,7 +620,8 @@ export default function Attendance() {
             btnSubmit="Submit"
           /> */}
       </div>
-      <div className="rounded-lg bg-card shadow">
+
+      <div className="rounded-lg h-[20rem] md:h-fit overflow-y-scroll bg-card shadow no-scrollbar">
         {loading ? (
           <div className="p-8 text-center">
             <div className="mx-auto h-8 w-8 animate-spin rounded-full border-b-2 border-primary"></div>
@@ -633,46 +634,7 @@ export default function Attendance() {
             <p className="text-destructive">{error}</p>
           </div>
         ) : data.length > 0 ? (
-          <>
             <Table headers={headers} rows={rows} />
-            <Pagination>
-              <PaginationContent>
-                <PaginationItem>
-                  <PaginationPrevious
-                    href="#"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      if (currentPage > 1) setCurrentPage((prev) => prev - 1);
-                    }}
-                  />
-                </PaginationItem>
-                {Array.from({ length: totalPages }, (_, index) => (
-                  <PaginationItem key={index}>
-                    <PaginationLink
-                      href="#"
-                      isActive={currentPage === index + 1}
-                      onClick={(e) => {
-                        e.preventDefault();
-                        setCurrentPage(index + 1);
-                      }}
-                    >
-                      {index + 1}
-                    </PaginationLink>
-                  </PaginationItem>
-                ))}
-                <PaginationItem>
-                  <PaginationNext
-                    href="#"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      if (currentPage < totalPages)
-                        setCurrentPage((prev) => prev + 1);
-                    }}
-                  />
-                </PaginationItem>
-              </PaginationContent>
-            </Pagination>
-          </>
         ) : (
           <div className="p-8 text-center">
             <p className="text-muted-foreground">
@@ -681,6 +643,45 @@ export default function Attendance() {
           </div>
         )}
       </div>
+      {data.length > 0 && (
+        <Pagination>
+          <PaginationContent>
+            <PaginationItem>
+              <PaginationPrevious
+                href="#"
+                onClick={(e) => {
+                  e.preventDefault();
+                  if (currentPage > 1) setCurrentPage((prev) => prev - 1);
+                }}
+              />
+            </PaginationItem>
+            {Array.from({ length: totalPages }, (_, index) => (
+              <PaginationItem key={index}>
+                <PaginationLink
+                  href="#"
+                  isActive={currentPage === index + 1}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    setCurrentPage(index + 1);
+                  }}
+                >
+                  {index + 1}
+                </PaginationLink>
+              </PaginationItem>
+            ))}
+            <PaginationItem>
+              <PaginationNext
+                href="#"
+                onClick={(e) => {
+                  e.preventDefault();
+                  if (currentPage < totalPages)
+                    setCurrentPage((prev) => prev + 1);
+                }}
+              />
+            </PaginationItem>
+          </PaginationContent>
+        </Pagination>
+      )}
     </main>
     // </AdminSidebar>
   );
