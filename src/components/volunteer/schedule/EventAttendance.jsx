@@ -236,7 +236,7 @@ export default function EventAttendance({ event_uuid }) {
             <AddAttendee event_uuid={event_uuid} />
           </div>
         </DialogHeader>
-        <div className="max-h-[25rem] overflow-y-auto no-scrollbar">
+        <div className="no-scrollbar max-h-[25rem] overflow-y-auto">
           <Table headers={headers} rows={filteredRows} />
         </div>
       </DialogContent>

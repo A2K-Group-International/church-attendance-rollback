@@ -30,12 +30,12 @@ export default function UniversalSidebar({ children }) {
 
   const links = {
     admin: [
+      { link: "/admin-dashboard", label: "Dashboard", icon: DashboardIcon },
       {
         link: "/volunteer-announcements",
         label: "Announcements",
         icon: CalendarIcon,
       },
-      { link: "/admin-dashboard", label: "Dashboard", icon: DashboardIcon },
       { link: "/attendance", label: "Attendance", icon: CheckListIcon },
       { link: "/groups", label: "Ministries", icon: PersonIcon },
       { link: "/event", label: "Schedule", icon: CalendarIcon },

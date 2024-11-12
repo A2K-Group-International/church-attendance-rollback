@@ -46,8 +46,17 @@ export default function AddAttendee({ event_uuid }) {
 
   const attendanceSubmit = async (data) => {
     try {
-      // Prepare the new attendees data
-      const attendeesData = attendees.map((attendee) => ({
+      // Check if `attendees` is empty, and if so, create a default entry with the main applicant's info
+      const attendeesData = (
+        attendees.length > 0
+          ? attendees
+          : [
+              {
+                firstName: data.main_applicant_first_name,
+                lastName: data.main_applicant_last_name,
+              },
+            ]
+      ).map((attendee) => ({
         attendee_first_name: attendee.firstName,
         attendee_last_name: attendee.lastName,
         main_applicant_first_name: data.main_applicant_first_name,
@@ -70,11 +79,12 @@ export default function AddAttendee({ event_uuid }) {
         throw error;
       }
 
+      // Reset form and attendees
       reset();
-      setAttendees([{ firstName: "", lastName: "" }]); // Reset attendees
+      setAttendees([]); // Reset attendees
       alert("Attendees added successfully!");
     } catch (error) {
-      console.log("Error inserting attendee", error);
+      console.log("Error inserting attendee:", error);
     }
   };
 
