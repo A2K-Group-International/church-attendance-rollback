@@ -98,13 +98,13 @@ export default function RequestCategory({ categories }) {
           onChange={setFilterType}
         />
       </div>
-      <Table
+      {/* <Table
         headers={
           filterType === "category" ? headersCategory : headersSubcategory
         }
         rows={filterType === "category" ? rowsCategory : rowsSubCategory}
         className="no-scrollbar !block h-52 !max-w-full rounded-xl border border-gray-100"
-      />
+      /> */}
     </div>
   );
 }
