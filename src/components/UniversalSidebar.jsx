@@ -36,7 +36,7 @@ export default function UniversalSidebar({ children }) {
         label: "Announcements",
         icon: CalendarIcon,
       },
-      { link: "/attendance", label: "Attendance", icon: CheckListIcon },
+      // { link: "/attendance", label: "Attendance", icon: CheckListIcon },
       { link: "/groups", label: "Ministries", icon: PersonIcon },
       { link: "/event", label: "Schedule", icon: CalendarIcon },
       { link: "/volunteers", label: "Requests", icon: RequestIcon },
