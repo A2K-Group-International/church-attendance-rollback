@@ -70,7 +70,7 @@ export default function RegisterUser() {
       <DialogTrigger asChild>
         <Button className="w-full">Register</Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-[425px] h-full md:max-h-[30rem] overflow-scroll">
         <DialogHeader className="space-y-3">
           <DialogTitle className="text-2xl font-semibold">Register</DialogTitle>
           <DialogDescription className="text-sm text-muted-foreground">

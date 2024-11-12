@@ -738,7 +738,7 @@ export default function VolunteerEvents() {
           <DialogTrigger asChild>
             <Button>New Event</Button>
           </DialogTrigger>
-          <DialogContent className="max-w-full sm:max-w-[700px]">
+          <DialogContent className="max-w-full sm:max-w-[700px] h-full md:h-fit">
             <DialogHeader>
               <DialogTitle>New Event</DialogTitle>
               <DialogDescription>Schedule an upcoming event.</DialogDescription>

@@ -168,7 +168,7 @@ export default function Registrationv1({ btnName }) {
       <DialogTrigger asChild>
         <Button>{btnName}</Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-2xl">
+      <DialogContent className="sm:max-w-2xl h-full md:h-[31rem]">
         <DialogHeader>
           <DialogTitle>Add Attendance Record</DialogTitle>
           <DialogDescription>

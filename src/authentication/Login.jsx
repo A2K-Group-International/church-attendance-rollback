@@ -40,8 +40,8 @@ export default function Login() {
       <DialogTrigger asChild>
         <Button className="w-full">Login</Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[425px]">
-        <DialogHeader className="space-y-3">
+      <DialogContent className="sm:max-w-[425px] h-full md:h-[30rem]">
+        <DialogHeader className="space-y-3 h-fit">
           <DialogTitle className="text-2xl font-semibold">Login</DialogTitle>
           <DialogDescription className="text-sm text-muted-foreground">
             Enter your account information to access your dashboard.

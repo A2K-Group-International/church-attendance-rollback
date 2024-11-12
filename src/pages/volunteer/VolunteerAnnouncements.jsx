@@ -312,7 +312,7 @@ export default function VolunteerAnnouncements() {
                   <DialogTrigger asChild>
                     <Button className="ml-4">Create Announcement</Button>
                   </DialogTrigger>
-                  <DialogContent className="sm:max-w-[500px]">
+                  <DialogContent className="sm:max-w-[500px] h-full md:h-fit">
                     <DialogHeader>
                       <DialogTitle>Create New Announcement</DialogTitle>
                       <DialogDescription>
