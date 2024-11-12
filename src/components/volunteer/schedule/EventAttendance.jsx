@@ -138,8 +138,6 @@ export default function EventAttendance({ event_uuid }) {
     ]);
 
   // Export to Excel function
-  // Export to Excel function
-  // Export to Excel function
   const exportToExcel = async () => {
     const workbook = new ExcelJS.Workbook();
     const worksheet = workbook.addWorksheet("Attendance");
@@ -164,13 +162,15 @@ export default function EventAttendance({ event_uuid }) {
     ];
 
     // Add data rows (remove "Action" data)
-    attendanceData.forEach((item, index) => {
+    attendanceData
+    .filter((item) => item.has_attended) // export only who are attended
+    .forEach((item, index) => {
       worksheet.addRow([
         index + 1, // Index
         `${item.attendee_first_name} ${item.attendee_last_name}`, // Name of Attendee
         `${item.main_applicant_first_name} ${item.main_applicant_last_name}`, // Main Applicant
         item.telephone, // Telephone
-        item.has_attended ? "Attended" : "Pending", // Status
+        "Attended", // Status
       ]);
     });
 
