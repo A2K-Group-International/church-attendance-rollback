@@ -75,7 +75,7 @@ const headers = [
   "Event Name",
   "Date",
   "Time",
-  "Description",
+  "Organiser",
 ];
 
 export default function VolunteerEvents() {
@@ -389,7 +389,7 @@ export default function VolunteerEvents() {
         whiteSpace: "pre-wrap",
       }}
     >
-      {event.description || "N/A"}
+      {event.creator_name || "N/A"}
     </div>,
 
     <DropdownMenu key={event.id}>
