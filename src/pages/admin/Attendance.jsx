@@ -530,7 +530,7 @@ export default function Attendance() {
     //   titlePage="Attendance"
     //   descriptionPage="Manage and track attendance records."
     // >
-    <main className="mx-auto max-w-7xl p-4 overflow-y-scroll h-screen">
+    <main className="mx-auto max-w-7xl p-4 overflow-y-scroll h-screen no-scrollbar">
       <div className="mb-2 md:flex md:justify-between">
         <div className="mb-8">
           <h1 className="mb-2 text-3xl font-bold">Attendance</h1>

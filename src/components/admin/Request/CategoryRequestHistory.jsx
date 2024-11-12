@@ -92,12 +92,12 @@ export default function CategoryRequestHistory() {
               </SelectContent>
             </Select>
           </>
-          <Table
+          {/* <Table
             headers={
               filterType === "category" ? headersCategory : headersSubCategory
             }
             rows={filterType === "category" ? rowsCategory : rowsSubCategory}
-          />
+          /> */}
         </DialogHeader>
       </DialogContent>
     </Dialog>

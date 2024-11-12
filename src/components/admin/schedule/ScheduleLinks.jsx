@@ -11,7 +11,7 @@ const buttonLinks = [
 export default function ScheduleLinks({ children }) {
   return (
     // <AdminSidebar>
-    <main className="mx-auto max-w-7xl p-4 lg:p-8 h-screen overflow-y-scroll">
+    <main className="mx-auto max-w-7xl p-4 lg:p-8 h-screen overflow-y-scroll no-scrollbar">
       <div className="mb-2 md:flex md:justify-between">
         <div className="mb-8">
           <h1 className="mb-2 text-3xl font-bold">Schedule</h1>
